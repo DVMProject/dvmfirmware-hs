@@ -1,0 +1,1201 @@
+/**
+* Digital Voice Modem - DSP Firmware (Hotspot)
+* GPLv2 Open Source. Use is subject to license terms.
+* DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+*
+* @package DVM / DSP Firmware (Hotspot)
+*
+*/
+//
+// Based on code from the MMDVM_HS project. (https://github.com/juribeparada/MMDVM_HS)
+// Licensed under the GPLv2 License (https://opensource.org/licenses/GPL-2.0)
+//
+/*
+*   Copyright (C) 2013,2015,2016,2018,2020,2021 by Jonathan Naylor G4KLX
+*   Copyright (C) 2016 by Colin Durbridge G4EML
+*   Copyright (C) 2016,2017,2018,2019 by Andy Uribe CA6JAU
+*   Copyright (C) 2019 by Florian Wolters DF2ET
+*   Copyright (C) 2017-2021 Bryan Biedenkapp N2PLL
+*
+*   This program is free software; you can redistribute it and/or modify
+*   it under the terms of the GNU General Public License as published by
+*   the Free Software Foundation; either version 2 of the License, or
+*   (at your option) any later version.
+*
+*   This program is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*   GNU General Public License for more details.
+*
+*   You should have received a copy of the GNU General Public License
+*   along with this program; if not, write to the Free Software
+*   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+#include "Globals.h"
+#include "SerialPort.h"
+
+ // ---------------------------------------------------------------------------
+ //  Constants
+ // ---------------------------------------------------------------------------
+
+#if defined(ENABLE_DMR)
+#define DESCR_DMR        "DMR, "
+#else
+#define DESCR_DMR        ""
+#endif
+#if defined(ENABLE_P25)
+#define DESCR_P25        "P25, "
+#else
+#define DESCR_P25        ""
+#endif
+
+#if defined(SEND_RSSI_DATA)
+#define DESCR_RSSI        "RSSI, "
+#else
+#define DESCR_RSSI        ""
+#endif
+
+#if defined(ZUMSPOT_ADF7021)
+#define BOARD_INFO      "ZUMspot"
+#elif defined(MMDVM_HS_HAT_REV12)
+#define BOARD_INFO      "MMDVM_HS_Hat"
+#elif defined(MMDVM_HS_DUAL_HAT_REV10)
+#define BOARD_INFO      "MMDVM_HS_Dual_Hat"
+#elif defined(NANO_HOTSPOT)
+#define BOARD_INFO      "Nano_hotSPOT"
+#elif defined(NANO_DV_REV11)
+#define BOARD_INFO      "Nano_DV"
+#elif defined(SKYBRIDGE_HS)
+#define BOARD_INFO      "SkyBridge"
+#elif defined(LONESTAR_USB)
+#define BOARD_INFO      "LS_USB_STICK"
+#else
+#define BOARD_INFO      "MMDVM_HS"
+#endif
+
+#if defined(ADF7021_14_7456)
+#define DESCR_OSC       "TCXO 14.7456"
+#endif
+#if defined(ADF7021_12_2880)
+#define DESCR_OSC       "TCXO 12.2880"
+#endif
+
+#if defined(ENABLE_ADF7021) && defined(ADF7021_N_VER)
+#define RF_CHIP         "ADF7021N"
+#elif defined(ENABLE_ADF7021)
+#define RF_CHIP         "ADF7021"
+#endif
+
+#define DESCRIPTION        "Digital Voice Modem DSP Hotspot [" BOARD_INFO "] (" RF_CHIP DESCR_DMR DESCR_P25 DESCR_OSC DESCR_RSSI "CW Id)"
+
+#define concat(a, b, c) a " (build " b " " c ")"
+const char HARDWARE[] = concat(DESCRIPTION, __TIME__, __DATE__);
+
+const uint8_t PROTOCOL_VERSION   = 2U;
+
+// ---------------------------------------------------------------------------
+//  Public Class Members
+// ---------------------------------------------------------------------------
+/// <summary>
+/// Initializes a new instance of the SerialPort class.
+/// </summary>
+SerialPort::SerialPort() :
+    m_buffer(),
+    m_ptr(0U),
+    m_len(0U),
+    m_debug(false),
+    m_firstCal(false)
+{
+    // stub
+}
+
+/// <summary>
+/// Starts serial port communications.
+/// </summary>
+void SerialPort::start()
+{
+    beginInt(1U, SERIAL_SPEED);
+}
+
+/// <summary>
+/// Process data from serial port.
+/// </summary>
+void SerialPort::process()
+{
+    while (availableInt(1U)) {
+        uint8_t c = readInt(1U);
+
+        if (m_ptr == 0U) {
+            if (c == DVM_FRAME_START) {
+                // Handle the frame start correctly
+                m_buffer[0U] = c;
+                m_ptr = 1U;
+                m_len = 0U;
+            }
+            else {
+                m_ptr = 0U;
+                m_len = 0U;
+            }
+        }
+        else if (m_ptr == 1U) {
+            // Handle the frame length
+            m_len = m_buffer[m_ptr] = c;
+            m_ptr = 2U;
+        }
+        else {
+            // Any other bytes are added to the buffer
+            m_buffer[m_ptr] = c;
+            m_ptr++;
+
+            // The full packet has been received, process it
+            if (m_ptr == m_len) {
+                uint8_t err = 2U;
+
+                switch (m_buffer[2U]) {
+                case CMD_GET_STATUS:
+                    getStatus();
+                    break;
+
+                case CMD_GET_VERSION:
+                    getVersion();
+                    break;
+
+                case CMD_SET_CONFIG:
+                    err = setConfig(m_buffer + 3U, m_len - 3U);
+                    if (err == RSN_OK)
+                        sendACK();
+                    else
+                        sendNAK(err);
+                    break;
+
+                case CMD_SET_MODE:
+                    err = setMode(m_buffer + 3U, m_len - 3U);
+                    if (err == RSN_OK)
+                        sendACK();
+                    else
+                        sendNAK(err);
+                    break;
+
+                case CMD_SET_SYMLVLADJ:
+                    err = setSymbolLvlAdj(m_buffer + 3U, m_len - 3U);
+                    if (err == RSN_OK)
+                        sendACK();
+                    else
+                        sendNAK(err);
+                    break;
+
+                case CMD_SET_RXLEVEL:
+                    sendNAK(RSN_INVALID_REQUEST); // CMD_SET_RXLEVEL not supported by HS
+                    break;
+
+                case CMD_SET_RFPARAMS:
+                    err = setRFParams(m_buffer + 3U, m_len - 3U);
+                    if (err == RSN_OK)
+                        sendACK();
+                    else
+                        sendNAK(err);
+                    break;
+
+                case CMD_CAL_DATA:
+                    if (m_modemState == STATE_DMR_DMO_CAL_1K || m_modemState == STATE_DMR_CAL_1K ||
+                        m_modemState == STATE_DMR_LF_CAL || m_modemState == STATE_DMR_CAL)
+                        err = calDMR.write(m_buffer + 3U, m_len - 3U);
+/*
+                    if (m_modemState == STATE_P25_CAL_1K || m_modemState == STATE_P25_LF_CAL || m_modemState == STATE_P25_CAL)
+                        err = calP25.write(m_buffer + 3U, m_len - 3U);
+*/
+                    if (err == RSN_OK) {
+                        sendACK();
+                    }
+                    else {
+                        DEBUG2("SerialPort: process(): received invalid calibration data", err);
+                        sendNAK(err);
+                    }
+                    break;
+
+                /** CW */
+                case CMD_SEND_CWID:
+                    err = RSN_RINGBUFF_FULL;
+                    if (m_modemState == STATE_IDLE) {
+                        m_cwIdState = true;
+                        
+                        io.rf1Conf(STATE_CW, true);
+                        
+                        err = cwIdTX.write(m_buffer + 3U, m_len - 3U);
+                    }
+                    if (err != RSN_OK) {
+                        DEBUG2("SerialPort: process(): invalid CW Id data", err);
+                        sendNAK(err);
+                    }
+                    break;
+
+                /** Digital Mobile Radio */
+                case CMD_DMR_DATA1:
+#if defined(DUPLEX)
+                    if (m_dmrEnable) {
+                        if (m_modemState == STATE_IDLE || m_modemState == STATE_DMR) {
+                            if (m_duplex)
+                                err = dmrTX.writeData1(m_buffer + 3U, m_len - 3U);
+                        }
+                    }
+                    if (err == RSN_OK) {
+                        if (m_modemState == STATE_IDLE)
+                            setMode(STATE_DMR);
+                    }
+                    else {
+                        DEBUG2("SerialPort: process() received invalid DMR data", err);
+                        sendNAK(err);
+                    }
+#else
+                    sendNAK(RSN_INVALID_REQUEST);
+#endif
+                    break;
+
+                case CMD_DMR_DATA2:
+                    if (m_dmrEnable) {
+                        if (m_modemState == STATE_IDLE || m_modemState == STATE_DMR) {
+#if defined(DUPLEX)
+                            if (m_duplex)
+                                err = dmrTX.writeData2(m_buffer + 3U, m_len - 3U);
+                            else
+                                err = dmrDMOTX.writeData(m_buffer + 3U, m_len - 3U);
+#else
+                            err = dmrDMOTX.writeData(m_buffer + 3U, m_len - 3U);
+#endif
+                        }
+                    }
+                    if (err == RSN_OK) {
+                        if (m_modemState == STATE_IDLE)
+                            setMode(STATE_DMR);
+                    }
+                    else {
+                        DEBUG2("SerialPort: process(): received invalid DMR data", err);
+                        sendNAK(err);
+                    }
+                    break;
+
+                case CMD_DMR_START:
+#if defined(DUPLEX)
+                    if (m_dmrEnable) {
+                        err = RSN_INVALID_DMR_START;
+                        if (m_len == 4U) {
+                            if (m_buffer[3U] == 0x01U && m_modemState == STATE_DMR) {
+                                if (!m_tx)
+                                    dmrTX.setStart(true);
+                                err = RSN_OK;
+                            }
+                            else if (m_buffer[3U] == 0x00U && m_modemState == STATE_DMR) {
+                                if (m_tx)
+                                    dmrTX.setStart(false);
+                                err = RSN_OK;
+                            }
+                        }
+                    }
+                    if (err != RSN_OK) {
+                        DEBUG3("SerialPort: process(): received invalid DMR start", err, m_len);
+                        sendNAK(err);
+                    }
+#else
+                    sendNAK(RSN_INVALID_REQUEST);
+#endif
+                    break;
+
+                case CMD_DMR_SHORTLC:
+#if defined(DUPLEX)
+                    if (m_dmrEnable)
+                        err = dmrTX.writeShortLC(m_buffer + 3U, m_len - 3U);
+                    if (err != RSN_OK) {
+                        DEBUG2("SerialPort: process(): received invalid DMR Short LC", err);
+                        sendNAK(err);
+                    }
+#else
+                    sendNAK(RSN_INVALID_REQUEST);
+#endif
+                    break;
+
+                case CMD_DMR_ABORT:
+#if defined(DUPLEX)
+                    if (m_dmrEnable)
+                        err = dmrTX.writeAbort(m_buffer + 3U, m_len - 3U);
+                    if (err != RSN_OK) {
+                        DEBUG2("SerialPort: process(): received invalid DMR Abort", err);
+                        sendNAK(err);
+                    }
+#else
+                    sendNAK(RSN_INVALID_REQUEST);
+#endif
+                    break;
+
+                /** Project 25 */
+                case CMD_P25_DATA:
+                    if (m_p25Enable) {
+                        if (m_modemState == STATE_IDLE || m_modemState == STATE_P25)
+                            err = p25TX.writeData(m_buffer + 3U, m_len - 3U);
+                    }
+                    if (err == RSN_OK) {
+                        if (m_modemState == STATE_IDLE)
+                            setMode(STATE_P25);
+                    }
+                    else {
+                        DEBUG2("SerialPort: process(): Received invalid P25 data", err);
+                        sendNAK(err);
+                    }
+                    break;
+
+                case CMD_P25_CLEAR:
+                    if (m_p25Enable) {
+                        if (m_modemState == STATE_IDLE || m_modemState == STATE_P25)
+                            p25TX.clear();
+                    }
+                    break;
+
+                default:
+                    // Handle this, send a NAK back
+                    sendNAK(RSN_NAK);
+                    break;
+                }
+
+                m_ptr = 0U;
+                m_len = 0U;
+            }
+        }
+    }
+
+    if (io.getWatchdog() >= 48000U) {
+        m_ptr = 0U;
+        m_len = 0U;
+    }
+}
+
+/// <summary>
+/// Write DMR frame data to serial port.
+/// </summary>
+/// <param name="slot"></param>
+/// <param name="data"></param>
+/// <param name="length"></param>
+void SerialPort::writeDMRData(bool slot, const uint8_t* data, uint8_t length)
+{
+    if (m_modemState != STATE_DMR && m_modemState != STATE_IDLE)
+        return;
+
+    if (!m_dmrEnable)
+        return;
+
+    uint8_t reply[40U];
+
+    reply[0U] = DVM_FRAME_START;
+    reply[1U] = 0U;
+    reply[2U] = slot ? CMD_DMR_DATA2 : CMD_DMR_DATA1;
+
+    uint8_t count = 3U;
+    for (uint8_t i = 0U; i < length; i++, count++)
+        reply[count] = data[i];
+
+    reply[1U] = count;
+
+    writeInt(1U, reply, count);
+}
+
+/// <summary>
+/// Write lost DMR frame data to serial port.
+/// </summary>
+/// <param name="slot"></param>
+void SerialPort::writeDMRLost(bool slot)
+{
+    if (m_modemState != STATE_DMR && m_modemState != STATE_IDLE)
+        return;
+
+    if (!m_dmrEnable)
+        return;
+
+    uint8_t reply[3U];
+
+    reply[0U] = DVM_FRAME_START;
+    reply[1U] = 3U;
+    reply[2U] = slot ? CMD_DMR_LOST2 : CMD_DMR_LOST1;
+
+    writeInt(1U, reply, 3);
+}
+
+/// <summary>
+/// Write P25 frame data to serial port.
+/// </summary>
+/// <param name="data"></param>
+/// <param name="length"></param>
+void SerialPort::writeP25Data(const uint8_t* data, uint8_t length)
+{
+    if (m_modemState != STATE_P25 && m_modemState != STATE_IDLE)
+        return;
+
+    if (!m_p25Enable)
+        return;
+
+    uint8_t reply[250U];
+
+    reply[0U] = DVM_FRAME_START;
+    reply[1U] = 0U;
+    reply[2U] = CMD_P25_DATA;
+
+    uint8_t count = 3U;
+    for (uint8_t i = 0U; i < length; i++, count++)
+        reply[count] = data[i];
+
+    reply[1U] = count;
+
+    writeInt(1U, reply, count);
+}
+
+/// <summary>
+/// Write lost P25 frame data to serial port.
+/// </summary>
+void SerialPort::writeP25Lost()
+{
+    if (m_modemState != STATE_P25 && m_modemState != STATE_IDLE)
+        return;
+
+    if (!m_p25Enable)
+        return;
+
+    uint8_t reply[3U];
+
+    reply[0U] = DVM_FRAME_START;
+    reply[1U] = 3U;
+    reply[2U] = CMD_P25_LOST;
+
+    writeInt(1U, reply, 3);
+}
+
+/// <summary>
+/// Write calibration frame data to serial port.
+/// </summary>
+/// <param name="data"></param>
+/// <param name="length"></param>
+void SerialPort::writeCalData(const uint8_t* data, uint8_t length)
+{
+    uint8_t reply[130U];
+
+    reply[0U] = DVM_FRAME_START;
+    reply[1U] = 0U;
+    reply[2U] = CMD_CAL_DATA;
+
+    uint8_t count = 3U;
+    for (uint8_t i = 0U; i < length; i++, count++)
+        reply[count] = data[i];
+
+    reply[1U] = count;
+
+    writeInt(1U, reply, count);
+}
+
+/// <summary>
+/// Write RSSI frame data to serial port.
+/// </summary>
+/// <param name="data"></param>
+/// <param name="length"></param>
+void SerialPort::writeRSSIData(const uint8_t* data, uint8_t length)
+{
+    if (m_modemState != STATE_RSSI_CAL)
+        return;
+
+    uint8_t reply[30U];
+
+    reply[0U] = DVM_FRAME_START;
+    reply[1U] = 0U;
+    reply[2U] = CMD_RSSI_DATA;
+
+    uint8_t count = 3U;
+    for (uint8_t i = 0U; i < length; i++, count++)
+        reply[count] = data[i];
+
+    reply[1U] = count;
+
+    writeInt(1U, reply, count);
+}
+
+/// <summary>
+///
+/// </summary>
+/// <param name="text"></param>
+void SerialPort::writeDebug(const char* text)
+{
+    if (!m_debug)
+        return;
+
+    uint8_t reply[130U];
+
+    reply[0U] = DVM_FRAME_START;
+    reply[1U] = 0U;
+    reply[2U] = CMD_DEBUG1;
+
+    uint8_t count = 3U;
+    for (uint8_t i = 0U; text[i] != '\0'; i++, count++)
+        reply[count] = text[i];
+
+    reply[1U] = count;
+
+    writeInt(1U, reply, count, true);
+}
+
+/// <summary>
+///
+/// </summary>
+/// <param name="text"></param>
+/// <param name="n1"></param>
+void SerialPort::writeDebug(const char* text, int16_t n1)
+{
+    if (!m_debug)
+        return;
+
+    uint8_t reply[130U];
+
+    reply[0U] = DVM_FRAME_START;
+    reply[1U] = 0U;
+    reply[2U] = CMD_DEBUG2;
+
+    uint8_t count = 3U;
+    for (uint8_t i = 0U; text[i] != '\0'; i++, count++)
+        reply[count] = text[i];
+
+    reply[count++] = (n1 >> 8) & 0xFF;
+    reply[count++] = (n1 >> 0) & 0xFF;
+
+    reply[1U] = count;
+
+    writeInt(1U, reply, count, true);
+}
+
+/// <summary>
+///
+/// </summary>
+/// <param name="text"></param>
+/// <param name="n1"></param>
+/// <param name="n2"></param>
+void SerialPort::writeDebug(const char* text, int16_t n1, int16_t n2)
+{
+    if (!m_debug)
+        return;
+
+    uint8_t reply[130U];
+
+    reply[0U] = DVM_FRAME_START;
+    reply[1U] = 0U;
+    reply[2U] = CMD_DEBUG3;
+
+    uint8_t count = 3U;
+    for (uint8_t i = 0U; text[i] != '\0'; i++, count++)
+        reply[count] = text[i];
+
+    reply[count++] = (n1 >> 8) & 0xFF;
+    reply[count++] = (n1 >> 0) & 0xFF;
+
+    reply[count++] = (n2 >> 8) & 0xFF;
+    reply[count++] = (n2 >> 0) & 0xFF;
+
+    reply[1U] = count;
+
+    writeInt(1U, reply, count, true);
+}
+
+/// <summary>
+///
+/// </summary>
+/// <param name="text"></param>
+/// <param name="n1"></param>
+/// <param name="n2"></param>
+/// <param name="n3"></param>
+void SerialPort::writeDebug(const char* text, int16_t n1, int16_t n2, int16_t n3)
+{
+    if (!m_debug)
+        return;
+
+    uint8_t reply[130U];
+
+    reply[0U] = DVM_FRAME_START;
+    reply[1U] = 0U;
+    reply[2U] = CMD_DEBUG4;
+
+    uint8_t count = 3U;
+    for (uint8_t i = 0U; text[i] != '\0'; i++, count++)
+        reply[count] = text[i];
+
+    reply[count++] = (n1 >> 8) & 0xFF;
+    reply[count++] = (n1 >> 0) & 0xFF;
+
+    reply[count++] = (n2 >> 8) & 0xFF;
+    reply[count++] = (n2 >> 0) & 0xFF;
+
+    reply[count++] = (n3 >> 8) & 0xFF;
+    reply[count++] = (n3 >> 0) & 0xFF;
+
+    reply[1U] = count;
+
+    writeInt(1U, reply, count, true);
+}
+
+/// <summary>
+///
+/// </summary>
+/// <param name="text"></param>
+/// <param name="n1"></param>
+/// <param name="n2"></param>
+/// <param name="n3"></param>
+/// <param name="n4"></param>
+void SerialPort::writeDebug(const char* text, int16_t n1, int16_t n2, int16_t n3, int16_t n4)
+{
+    if (!m_debug)
+        return;
+
+    uint8_t reply[130U];
+
+    reply[0U] = DVM_FRAME_START;
+    reply[1U] = 0U;
+    reply[2U] = CMD_DEBUG5;
+
+    uint8_t count = 3U;
+    for (uint8_t i = 0U; text[i] != '\0'; i++, count++)
+        reply[count] = text[i];
+
+    reply[count++] = (n1 >> 8) & 0xFF;
+    reply[count++] = (n1 >> 0) & 0xFF;
+
+    reply[count++] = (n2 >> 8) & 0xFF;
+    reply[count++] = (n2 >> 0) & 0xFF;
+
+    reply[count++] = (n3 >> 8) & 0xFF;
+    reply[count++] = (n3 >> 0) & 0xFF;
+
+    reply[count++] = (n4 >> 8) & 0xFF;
+    reply[count++] = (n4 >> 0) & 0xFF;
+
+    reply[1U] = count;
+
+    writeInt(1U, reply, count, true);
+}
+
+/// <summary>
+///
+/// </summary>
+/// <param name="data"></param>
+/// <param name="length"></param>
+void SerialPort::writeDump(const uint8_t* data, uint16_t length)
+{
+    if (!m_debug)
+        return;
+
+    uint8_t reply[512U];
+
+    reply[0U] = DVM_FRAME_START;
+
+    if (length > 252U) {
+        reply[1U] = 0U;
+        reply[2U] = (length + 4U) - 255U;
+        reply[3U] = CMD_DEBUG_DUMP;
+
+        for (uint8_t i = 0U; i < length; i++)
+            reply[i + 4U] = data[i];
+
+        writeInt(1U, reply, length + 4U);
+    }
+    else {
+        reply[1U] = length + 3U;
+        reply[2U] = CMD_DEBUG_DUMP;
+
+        for (uint8_t i = 0U; i < length; i++)
+            reply[i + 3U] = data[i];
+
+        writeInt(1U, reply, length + 3U);
+    }
+}
+
+// ---------------------------------------------------------------------------
+//  Private Class Members
+// ---------------------------------------------------------------------------
+/// <summary>
+/// Write acknowlegement.
+/// </summary>
+void SerialPort::sendACK()
+{
+    uint8_t reply[4U];
+
+    reply[0U] = DVM_FRAME_START;
+    reply[1U] = 4U;
+    reply[2U] = CMD_ACK;
+    reply[3U] = m_buffer[2U];
+
+    writeInt(1U, reply, 4);
+}
+
+/// <summary>
+/// Write negative acknowlegement.
+/// </summary>
+/// <param name="err"></param>
+void SerialPort::sendNAK(uint8_t err)
+{
+    uint8_t reply[5U];
+
+    reply[0U] = DVM_FRAME_START;
+    reply[1U] = 5U;
+    reply[2U] = CMD_NAK;
+    reply[3U] = m_buffer[2U];
+    reply[4U] = err;
+
+    writeInt(1U, reply, 5);
+}
+
+/// <summary>
+/// Write modem DSP status.
+/// </summary>
+void SerialPort::getStatus()
+{
+    io.resetWatchdog();
+
+    uint8_t reply[15U];
+
+    // send all sorts of interesting internal values
+    reply[0U] = DVM_FRAME_START;
+    reply[1U] = 11U;
+    reply[2U] = CMD_GET_STATUS;
+
+    reply[3U]  = 0x00U;
+    if (m_dmrEnable)
+        reply[3U] |= 0x02U;
+    if (m_p25Enable)
+        reply[3U] |= 0x08U;
+
+    reply[4U] = uint8_t(m_modemState);
+
+    reply[5U] = m_tx ? 0x01U : 0x00U;
+
+    if (io.hasRXOverflow())
+        reply[5U] |= 0x04U;
+
+    if (io.hasTXOverflow())
+        reply[5U] |= 0x08U;
+
+    reply[5U] |= m_dcd ? 0x40U : 0x00U;
+
+    reply[6U] = 0U;
+
+    if (m_dmrEnable) {
+#if defined(DUPLEX)
+        if (m_duplex) {
+            reply[7U] = dmrTX.getSpace1();
+            reply[8U] = dmrTX.getSpace2();
+        } else {
+            reply[7U] = 10U;
+            reply[8U] = dmrDMOTX.getSpace();
+        }
+#else
+        reply[7U] = 10U;
+        reply[8U] = dmrDMOTX.getSpace();
+#endif
+    } else {
+        reply[7U] = 0U;
+        reply[8U] = 0U;
+    }
+
+    reply[9U] = 0U;
+
+    if (m_p25Enable)
+        reply[10U] = p25TX.getSpace();
+    else
+        reply[10U] = 0U;
+
+    writeInt(1U, reply, 11);
+}
+
+/// <summary>
+/// Write modem DSP version.
+/// </summary>
+void SerialPort::getVersion()
+{
+    uint8_t reply[200U];
+
+    reply[0U] = DVM_FRAME_START;
+    reply[1U] = 0U;
+    reply[2U] = CMD_GET_VERSION;
+
+    reply[3U] = PROTOCOL_VERSION;
+
+    reply[4U] = io.getCPU();
+
+    // Reserve 16 bytes for the UDID
+    ::memcpy(reply + 5U, 0x00U, 16U);
+    io.getUDID(reply + 5U);
+
+    uint8_t count = 4U;
+    for (uint8_t i = 0U; HARDWARE[i] != 0x00U; i++, count++)
+        reply[count] = HARDWARE[i];
+
+    reply[1U] = count;
+
+    writeInt(1U, reply, count);
+}
+
+/// <summary>
+/// Helper to validate the passed modem state is valid.
+/// </summary>
+/// <param name="state"></param>
+/// <returns></returns>
+uint8_t SerialPort::modemStateCheck(DVM_STATE state)
+{
+    // invalid mode check
+    if (state != STATE_IDLE && state != STATE_DMR && state != STATE_P25 &&
+        state != STATE_P25_CAL_1K &&
+        state != STATE_DMR_DMO_CAL_1K && state != STATE_DMR_CAL_1K &&
+        state != STATE_DMR_LF_CAL && state != STATE_P25_LF_CAL &&
+        state != STATE_RSSI_CAL &&
+        state != STATE_P25_CAL && state != STATE_DMR_CAL &&
+        state != STATE_INT_CAL)
+        return RSN_INVALID_MODE;
+/*
+    // DMR without DMR being enabled
+    if (state == STATE_DMR && !m_dmrEnable)
+        return RSN_DMR_DISABLED;
+    // P25 without P25 being enabled
+    if (state == STATE_P25 && !m_p25Enable)
+        return RSN_P25_DISABLED;
+*/
+    return RSN_OK;
+}
+
+/// <summary>
+/// Set modem DSP configuration from serial port data.
+/// </summary>
+/// <param name="data"></param>
+/// <param name="length"></param>
+/// <returns></returns>
+uint8_t SerialPort::setConfig(const uint8_t* data, uint8_t length)
+{
+    if (length < 14U)
+        return RSN_ILLEGAL_LENGTH;
+
+    bool simplex = (data[0U] & 0x80U) == 0x80U;
+
+    m_debug = (data[0U] & 0x10U) == 0x10U;
+
+    bool dmrEnable = (data[1U] & 0x02U) == 0x02U;
+    bool p25Enable = (data[1U] & 0x08U) == 0x08U;
+
+    uint8_t fdmaPreamble = data[2U];
+    if (fdmaPreamble > 255U)
+        return RSN_INVALID_FDMA_PREAMBLE;
+
+    DVM_STATE modemState = DVM_STATE(data[3U]);
+
+    uint8_t ret = modemStateCheck(modemState);
+    if (ret != RSN_OK)
+        return ret;
+
+    uint8_t colorCode = data[6U];
+    if (colorCode > 15U)
+        return RSN_INVALID_DMR_CC;
+
+#if defined(DUPLEX)
+    uint8_t dmrRxDelay = data[7U];
+    if (dmrRxDelay > 255U)
+        return RSN_INVALID_DMR_RX_DELAY;
+#endif
+
+    uint16_t nac = (data[8U] << 4) + (data[9U] >> 4);
+
+    m_cwIdTXLevel = data[5U] >> 2; // ??
+
+    uint8_t dmrTXLevel = data[10U];
+    uint8_t p25TXLevel = data[12U];
+
+    io.setDeviations(dmrTXLevel, p25TXLevel);
+
+    uint8_t p25CorrCount = data[11U];
+    if (p25CorrCount > 255U)
+        return RSN_INVALID_P25_CORR_COUNT;
+
+    if (modemState == STATE_DMR_CAL || modemState == STATE_DMR_DMO_CAL_1K || modemState == STATE_RSSI_CAL ||
+        modemState == STATE_INT_CAL) {
+        m_dmrEnable = true;
+        m_modemState = STATE_DMR;
+        m_calState = modemState;
+        if (m_firstCal)
+            io.updateCal();
+        if (modemState == STATE_RSSI_CAL)
+            io.rf1Conf(STATE_DMR, true);
+    } else {
+        m_modemState = modemState;
+        m_calState = STATE_IDLE;
+    }
+
+    m_dmrEnable = dmrEnable;
+    m_p25Enable = p25Enable;
+    m_duplex = !simplex;
+
+#if !defined(DUPLEX)
+    if (m_duplex && m_calState == STATE_IDLE) {
+        DEBUG1("Full duplex not supported with this firmware");
+        return RSN_INVALID_STATE;
+    }
+#elif defined(DUPLEX) && (defined(ZUMSPOT_ADF7021) || defined(LONESTAR_USB) || defined(SKYBRIDGE_HS))
+    if (io.isDualBand() && m_duplex && m_calState == STATE_IDLE) {
+        DEBUG1("Full duplex is not supported on this board");
+        return RSN_INVALID_STATE;
+    }
+#endif
+
+    p25TX.setPreambleCount(fdmaPreamble);
+    dmrDMOTX.setPreambleCount(fdmaPreamble);
+
+    p25RX.setNAC(nac);
+    p25RX.setCorrCount(p25CorrCount);
+
+#if defined(DUPLEX)
+    dmrTX.setColorCode(colorCode);
+    dmrRX.setColorCode(colorCode);
+    dmrRX.setRxDelay(dmrRxDelay);
+    dmrIdleRX.setColorCode(colorCode);
+#endif
+
+    dmrDMORX.setColorCode(colorCode);
+
+    if (!m_firstCal || (modemState != STATE_DMR_CAL && modemState != STATE_DMR_DMO_CAL_1K &&
+        modemState != STATE_RSSI_CAL && modemState != STATE_INT_CAL)) {
+        if(m_dmrEnable)
+            io.rf1Conf(STATE_DMR, true);
+        else if(m_p25Enable)
+            io.rf1Conf(STATE_P25, true);
+    }
+
+    io.start();
+
+    if (modemState == STATE_DMR_CAL || modemState == STATE_DMR_DMO_CAL_1K ||
+        modemState == STATE_RSSI_CAL || modemState == STATE_INT_CAL)
+        m_firstCal = true;
+
+    return RSN_OK;
+}
+
+/// <summary>
+/// Set modem DSP mode from serial port data.
+/// </summary>
+/// <param name="data"></param>
+/// <param name="length"></param>
+/// <returns></returns>
+uint8_t SerialPort::setMode(const uint8_t* data, uint8_t length)
+{
+    if (length < 1U)
+        return RSN_ILLEGAL_LENGTH;
+
+    DVM_STATE modemState = DVM_STATE(data[0U]);
+    DVM_STATE tmpState;
+
+    if (modemState == m_modemState)
+        return RSN_OK;
+
+    uint8_t ret = modemStateCheck(modemState);
+    if (ret != RSN_OK)
+        return ret;
+
+    if (modemState == STATE_DMR_CAL || modemState == STATE_DMR_DMO_CAL_1K ||
+        modemState == STATE_RSSI_CAL || modemState == STATE_INT_CAL) {
+        m_dmrEnable = true;
+        tmpState = STATE_DMR;
+        m_calState = modemState;
+        if (m_firstCal)
+            io.updateCal();
+    } else {
+        tmpState = modemState;
+        m_calState = STATE_IDLE;
+    }
+
+    setMode(tmpState);
+
+    return RSN_OK;
+}
+
+/// <summary>
+/// Sets the modem state.
+/// </summary>
+/// <param name="modemState"></param>
+void SerialPort::setMode(DVM_STATE modemState)
+{
+    switch (modemState) {
+    case STATE_DMR:
+        DEBUG1("SerialPort: setMode(): mode set to DMR");
+        p25RX.reset();
+        cwIdTX.reset();
+        break;
+    case STATE_P25:
+        DEBUG1("SerialPort: setMode(): mode set to P25");
+#if defined(DUPLEX)
+        dmrIdleRX.reset();
+        dmrRX.reset();
+#endif
+        dmrDMORX.reset();
+        cwIdTX.reset();
+        break;
+    case STATE_DMR_CAL:
+        DEBUG1("SerialPort: setMode(): mode set to DMR Calibrate");
+#if defined(DUPLEX)
+        dmrIdleRX.reset();
+        dmrRX.reset();
+#endif
+        dmrDMORX.reset();
+        p25RX.reset();
+        cwIdTX.reset();
+        break;
+    case STATE_P25_CAL:
+        DEBUG1("SerialPort: setMode(): mode set to P25 Calibrate");
+#if defined(DUPLEX)
+        dmrIdleRX.reset();
+        dmrRX.reset();
+#endif
+        dmrDMORX.reset();
+        p25RX.reset();
+        cwIdTX.reset();
+        break;
+    case STATE_P25_LF_CAL:
+        DEBUG1("SerialPort: setMode(): mode set to P25 80Hz Calibrate");
+#if defined(DUPLEX)
+        dmrIdleRX.reset();
+        dmrRX.reset();
+#endif
+        dmrDMORX.reset();
+        p25RX.reset();
+        cwIdTX.reset();
+        break;
+    case STATE_RSSI_CAL:
+        DEBUG1("SerialPort: setMode(): mode set to RSSI Calibrate");
+#if defined(DUPLEX)
+        dmrIdleRX.reset();
+        dmrRX.reset();
+#endif
+        dmrDMORX.reset();
+        p25RX.reset();
+        cwIdTX.reset();
+        break;
+    case STATE_DMR_LF_CAL:
+        DEBUG1("SerialPort: setMode(): mode set to DMR 80Hz Calibrate");
+#if defined(DUPLEX)
+        dmrIdleRX.reset();
+        dmrRX.reset();
+#endif
+        dmrDMORX.reset();
+        dmrRX.reset();
+        p25RX.reset();
+        cwIdTX.reset();
+        break;
+    case STATE_DMR_CAL_1K:
+        DEBUG1("SerialPort: setMode(): mode set to DMR BS 1031Hz Calibrate");
+#if defined(DUPLEX)
+        dmrIdleRX.reset();
+        dmrRX.reset();
+#endif
+        dmrDMORX.reset();
+        p25RX.reset();
+        cwIdTX.reset();
+        break;
+    case STATE_DMR_DMO_CAL_1K:
+        DEBUG1("SerialPort: setMode(): mode set to DMR MS 1031Hz Calibrate");
+#if defined(DUPLEX)
+        dmrIdleRX.reset();
+        dmrRX.reset();
+#endif
+        dmrDMORX.reset();
+        p25RX.reset();
+        cwIdTX.reset();
+        break;
+    case STATE_P25_CAL_1K:
+        DEBUG1("SerialPort: setMode(): mode set to P25 1011Hz Calibrate");
+#if defined(DUPLEX)
+        dmrIdleRX.reset();
+        dmrRX.reset();
+#endif
+        dmrDMORX.reset();
+        p25RX.reset();
+        cwIdTX.reset();
+        break;
+    default:
+        DEBUG1("SerialPort: setMode(): mode set to Idle");
+        // STATE_IDLE
+        break;
+    }
+
+    m_modemState = modemState;
+
+    if ((modemState != STATE_IDLE) && (m_modemStatePrev != modemState)) {
+        DEBUG1("SerialPort: setMode(): setting RF hardware");
+        io.rf1Conf(modemState, true);
+    }
+
+    io.setMode(m_modemState);
+}
+
+/// <summary>
+/// Sets the fine-tune symbol levels.
+/// </summary>
+/// <param name="data"></param>
+/// <param name="length"></param>
+/// <returns></returns>
+uint8_t SerialPort::setSymbolLvlAdj(const uint8_t* data, uint8_t length)
+{
+    if (length < 4U)
+        return RSN_ILLEGAL_LENGTH;
+
+    int8_t dmrSymLvl3Adj = int8_t(data[0U]) - 128;
+    if (dmrSymLvl3Adj > 128)
+        return RSN_INVALID_REQUEST;
+    if (dmrSymLvl3Adj < -128)
+        return RSN_INVALID_REQUEST;
+
+    int8_t dmrSymLvl1Adj = int8_t(data[1U]) - 128;
+    if (dmrSymLvl1Adj > 128)
+        return RSN_INVALID_REQUEST;
+    if (dmrSymLvl1Adj < -128)
+        return RSN_INVALID_REQUEST;
+
+    int8_t p25SymLvl3Adj = int8_t(data[2U]) - 128;
+    if (p25SymLvl3Adj > 128)
+        return RSN_INVALID_REQUEST;
+    if (p25SymLvl3Adj < -128)
+        return RSN_INVALID_REQUEST;
+
+    int8_t p25SymLvl1Adj = int8_t(data[3U]) - 128;
+    if (p25SymLvl1Adj > 128)
+        return RSN_INVALID_REQUEST;
+    if (p25SymLvl1Adj < -128)
+        return RSN_INVALID_REQUEST;
+
+    p25TX.setSymbolLvlAdj(p25SymLvl3Adj, p25SymLvl1Adj);
+
+    dmrDMOTX.setSymbolLvlAdj(dmrSymLvl3Adj, dmrSymLvl1Adj);
+    dmrTX.setSymbolLvlAdj(dmrSymLvl3Adj, dmrSymLvl1Adj);
+
+    return RSN_OK;
+}
+
+/// <summary>
+/// Sets the RF parameters.
+/// </summary>
+/// <param name="data"></param>
+/// <param name="length"></param>
+/// <returns></returns>
+uint8_t SerialPort::setRFParams(const uint8_t* data, uint8_t length)
+{
+    if (length < 10U)
+        return RSN_ILLEGAL_LENGTH;
+
+    uint32_t rxFreq, txFreq;
+    uint8_t rfPower;
+
+    rxFreq = data[1U] << 0;
+    rxFreq |= data[2U] << 8;
+    rxFreq |= data[3U] << 16;
+    rxFreq |= data[4U] << 24;
+
+    txFreq = data[5U] << 0;
+    txFreq |= data[6U] << 8;
+    txFreq |= data[7U] << 16;
+    txFreq |= data[8U] << 24;
+
+    rfPower = data[9U];
+
+    return io.setRFParams(rxFreq, txFreq, rfPower);
+}

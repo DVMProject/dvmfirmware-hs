@@ -187,7 +187,7 @@ zumspot-adf7021-duplex: CXXFLAGS+=-DDUPLEX
 zumspot-adf7021-duplex: zumspot-adf7021
 zumspot-adf7021-usb: CFLAGS+=-DZUMSPOT_ADF7021 -DSTM32_USB_HOST
 zumspot-adf7021-usb: CXXFLAGS+=-DZUMSPOT_ADF7021 -DSTM32_USB_HOST
-zumspot-adf7021-usb: hs
+zumspot-adf7021-usb: bl
 zumspot-adf7021-usb-duplex: CFLAGS+=-DDUPLEX
 zumspot-adf7021-usb-duplex: CXXFLAGS+=-DDUPLEX
 zumspot-adf7021-usb-duplex: zumspot-adf7021-usb
@@ -201,7 +201,7 @@ pihat-7021-r2-duplex: pihat-7021-r2-duplex
 
 lonestar-usb: CFLAGS+=-DLONESTAR_USB -DSTM32_USB_HOST
 lonestar-usb: CXXFLAGS+=-DLONESTAR_USB -DSTM32_USB_HOST
-lonestar-usb: hs
+lonestar-usb: bl
 
 mmdvm-hs-hat: zumspot-adf7021
 mmdvm-hs-hat-dual: zumspot-adf7021-duplex

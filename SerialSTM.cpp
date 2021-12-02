@@ -251,7 +251,8 @@ int SerialPort::availableForWriteInt(uint8_t n)
 #if defined(STM32_USART1_HOST)
         return m_USART1.availableForWrite();
 #elif defined(STM32_USB_HOST)
-        return usbserial.availableForWrite();
+        //return usbserial.availableForWrite();
+        return 1U; // we don't have this -- so fake it
 #endif
     case 3U:
         return m_USART2.availableForWrite();

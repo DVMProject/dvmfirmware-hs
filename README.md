@@ -2,7 +2,7 @@
 
 The DVM firmware provides the embedded microcontroller implementation of a mixed-mode DMR/P25 or dedicated-mode DMR or P25 repeater system. The firmware; is the portion of a complete Over-The-Air modem implementation that uses an ADF7021 to provide a raw RF interface.
 
-This project is a direct fork of the MMDVM (https://github.com/jelimoore/MMDVM_HS) project.
+This project is a direct fork of the MMDVM_HS (https://github.com/juribeparada/MMDVM_HS) project.
 
 ## Building
 

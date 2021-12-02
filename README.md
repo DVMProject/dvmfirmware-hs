@@ -8,7 +8,7 @@ This project is a direct fork of the MMDVM_HS (https://github.com/juribeparada/M
 
 Please see the various Makefile's included in the project for more information. This project includes a few Makefiles to target different hardware. (All following information assumes familiarity with the standard Linux make system.)
 
-* Makefile - This makefile is used for targeting a generic STM32F103/ADF7021 device.
+* Makefile.STM32F1 - This makefile is used for targeting a generic STM32F103 with an ADF7021 RF SoC device.
 
 * For STM32F103 using Ubuntu OS install the standard ARM embedded toolchain (typically arm-gcc-none-eabi).
   1. Create a directory under "/opt" called "tools" and change to the directory:

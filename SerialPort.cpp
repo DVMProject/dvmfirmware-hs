@@ -931,12 +931,12 @@ uint8_t SerialPort::setConfig(const uint8_t* data, uint8_t length)
 #if !defined(DUPLEX)
     if (m_duplex && m_calState == STATE_IDLE) {
         DEBUG1("Full duplex not supported with this firmware");
-        return RSN_INVALID_STATE;
+        return RSN_INVALID_REQUEST;
     }
 #elif defined(DUPLEX) && (defined(ZUMSPOT_ADF7021) || defined(LONESTAR_USB) || defined(SKYBRIDGE_HS))
     if (io.isDualBand() && m_duplex && m_calState == STATE_IDLE) {
         DEBUG1("Full duplex is not supported on this board");
-        return RSN_INVALID_STATE;
+        return RSN_INVALID_REQUEST;
     }
 #endif
 
@@ -1078,7 +1078,6 @@ void SerialPort::setMode(DVM_STATE modemState)
         dmrRX.reset();
 #endif
         dmrDMORX.reset();
-        dmrRX.reset();
         p25RX.reset();
         cwIdTX.reset();
         break;

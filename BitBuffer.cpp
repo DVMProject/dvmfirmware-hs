@@ -98,8 +98,8 @@ bool BitBuffer::put(uint8_t bit, uint8_t control)
         return false;
     }
 
-    WRITE_BIT(m_bits, m_head, bit);
-    WRITE_BIT(m_control, m_head, control);
+    _WRITE_BIT(m_bits, m_head, bit);
+    _WRITE_BIT(m_control, m_head, control);
 
     m_head++;
     if (m_head >= m_length)
@@ -120,8 +120,8 @@ bool BitBuffer::get(uint8_t& bit, uint8_t& control)
     if (m_head == m_tail && !m_full)
         return false;
 
-    bit = READ_BIT(m_bits, m_tail);
-    control = READ_BIT(m_control, m_tail);
+    bit = _READ_BIT(m_bits, m_tail);
+    control = _READ_BIT(m_control, m_tail);
 
     m_full = false;
 

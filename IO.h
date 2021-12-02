@@ -36,7 +36,6 @@
 #include "Defines.h"
 #include "Globals.h"
 #include "BitBuffer.h"
-#include "ADF7021.h"
 
 // ---------------------------------------------------------------------------
 //  Constants
@@ -144,6 +143,32 @@ public:
 
     /// <summary></summary>
     void getIntCounter(uint16_t& int1, uint16_t& int2);
+#if defined(ZUMSPOT_ADF7021) || defined(LONESTAR_USB) || defined(SKYBRIDGE_HS)
+    /// <summary></summary>
+    bool isDualBand();
+#endif
+
+    /// <summary></summary>
+    void SCLK(bool on);
+    /// <summary></summary>
+    void SDATA(bool on);
+    /// <summary></summary>
+    bool SREAD();
+    /// <summary></summary>
+    void SLE1(bool on);
+
+#if defined(DUPLEX)
+    /// <summary></summary>
+    void SLE2(bool on);
+    /// <summary></summary>
+    bool RXD2();
+#endif
+    /// <summary></summary>
+    void CE(bool on);
+    /// <summary></summary>
+    bool RXD1();
+    /// <summary></summary>
+    bool CLK();
 
 private:
     bool m_started;
@@ -168,14 +193,12 @@ private:
 
     /// <summary>Helper to check the frequencies are within band ranges of the ADF7021.</summary>
     void checkBand(uint32_t rxFreq, uint32_t txFreq);
-
+#if defined(ZUMSPOT_ADF7021) || defined(LONESTAR_USB) || defined(SKYBRIDGE_HS)
     /// <summary></summary>
     void setBandVHF(bool enable);
     /// <summary></summary>
     bool hasSingleADF7021();
-    /// <summary></summary>
-    bool isDualBand();
-
+#endif
     /// <summary></summary>
     void configureBand();
 
@@ -196,28 +219,6 @@ private:
     void initInt();
     /// <summary>Starts hardware interrupts.</summary>
     void startInt();
-
-    /// <summary></summary>
-    void SCLK(bool on);
-    /// <summary></summary>
-    void SDATA(bool on);
-    /// <summary></summary>
-    bool SREAD();
-    /// <summary></summary>
-    void SLE1(bool on);
-
-#if defined(DUPLEX)
-    /// <summary></summary>
-    void SLE2(bool on);
-    /// <summary></summary>
-    bool RXD2();
-#endif
-    /// <summary></summary>
-    void CE(bool on);
-    /// <summary></summary>
-    bool RXD1();
-    /// <summary></summary>
-    bool CLK();
 
     /// <summary></summary>
     void setTXDInt(bool on);

@@ -128,7 +128,7 @@ void DMRDMORX::databit(bool bit)
             // Data sync
             uint8_t colorCode;
             uint8_t dataType;
-            CDMRSlotType slotType;
+            DMRSlotType slotType;
             slotType.decode(frame + 1U, colorCode, dataType);
 
             if (colorCode == m_colorCode) {

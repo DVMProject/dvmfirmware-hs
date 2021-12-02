@@ -206,7 +206,7 @@ void P25RX::processBit(bool bit)
             switch (m_duid) {
             case P25_DUID_HDU:
                 {
-                    DEBUG1("P25RX: processBit(): sync found in HDU pos", m_syncPtr);
+                    DEBUG2("P25RX: processBit(): sync found in HDU pos", m_syncPtr);
 
                     uint8_t frame[P25_HDU_FRAME_LENGTH_BYTES + 1U];
                     bitsToBytes(m_startPtr + P25_NID_LENGTH_BITS, P25_HDU_FRAME_LENGTH_BITS, frame);
@@ -218,7 +218,7 @@ void P25RX::processBit(bool bit)
                 break;
             case P25_DUID_TDU:
                 {
-                    DEBUG1("P25RX: processBit(): sync found in TDU pos", m_syncPtr);
+                    DEBUG2("P25RX: processBit(): sync found in TDU pos", m_syncPtr);
                     
                     uint8_t frame[P25_TDU_FRAME_LENGTH_BYTES + 1U];
                     bitsToBytes(m_startPtr + P25_NID_LENGTH_BITS, P25_TDU_FRAME_LENGTH_BITS, frame);
@@ -233,7 +233,7 @@ void P25RX::processBit(bool bit)
                 return;
             case P25_DUID_TSDU:
                 {
-                    DEBUG1("P25RX: processBit(): sync found in TSDU pos", m_syncPtr);
+                    DEBUG2("P25RX: processBit(): sync found in TSDU pos", m_syncPtr);
 
                     uint8_t frame[P25_TSDU_FRAME_LENGTH_BYTES + 1U];
                     bitsToBytes(m_startPtr + P25_NID_LENGTH_BITS, P25_TSDU_FRAME_LENGTH_BITS, frame);
@@ -251,7 +251,7 @@ void P25RX::processBit(bool bit)
                 return;
             case P25_DUID_TDULC:
                 {
-                    DEBUG1("P25RX: processBit(): sync found in TDULC pos", m_syncPtr);
+                    DEBUG2("P25RX: processBit(): sync found in TDULC pos", m_syncPtr);
             
                     uint8_t frame[P25_TDULC_FRAME_LENGTH_BYTES + 1U];
                     bitsToBytes(m_startPtr + P25_NID_LENGTH_BITS, P25_TDULC_FRAME_LENGTH_BITS, frame);
@@ -339,7 +339,7 @@ void P25RX::processVoice(bool bit)
             }
             else {
                 if (m_duid == P25_DUID_TDU) {
-                    DEBUG1("P25RX: processBit(): sync found in TDU pos", m_syncPtr);
+                    DEBUG2("P25RX: processBit(): sync found in TDU pos", m_syncPtr);
 
                     uint8_t frame[P25_TDU_FRAME_LENGTH_BYTES + 1U];
                     bitsToBytes(m_startPtr + P25_NID_LENGTH_BITS, P25_TDU_FRAME_LENGTH_BITS, frame);
@@ -353,7 +353,7 @@ void P25RX::processVoice(bool bit)
                     return;
                 }
 
-                DEBUG1("P25RX: processVoice(): sync found in LDU pos", m_syncPtr);
+                DEBUG2("P25RX: processVoice(): sync found in LDU pos", m_syncPtr);
 
                 uint8_t frame[P25_LDU_FRAME_LENGTH_BYTES + 3U];
                 bitsToBytes(m_startPtr + P25_NID_LENGTH_BITS, P25_LDU_FRAME_LENGTH_BITS, frame);
@@ -426,7 +426,7 @@ void P25RX::processData(bool bit)
                 reset();
             }
             else {
-                DEBUG1("P25RX: processVoice(): sync found in PDU pos", m_syncPtr);
+                DEBUG2("P25RX: processData(): sync found in PDU pos", m_syncPtr);
 
                 uint8_t frame[P25_LDU_FRAME_LENGTH_BYTES + 3U];
                 bitsToBytes(m_startPtr + P25_NID_LENGTH_BITS, P25_LDU_FRAME_LENGTH_BITS, frame);

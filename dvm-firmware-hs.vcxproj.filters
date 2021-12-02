@@ -171,4 +171,8 @@
       <Filter>Source Files\p25</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Makefile" />
+    <None Include="Makefile.STM32FX" />
+  </ItemGroup>
 </Project>

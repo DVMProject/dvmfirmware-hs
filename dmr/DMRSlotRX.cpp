@@ -55,8 +55,6 @@ const uint8_t CONTROL_NONE = 0x00U;
 const uint8_t CONTROL_VOICE = 0x20U;
 const uint8_t CONTROL_DATA = 0x40U;
 
-const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02U, 0x01U};
-
 // ---------------------------------------------------------------------------
 //  Public Class Members
 // ---------------------------------------------------------------------------

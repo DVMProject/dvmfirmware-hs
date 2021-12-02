@@ -39,6 +39,7 @@
 // ---------------------------------------------------------------------------
 
 class DSP_FW_API CalRSSI {
+public:
     /// <summary>Initializes a new instance of the CalRSSI class.</summary>
     CalRSSI();
 

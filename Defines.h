@@ -33,7 +33,6 @@
 #define __DEFINES_H__
 
 #include <stdint.h>
-#include <arm_math.h>
 
 // ---------------------------------------------------------------------------
 //  Types
@@ -109,7 +108,7 @@ typedef unsigned long long  ulong64_t;
 #define BIDIR_DATA_PIN
 
 // Enable full duplex support with dual ADF7021 (valid for homebrew hotspots only)
-#define DUPLEX
+// #define DUPLEX
 
 // TCXO of the ADF7021
 // For 14.7456 MHz:
@@ -137,6 +136,8 @@ typedef unsigned long long  ulong64_t;
 // #define LONG_USB_RESET
 
 const uint8_t BIT_MASK_TABLE[] = { 0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02U, 0x01U };
+
+#define CPU_TYPE_STM32 0x02U
 
 // ---------------------------------------------------------------------------
 //  Macros

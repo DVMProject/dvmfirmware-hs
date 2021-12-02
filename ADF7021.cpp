@@ -35,6 +35,8 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 #include <math.h>
+
+#include "Globals.h"
 #include "ADF7021.h"
 
 #if defined(ENABLE_ADF7021)
@@ -94,9 +96,9 @@ static void AD7021_IOCTL_Shift()
 /// </summary>
 static void AD7021_IOCTL_SLEPulse()
 {
-    io.SLE(HIGH);
+    io.SLE1(HIGH);
     io.delayBit();
-    io.SLE(LOW);
+    io.SLE1(LOW);
 }
 
 /// <summary>

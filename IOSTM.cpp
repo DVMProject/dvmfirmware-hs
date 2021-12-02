@@ -336,11 +336,127 @@ static inline void delay_ns()
 //  Public Class Members
 // ---------------------------------------------------------------------------
 /// <summary>
+/// Gets the CPU type the firmware is running on.
+/// </summary>
+/// <returns></returns>
+uint8_t IO::getCPU() const
+{
+    return CPU_TYPE_STM32;
+}
+
+/// <summary>
+/// Gets the unique identifier for the air interface.
+/// </summary>
+/// <returns></returns>
+void IO::getUDID(uint8_t* buffer)
+{
+    ::memcpy(buffer, (void*)STM32_UUID, 12U);
+}
+
+/// <summary>
 /// 
 /// </summary>
 void IO::delayBit()
 {
     delay_ns();
+}
+
+#if defined(ZUMSPOT_ADF7021) || defined(LONESTAR_USB) || defined(SKYBRIDGE_HS)
+/// <summary>
+/// 
+/// </summary>
+/// <returns></returns>
+bool IO::isDualBand()
+{
+    return GPIO_ReadInputDataBit(PORT_DL_DPX, PIN_DL_DPX) == Bit_SET;
+}
+#endif
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="on"></param>
+void IO::SCLK(bool on)
+{
+    GPIO_WriteBit(PORT_SCLK, PIN_SCLK, on ? Bit_SET : Bit_RESET);
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="on"></param>
+void IO::SDATA(bool on)
+{
+    GPIO_WriteBit(PORT_SDATA, PIN_SDATA, on ? Bit_SET : Bit_RESET);
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <returns></returns>
+bool IO::SREAD()
+{
+    return GPIO_ReadInputDataBit(PORT_SREAD, PIN_SREAD) == Bit_SET;
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="on"></param>
+void IO::SLE1(bool on)
+{
+    GPIO_WriteBit(PORT_SLE, PIN_SLE, on ? Bit_SET : Bit_RESET);
+}
+
+#if defined(DUPLEX)
+/// <summary>
+/// 
+/// </summary>
+/// <param name="on"></param>
+void IO::SLE2(bool on)
+{
+    GPIO_WriteBit(PORT_SLE2, PIN_SLE2, on ? Bit_SET : Bit_RESET);
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <returns></returns>
+bool IO::RXD2()
+{
+    return GPIO_ReadInputDataBit(PORT_RXD2, PIN_RXD2) == Bit_SET;
+}
+#endif
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="on"></param>
+void IO::CE(bool on)
+{
+    GPIO_WriteBit(PORT_CE, PIN_CE, on ? Bit_SET : Bit_RESET);
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <returns></returns>
+bool IO::RXD1()
+{
+    return GPIO_ReadInputDataBit(PORT_RXD, PIN_RXD) == Bit_SET;
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <returns></returns>
+bool IO::CLK()
+{
+#if defined(BIDIR_DATA_PIN)
+    return GPIO_ReadInputDataBit(PORT_TXD, PIN_TXD) == Bit_SET;
+#else
+    return GPIO_ReadInputDataBit(PORT_CLKOUT, PIN_CLKOUT) == Bit_SET;
+#endif
 }
 
 // ---------------------------------------------------------------------------
@@ -353,7 +469,7 @@ void IO::delayBit()
 /// <param name="enable"></param>
 void IO::setBandVHF(bool enable)
 {
-    GPIO_WriteBit(PORT_SET_BAND, PIN_SET_BAND, vhf_on ? Bit_SET : Bit_RESET);
+    GPIO_WriteBit(PORT_SET_BAND, PIN_SET_BAND, enable ? Bit_SET : Bit_RESET);
 }
 
 /// <summary>
@@ -363,15 +479,6 @@ void IO::setBandVHF(bool enable)
 bool IO::hasSingleADF7021()
 {
     return GPIO_ReadInputDataBit(PORT_SGL_DBL, PIN_SGL_DBL) == Bit_SET;
-}
-
-/// <summary>
-/// 
-/// </summary>
-/// <returns></returns>
-bool IO::isDualBand()
-{
-    return GPIO_ReadInputDataBit(PORT_DL_DPX, PIN_DL_DPX) == Bit_SET;
 }
 #endif
 
@@ -700,93 +807,6 @@ void IO::setDataDirOut(bool dir)
     GPIO_Init(PORT_RXD, &GPIO_InitStruct);
 }
 #endif
-
-/// <summary>
-/// 
-/// </summary>
-/// <param name="on"></param>
-void IO::SCLK(bool on)
-{
-    GPIO_WriteBit(PORT_SCLK, PIN_SCLK, on ? Bit_SET : Bit_RESET);
-}
-
-/// <summary>
-/// 
-/// </summary>
-/// <param name="on"></param>
-void IO::SDATA(bool on)
-{
-    GPIO_WriteBit(PORT_SDATA, PIN_SDATA, on ? Bit_SET : Bit_RESET);
-}
-
-/// <summary>
-/// 
-/// </summary>
-/// <returns></returns>
-bool IO::SREAD()
-{
-    return GPIO_ReadInputDataBit(PORT_SREAD, PIN_SREAD) == Bit_SET;
-}
-
-/// <summary>
-/// 
-/// </summary>
-/// <param name="on"></param>
-void IO::SLE1(bool on)
-{
-    GPIO_WriteBit(PORT_SLE, PIN_SLE, on ? Bit_SET : Bit_RESET);
-}
-
-#if defined(DUPLEX)
-/// <summary>
-/// 
-/// </summary>
-/// <param name="on"></param>
-void IO::SLE2(bool on)
-{
-    GPIO_WriteBit(PORT_SLE2, PIN_SLE2, on ? Bit_SET : Bit_RESET);
-}
-
-/// <summary>
-/// 
-/// </summary>
-/// <returns></returns>
-bool IO::RXD2()
-{
-    return GPIO_ReadInputDataBit(PORT_RXD2, PIN_RXD2) == Bit_SET;
-}
-#endif
-
-/// <summary>
-/// 
-/// </summary>
-/// <param name="on"></param>
-void IO::CE(bool on)
-{
-    GPIO_WriteBit(PORT_CE, PIN_CE, on ? Bit_SET : Bit_RESET);
-}
-
-/// <summary>
-/// 
-/// </summary>
-/// <returns></returns>
-bool IO::RXD1()
-{
-    return GPIO_ReadInputDataBit(PORT_RXD, PIN_RXD) == Bit_SET;
-}
-
-/// <summary>
-/// 
-/// </summary>
-/// <returns></returns>
-bool IO::CLK()
-{
-#if defined(BIDIR_DATA_PIN)
-    return GPIO_ReadInputDataBit(PORT_TXD, PIN_TXD) == Bit_SET;
-#else
-    return GPIO_ReadInputDataBit(PORT_CLKOUT, PIN_CLKOUT) == Bit_SET;
-#endif
-}
 
 #if defined(BIDIR_DATA_PIN)
 /// <summary>

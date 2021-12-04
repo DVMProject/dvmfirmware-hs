@@ -309,16 +309,6 @@ void DMRTX::setColorCode(uint8_t colorCode)
 }
 
 /// <summary>
-/// Sets the fine adjust 4FSK symbol levels.
-/// </summary>
-/// <param name="level3Adj">+3/-3 symbol adjust.</param>
-/// <param name="level1Adj">+1/-1 symbol adjust.</param>
-void DMRTX::setSymbolLvlAdj(int8_t level3Adj, int8_t level1Adj)
-{
-    /* ignored ADF7021 doesn't allow direct symbol level adjustments */
-}
-
-/// <summary>
 /// Helper to reset data values to defaults for slot 1 FIFO.
 /// </summary>
 void DMRTX::resetFifo1()

@@ -164,16 +164,6 @@ void P25TX::setPreambleCount(uint8_t preambleCnt)
 }
 
 /// <summary>
-/// Sets the fine adjust 4FSK symbol levels.
-/// </summary>
-/// <param name="level3Adj">+3/-3 symbol adjust.</param>
-/// <param name="level1Adj">+1/-1 symbol adjust.</param>
-void P25TX::setSymbolLvlAdj(int8_t level3Adj, int8_t level1Adj)
-{
-    /* ignored ADF7021 doesn't allow direct symbol level adjustments */
-}
-
-/// <summary>
 /// Helper to set the calibration state for Tx.
 /// </summary>
 /// <param name="start"></param>

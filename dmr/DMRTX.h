@@ -86,8 +86,6 @@ namespace dmr
 
         /// <summary>Sets the DMR color code.</summary>
         void setColorCode(uint8_t colorCode);
-        /// <summary>Sets the fine adjust 4FSK symbol levels.</summary>
-        void setSymbolLvlAdj(int8_t level3Adj, int8_t level1Adj);
 
         /// <summary>Helper to reset data values to defaults for slot 1 FIFO.</summary>
         void resetFifo1();

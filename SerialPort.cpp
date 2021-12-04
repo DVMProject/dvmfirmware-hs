@@ -177,15 +177,11 @@ void SerialPort::process()
                     break;
 
                 case CMD_SET_SYMLVLADJ:
-                    err = setSymbolLvlAdj(m_buffer + 3U, m_len - 3U);
-                    if (err == RSN_OK)
-                        sendACK();
-                    else
-                        sendNAK(err);
+                    sendACK(); // CMD_SET_RXLEVEL not supported by HS
                     break;
 
                 case CMD_SET_RXLEVEL:
-                    sendNAK(RSN_INVALID_REQUEST); // CMD_SET_RXLEVEL not supported by HS
+                    sendACK(); // CMD_SET_RXLEVEL not supported by HS
                     break;
 
                 case CMD_SET_RFPARAMS:
@@ -200,10 +196,8 @@ void SerialPort::process()
                     if (m_modemState == STATE_DMR_DMO_CAL_1K || m_modemState == STATE_DMR_CAL_1K ||
                         m_modemState == STATE_DMR_LF_CAL || m_modemState == STATE_DMR_CAL)
                         err = calDMR.write(m_buffer + 3U, m_len - 3U);
-/*
                     if (m_modemState == STATE_P25_CAL_1K || m_modemState == STATE_P25_LF_CAL || m_modemState == STATE_P25_CAL)
                         err = calP25.write(m_buffer + 3U, m_len - 3U);
-*/
                     if (err == RSN_OK) {
                         sendACK();
                     }
@@ -756,7 +750,7 @@ void SerialPort::getStatus()
     reply[1U] = 11U;
     reply[2U] = CMD_GET_STATUS;
 
-    reply[3U]  = 0x00U;
+    reply[3U] = 0x01U;
     if (m_dmrEnable)
         reply[3U] |= 0x02U;
     if (m_p25Enable)
@@ -823,7 +817,7 @@ void SerialPort::getVersion()
     ::memcpy(reply + 5U, 0x00U, 16U);
     io.getUDID(reply + 5U);
 
-    uint8_t count = 4U;
+    uint8_t count = 21U;
     for (uint8_t i = 0U; HARDWARE[i] != 0x00U; i++, count++)
         reply[count] = HARDWARE[i];
 
@@ -1128,49 +1122,6 @@ void SerialPort::setMode(DVM_STATE modemState)
 }
 
 /// <summary>
-/// Sets the fine-tune symbol levels.
-/// </summary>
-/// <param name="data"></param>
-/// <param name="length"></param>
-/// <returns></returns>
-uint8_t SerialPort::setSymbolLvlAdj(const uint8_t* data, uint8_t length)
-{
-    if (length < 4U)
-        return RSN_ILLEGAL_LENGTH;
-
-    int8_t dmrSymLvl3Adj = int8_t(data[0U]) - 128;
-    if (dmrSymLvl3Adj > 128)
-        return RSN_INVALID_REQUEST;
-    if (dmrSymLvl3Adj < -128)
-        return RSN_INVALID_REQUEST;
-
-    int8_t dmrSymLvl1Adj = int8_t(data[1U]) - 128;
-    if (dmrSymLvl1Adj > 128)
-        return RSN_INVALID_REQUEST;
-    if (dmrSymLvl1Adj < -128)
-        return RSN_INVALID_REQUEST;
-
-    int8_t p25SymLvl3Adj = int8_t(data[2U]) - 128;
-    if (p25SymLvl3Adj > 128)
-        return RSN_INVALID_REQUEST;
-    if (p25SymLvl3Adj < -128)
-        return RSN_INVALID_REQUEST;
-
-    int8_t p25SymLvl1Adj = int8_t(data[3U]) - 128;
-    if (p25SymLvl1Adj > 128)
-        return RSN_INVALID_REQUEST;
-    if (p25SymLvl1Adj < -128)
-        return RSN_INVALID_REQUEST;
-
-    p25TX.setSymbolLvlAdj(p25SymLvl3Adj, p25SymLvl1Adj);
-
-    dmrDMOTX.setSymbolLvlAdj(dmrSymLvl3Adj, dmrSymLvl1Adj);
-    dmrTX.setSymbolLvlAdj(dmrSymLvl3Adj, dmrSymLvl1Adj);
-
-    return RSN_OK;
-}
-
-/// <summary>
 /// Sets the RF parameters.
 /// </summary>
 /// <param name="data"></param>
@@ -1178,7 +1129,7 @@ uint8_t SerialPort::setSymbolLvlAdj(const uint8_t* data, uint8_t length)
 /// <returns></returns>
 uint8_t SerialPort::setRFParams(const uint8_t* data, uint8_t length)
 {
-    if (length < 10U)
+    if (length < 14U)
         return RSN_ILLEGAL_LENGTH;
 
     uint32_t rxFreq, txFreq;
@@ -1195,6 +1146,32 @@ uint8_t SerialPort::setRFParams(const uint8_t* data, uint8_t length)
     txFreq |= data[8U] << 24;
 
     rfPower = data[9U];
+
+    int8_t dmrDiscBWAdj = int8_t(data[10U]) - 128;
+    if (dmrDiscBWAdj > 128)
+        return RSN_INVALID_REQUEST;
+    if (dmrDiscBWAdj < -128)
+        return RSN_INVALID_REQUEST;
+
+    int8_t p25DiscBWAdj = int8_t(data[11U]) - 128;
+    if (p25DiscBWAdj > 128)
+        return RSN_INVALID_REQUEST;
+    if (p25DiscBWAdj < -128)
+        return RSN_INVALID_REQUEST;
+
+    int8_t dmrPostBWAdj = int8_t(data[12U]) - 128;
+    if (dmrPostBWAdj > 128)
+        return RSN_INVALID_REQUEST;
+    if (dmrPostBWAdj < -128)
+        return RSN_INVALID_REQUEST;
+
+    int8_t p25PostBWAdj = int8_t(data[13U]) - 128;
+    if (p25PostBWAdj > 128)
+        return RSN_INVALID_REQUEST;
+    if (p25PostBWAdj < -128)
+        return RSN_INVALID_REQUEST;
+
+    io.setRFAdjust(dmrDiscBWAdj, p25DiscBWAdj, dmrPostBWAdj, p25PostBWAdj);
 
     return io.setRFParams(rxFreq, txFreq, rfPower);
 }

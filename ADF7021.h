@@ -84,10 +84,13 @@
 #define ADF_BIT_READ(value, bit) (((value) >> (bit)) & 0x01)
 
 #if defined(ADF7021_DISABLE_RC_4FSK)
-#define ADF7021_EVEN_BIT  true
+#define ADF7021_EVEN_BIT        true
 #else
-#define ADF7021_EVEN_BIT  false
+#define ADF7021_EVEN_BIT        false
 #endif // ADF7021_DISABLE_RC_4FSK
+
+#define ADF7021_DISC_BW_MAX     660
+#define ADF7021_POST_BW_MAX     1023
 
 /*
     - Most of the registers values are obteined from ADI eval software:
@@ -105,21 +108,6 @@
 // Transmit the carrier frequency:
 // #define TEST_TX
 
-/*********************/
-
-// Disable TX Raised Cosine filter for 4FSK modulation in ADF7021:
-// #define ADF7021_DISABLE_RC_4FSK
-
-// Support for ADF7021-N version: 
-// #define ADF7021_N_VER
-
-// Enable AFC support for DMR, YSF, P25, and M17 (experimental):
-// (AFC is already enabled by default in D-Star)
-// #define ADF7021_ENABLE_4FSK_AFC
-
-// Configure AFC with positive initial frequency offset:
-// #define ADF7021_AFC_POS
-
 /** Support for 14.7456 MHz TCXO (modified RF7021SE boards) */
 #if defined(ADF7021_14_7456)
 
@@ -133,12 +121,20 @@
 */
 #define ADF7021_REG1_VHF        0x02175041  /** 136 - 174mhz */
 #define ADF7021_REG1_VHF_220    0x021B5041  /** 219 - 225mhz */
+#if defined(FORCE_UHF_INTERAL_L)
+#define ADF7021_REG1_UHF_380    0x001B5041  /** 380 - 431mhz */
+#else
 #define ADF7021_REG1_UHF_380    0x021B5041  /** 380 - 431mhz */ // this could be problematic due to
                                                                 // the external VCO control
+#endif // FORCE_UHF_INTERAL_L
 #define ADF7021_REG1_UHF_1      0x00575041  /** 431 - 450mhz */
 #define ADF7021_REG1_UHF_2      0x01D75041  /** 450 - 470mhz */
+#if defined(FORCE_UHF_INTERAL_L)
+#define ADF7021_REG1_UHF_T      0x00235041  /** 470 - 520mhz */
+#else
 #define ADF7021_REG1_UHF_T      0x02235041  /** 470 - 520mhz */ // this could be problematic due to
                                                                 // the external VCO control
+#endif // FORCE_UHF_INTERAL_L
 #define ADF7021_REG1_800        0x00535041  /** 842 - 900mhz */
 #define ADF7021_REG1_900        0x01D35041  /** 900 - 950mhz */
 
@@ -234,12 +230,20 @@
 */
 #define ADF7021_REG1_VHF        0x02175021  /** 136 - 174mhz */
 #define ADF7021_REG1_VHF_220    0x021B5021  /** 219 - 225mhz */
+#if defined(FORCE_UHF_INTERAL_L)
+#define ADF7021_REG1_UHF_380    0x001B5021  /** 380 - 431mhz */
+#else
 #define ADF7021_REG1_UHF_380    0x021B5021  /** 380 - 431mhz */ // this could be problematic due to
-// the external VCO control
+                                                                // the external VCO control
+#endif // FORCE_UHF_INTERAL_L
 #define ADF7021_REG1_UHF_1      0x00575021  /** 431 - 450mhz */
 #define ADF7021_REG1_UHF_2      0x01D75021  /** 450 - 470mhz */
+#if defined(FORCE_UHF_INTERAL_L)
+#define ADF7021_REG1_UHF_T      0x00235021  /** 470 - 520mhz */
+#else
 #define ADF7021_REG1_UHF_T      0x02235021  /** 470 - 520mhz */ // this could be problematic due to
                                                                 // the external VCO control
+#endif // FORCE_UHF_INTERAL_L
 #define ADF7021_REG1_800        0x00535021  /** 842 - 900mhz */
 #define ADF7021_REG1_900        0x01D35021  /** 900 - 950mhz */
 

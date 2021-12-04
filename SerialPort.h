@@ -197,8 +197,6 @@ private:
     uint8_t setMode(const uint8_t* data, uint8_t length);
     /// <summary>Sets the modem state.</summary>
     void setMode(DVM_STATE modemState);
-    /// <summary>Sets the fine-tune symbol levels.</summary>
-    uint8_t setSymbolLvlAdj(const uint8_t* data, uint8_t length);
     /// <summary>Sets the RF parameters.</summary>
     uint8_t setRFParams(const uint8_t* data, uint8_t length);
 

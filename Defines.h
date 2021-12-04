@@ -126,6 +126,22 @@ typedef unsigned long long  ulong64_t;
 // AGC OFF, highest gain
 // #define AD7021_GAIN_HIGH
 
+// Disable TX Raised Cosine filter for 4FSK modulation in ADF7021
+// #define ADF7021_DISABLE_RC_4FSK
+
+// Support for ADF7021-N version: 
+// #define ADF7021_N_VER
+
+// Enable AFC support for DMR, YSF, P25, and M17 (experimental)
+// (AFC is already enabled by default in D-Star)
+// #define ADF7021_ENABLE_4FSK_AFC
+
+// Configure AFC with positive initial frequency offset
+// #define ADF7021_AFC_POS
+
+// Force the internal L (internal VCO inductor) for UHF 380 and T-band
+#define FORCE_UHF_INTERAL_L
+
 // Enable mode detection
 #define ENABLE_SCAN_MODE
 

@@ -154,16 +154,6 @@ void DMRDMOTX::setPreambleCount(uint8_t preambleCnt)
 }
 
 /// <summary>
-/// Sets the fine adjust 4FSK symbol levels.
-/// </summary>
-/// <param name="level3Adj">+3/-3 symbol adjust.</param>
-/// <param name="level1Adj">+1/-1 symbol adjust.</param>
-void DMRDMOTX::setSymbolLvlAdj(int8_t level3Adj, int8_t level1Adj)
-{
-    /* ignored ADF7021 doesn't allow direct symbol level adjustments */
-}
-
-/// <summary>
 /// Helper to get how much space the ring buffer has for samples.
 /// </summary>
 /// <returns></returns>

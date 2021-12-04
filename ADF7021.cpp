@@ -11,29 +11,29 @@
 // Licensed under the GPLv2 License (https://opensource.org/licenses/GPL-2.0)
 //
 /*
- *   Copyright (C) 2020,2021 by Jonathan Naylor G4KLX
- *   Copyright (C) 2016 by Jim McLaughlin KI6ZUM
- *   Copyright (C) 2016,2017,2018,2019,2020 by Andy Uribe CA6JAU
- *   Copyright (C) 2017 by Danilo DB4PLE
- *   Copyright (C) 2021 Bryan Biedenkapp N2PLL
- *
- *   Some of the code is based on work of Guus Van Dooren PE1PLM:
- *   https://github.com/ki6zum/gmsk-dstar/blob/master/firmware/dvmega/dvmega.ino
- *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU General Public License for more details.
- *
- *   You should have received a copy of the GNU General Public License
- *   along with this program; if not, write to the Free Software
- *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
+*   Copyright (C) 2020,2021 by Jonathan Naylor G4KLX
+*   Copyright (C) 2016 by Jim McLaughlin KI6ZUM
+*   Copyright (C) 2016,2017,2018,2019,2020 by Andy Uribe CA6JAU
+*   Copyright (C) 2017 by Danilo DB4PLE
+*   Copyright (C) 2021 Bryan Biedenkapp N2PLL
+*
+*   Some of the code is based on work of Guus Van Dooren PE1PLM:
+*   https://github.com/ki6zum/gmsk-dstar/blob/master/firmware/dvmega/dvmega.ino
+*
+*   This program is free software; you can redistribute it and/or modify
+*   it under the terms of the GNU General Public License as published by
+*   the Free Software Foundation; either version 2 of the License, or
+*   (at your option) any later version.
+*
+*   This program is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*   GNU General Public License for more details.
+*
+*   You should have received a copy of the GNU General Public License
+*   along with this program; if not, write to the Free Software
+*   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
 #include <math.h>
 
 #include "Globals.h"
@@ -63,8 +63,13 @@ uint16_t RX_F_Divider;  // Rx - 15-bit Frational_N
 uint8_t TX_N_Divider;   // Tx - 8-bit Integer_N
 uint16_t TX_F_Divider;  // Tx - 15-bit Frational_N
 
-uint16_t m_dmrDev;
-uint16_t m_p25Dev;
+uint16_t dmrDev;
+uint16_t p25Dev;
+
+int8_t m_dmrDiscBWAdj;
+int8_t m_p25DiscBWAdj;
+int8_t m_dmrPostBWAdj;
+int8_t m_p25PostBWAdj;
 
 // ---------------------------------------------------------------------------
 //  Global Functions
@@ -376,162 +381,218 @@ void IO::rf1Conf(DVM_STATE modemState, bool reset)
 
     switch (modemState) {
     case STATE_CW: // 4FSK
-        // Dev: +1 symb (variable), symb rate = 4800
+        {
+            // Dev: +1 symb (variable), symb rate = 4800
 
-        /*
-        ** Tx/Rx Clock (Register 3) & AFC (Register 10)
-        */
-        ADF7021_REG3 = ADF7021_REG3_DMR;
-        ADF7021_REG10 = ADF7021_REG10_DMR;
+            /*
+            ** Tx/Rx Clock (Register 3) & AFC (Register 10)
+            */
+            ADF7021_REG3 = ADF7021_REG3_DMR;
+            ADF7021_REG10 = ADF7021_REG10_DMR;
 
-        /*
-        ** Demodulator Setup (Register 4)
-        */
-        // K=32
-        ADF7021_REG4 = (uint32_t)0b0100 << 0;           // register 4
-        ADF7021_REG4 |= (uint32_t)0b011 << 4;           // mode, 4FSK
-        ADF7021_REG4 |= (uint32_t)0b0 << 7;             // cross product
-        ADF7021_REG4 |= (uint32_t)0b11 << 8;            // invert clk/data
-        ADF7021_REG4 |= (uint32_t)ADF7021_DISC_BW_DMR << 10; // discriminator BW
-        ADF7021_REG4 |= (uint32_t)ADF7021_POST_BW_DMR << 20; // post demod BW
-        ADF7021_REG4 |= (uint32_t)0b10 << 30;           // IF filter (25 kHz)
+            /*
+            ** Demodulator Setup (Register 4)
+            */
+            uint16_t discBW = ADF7021_DISC_BW_DMR;
+            if (discBW + m_dmrDiscBWAdj < 0U)
+                discBW = 0U;
+            else
+                discBW = ADF7021_DISC_BW_DMR + m_dmrDiscBWAdj;
+            if (discBW > ADF7021_DISC_BW_MAX)
+                discBW = ADF7021_DISC_BW_MAX;
 
-        /*
-        ** 3FSK/4FSK Demod (Register 13)
-        */
-        ADF7021_REG13 = (uint32_t)0b1101 << 0;          // register 13
-        ADF7021_REG13 |= (uint32_t)ADF7021_SLICER_TH_DMR << 4; // slicer threshold
+            uint16_t postBW = ADF7021_POST_BW_DMR;
+            if (postBW + m_dmrPostBWAdj < 0)
+                postBW = 0U;
+            else
+                postBW = ADF7021_POST_BW_DMR + m_dmrPostBWAdj;
+            if (postBW > ADF7021_POST_BW_MAX)
+                postBW = ADF7021_POST_BW_MAX;
 
-        /*
-        ** Transmit Modulation (Register 2)
-        */
-        ADF7021_REG2 = (uint32_t)0b0010;                // register 2
-        ADF7021_REG2 |= (uint32_t)m_rfPower << 13;      // power level
-        ADF7021_REG2 |= (uint32_t)0b110001 << 7;        // PA
-        ADF7021_REG2 |= (uint32_t)0b10 << 28;           // invert data (and RC alpha = 0.5)
-        ADF7021_REG2 |= (uint32_t)(m_cwIdTXLevel / div2) << 19; // deviation
-        ADF7021_REG2 |= (uint32_t)0b111 << 4;           // modulation (RC 4FSK)
+            // K=32
+            ADF7021_REG4 = (uint32_t)0b0100 << 0;           // register 4
+            ADF7021_REG4 |= (uint32_t)0b011 << 4;           // mode, 4FSK
+            ADF7021_REG4 |= (uint32_t)0b0 << 7;             // cross product
+            ADF7021_REG4 |= (uint32_t)0b11 << 8;            // invert clk/data
+            ADF7021_REG4 |= (uint32_t)(discBW & 0x3FFU) << 10; // discriminator BW
+            ADF7021_REG4 |= (uint32_t)(postBW & 0xFFFU) << 20; // post demod BW
+            ADF7021_REG4 |= (uint32_t)0b10 << 30;           // IF filter (25 kHz)
+
+            /*
+            ** 3FSK/4FSK Demod (Register 13)
+            */
+            ADF7021_REG13 = (uint32_t)0b1101 << 0;          // register 13
+            ADF7021_REG13 |= (uint32_t)ADF7021_SLICER_TH_DMR << 4; // slicer threshold
+
+            /*
+            ** Transmit Modulation (Register 2)
+            */
+            ADF7021_REG2 = (uint32_t)0b0010;                // register 2
+            ADF7021_REG2 |= (uint32_t)m_rfPower << 13;      // power level
+            ADF7021_REG2 |= (uint32_t)0b110001 << 7;        // PA
+            ADF7021_REG2 |= (uint32_t)0b10 << 28;           // invert data (and RC alpha = 0.5)
+            ADF7021_REG2 |= (uint32_t)(m_cwIdTXLevel / div2) << 19; // deviation
+            ADF7021_REG2 |= (uint32_t)0b111 << 4;           // modulation (RC 4FSK)
+        }
         break;
 
     case STATE_DMR: // 4FSK
-        // Dev: +1 symb 648 Hz, symb rate = 4800
+        {
+            // Dev: +1 symb 648 Hz, symb rate = 4800
 
-        /*
-        ** Tx/Rx Clock (Register 3) & AFC (Register 10)
-        */
-        ADF7021_REG3 = ADF7021_REG3_DMR;
-        ADF7021_REG10 = ADF7021_REG10_DMR;
+            /*
+            ** Tx/Rx Clock (Register 3) & AFC (Register 10)
+            */
+            ADF7021_REG3 = ADF7021_REG3_DMR;
+            ADF7021_REG10 = ADF7021_REG10_DMR;
 
-        /*
-        ** Demodulator Setup (Register 4)
-        */
-        // K=32
-        ADF7021_REG4 = (uint32_t)0b0100 << 0;           // register 4
-        ADF7021_REG4 |= (uint32_t)0b011 << 4;           // mode, 4FSK
-        ADF7021_REG4 |= (uint32_t)0b0 << 7;             // cross product
-        ADF7021_REG4 |= (uint32_t)0b11 << 8;            // invert clk/data
-        ADF7021_REG4 |= (uint32_t)ADF7021_DISC_BW_DMR << 10; // discriminator BW
-        ADF7021_REG4 |= (uint32_t)ADF7021_POST_BW_DMR << 20; // post demod BW
-        ADF7021_REG4 |= (uint32_t)0b10 << 30;           // IF filter (25 kHz)
+            /*
+            ** Demodulator Setup (Register 4)
+            */
+            uint16_t discBW = ADF7021_DISC_BW_DMR;
+            if (discBW + m_dmrDiscBWAdj < 0U)
+                discBW = 0U;
+            else
+                discBW = ADF7021_DISC_BW_DMR + m_dmrDiscBWAdj;
+            if (discBW > ADF7021_DISC_BW_MAX)
+                discBW = ADF7021_DISC_BW_MAX;
 
-        /*
-        ** 3FSK/4FSK Demod (Register 13)
-        */
-        ADF7021_REG13 = (uint32_t)0b1101 << 0;          // register 13
-        ADF7021_REG13 |= (uint32_t)ADF7021_SLICER_TH_DMR << 4; // slicer threshold
+            uint16_t postBW = ADF7021_POST_BW_DMR;
+            if (postBW + m_dmrPostBWAdj < 0)
+                postBW = 0U;
+            else
+                postBW = ADF7021_POST_BW_DMR + m_dmrPostBWAdj;
+            if (postBW > ADF7021_POST_BW_MAX)
+                postBW = ADF7021_POST_BW_MAX;
 
-        /*
-        ** Transmit Modulation (Register 2)
-        */
-        ADF7021_REG2 = (uint32_t)0b0010;                // register 2
-        ADF7021_REG2 |= (uint32_t)m_rfPower << 13;      // power level
-        ADF7021_REG2 |= (uint32_t)0b110001 << 7;        // PA
-        ADF7021_REG2 |= (uint32_t)0b10 << 28;           // invert data (and RC alpha = 0.5)
-        ADF7021_REG2 |= (uint32_t)(m_dmrDev / div2) << 19; // deviation
+            // K=32
+            ADF7021_REG4 = (uint32_t)0b0100 << 0;           // register 4
+            ADF7021_REG4 |= (uint32_t)0b011 << 4;           // mode, 4FSK
+            ADF7021_REG4 |= (uint32_t)0b0 << 7;             // cross product
+            ADF7021_REG4 |= (uint32_t)0b11 << 8;            // invert clk/data
+            ADF7021_REG4 |= (uint32_t)(discBW & 0x3FFU) << 10; // discriminator BW
+            ADF7021_REG4 |= (uint32_t)(postBW & 0xFFFU) << 20; // post demod BW
+            ADF7021_REG4 |= (uint32_t)0b10 << 30;           // IF filter (25 kHz)
+
+            /*
+            ** 3FSK/4FSK Demod (Register 13)
+            */
+            ADF7021_REG13 = (uint32_t)0b1101 << 0;          // register 13
+            ADF7021_REG13 |= (uint32_t)ADF7021_SLICER_TH_DMR << 4; // slicer threshold
+
+            /*
+            ** Transmit Modulation (Register 2)
+            */
+            ADF7021_REG2 = (uint32_t)0b0010;                // register 2
+            ADF7021_REG2 |= (uint32_t)m_rfPower << 13;      // power level
+            ADF7021_REG2 |= (uint32_t)0b110001 << 7;        // PA
+            ADF7021_REG2 |= (uint32_t)0b10 << 28;           // invert data (and RC alpha = 0.5)
+            ADF7021_REG2 |= (uint32_t)(dmrDev / div2) << 19; // deviation
 #if defined(ADF7021_DISABLE_RC_4FSK)
-        ADF7021_REG2 |= (uint32_t)0b011 << 4;           // modulation (4FSK)
+            ADF7021_REG2 |= (uint32_t)0b011 << 4;           // modulation (4FSK)
 #else
-        ADF7021_REG2 |= (uint32_t)0b111 << 4;           // modulation (RC 4FSK)
+            ADF7021_REG2 |= (uint32_t)0b111 << 4;           // modulation (RC 4FSK)
 #endif
+        }
         break;
 
     case STATE_P25: // 4FSK
-        // Dev: +1 symb 600 Hz, symb rate = 4800
+        {
+            // Dev: +1 symb 600 Hz, symb rate = 4800
 
-        /*
-        ** Tx/Rx Clock (Register 3) & AFC (Register 10)
-        */
-        ADF7021_REG3 = ADF7021_REG3_P25;
-        ADF7021_REG10 = ADF7021_REG10_P25;
+            /*
+            ** Tx/Rx Clock (Register 3) & AFC (Register 10)
+            */
+            ADF7021_REG3 = ADF7021_REG3_P25;
+            ADF7021_REG10 = ADF7021_REG10_P25;
 
-        /*
-        ** Demodulator Setup (Register 4)
-        */
-        // K=32
-        ADF7021_REG4 = (uint32_t)0b0100 << 0;           // register 4
-        ADF7021_REG4 |= (uint32_t)0b011 << 4;           // mode, 4FSK
-        ADF7021_REG4 |= (uint32_t)0b0 << 7;             // cross product
-        ADF7021_REG4 |= (uint32_t)0b11 << 8;            // invert clk/data
-        ADF7021_REG4 |= (uint32_t)ADF7021_DISC_BW_P25 << 10; // discriminator BW
-        ADF7021_REG4 |= (uint32_t)ADF7021_POST_BW_P25 << 20; // post demod BW
-        ADF7021_REG4 |= (uint32_t)0b00 << 30;           // IF filter (12.5 kHz)
+            /*
+            ** Demodulator Setup (Register 4)
+            */
+            uint16_t discBW = ADF7021_DISC_BW_P25;
+            if (discBW + m_dmrDiscBWAdj < 0U)
+                discBW = 0U;
+            else
+                discBW = ADF7021_DISC_BW_P25 + m_dmrDiscBWAdj;
+            if (discBW > ADF7021_DISC_BW_MAX)
+                discBW = ADF7021_DISC_BW_MAX;
 
-        /*
-        ** 3FSK/4FSK Demod (Register 13)
-        */
-        ADF7021_REG13 = (uint32_t)0b1101 << 0;          // register 13
-        ADF7021_REG13 |= (uint32_t)ADF7021_SLICER_TH_P25 << 4; // slicer threshold
+            uint16_t postBW = ADF7021_POST_BW_P25;
+            if (postBW + m_dmrPostBWAdj < 0)
+                postBW = 0U;
+            else
+                postBW = ADF7021_POST_BW_P25 + m_dmrPostBWAdj;
+            if (postBW > ADF7021_POST_BW_MAX)
+                postBW = ADF7021_POST_BW_MAX;
 
-        /*
-        ** Transmit Modulation (Register 2)
-        */
-        ADF7021_REG2 = (uint32_t)0b0010;                // register 2
-        ADF7021_REG2 |= (uint32_t)m_rfPower << 13;      // power level
-        ADF7021_REG2 |= (uint32_t)0b110001 << 7;        // PA
-        ADF7021_REG2 |= (uint32_t)0b10 << 28;           // invert data (and RC alpha = 0.5)
-        ADF7021_REG2 |= (uint32_t)(m_p25Dev / div2) << 19; // deviation
+            // K=32
+            ADF7021_REG4 = (uint32_t)0b0100 << 0;           // register 4
+            ADF7021_REG4 |= (uint32_t)0b011 << 4;           // mode, 4FSK
+            ADF7021_REG4 |= (uint32_t)0b0 << 7;             // cross product
+            ADF7021_REG4 |= (uint32_t)0b11 << 8;            // invert clk/data
+            ADF7021_REG4 |= (uint32_t)(discBW & 0x3FFU) << 10; // discriminator BW
+            ADF7021_REG4 |= (uint32_t)(postBW & 0xFFFU) << 20; // post demod BW
+            ADF7021_REG4 |= (uint32_t)0b00 << 30;           // IF filter (12.5 kHz)
+
+            /*
+            ** 3FSK/4FSK Demod (Register 13)
+            */
+            ADF7021_REG13 = (uint32_t)0b1101 << 0;          // register 13
+            ADF7021_REG13 |= (uint32_t)ADF7021_SLICER_TH_P25 << 4; // slicer threshold
+
+            /*
+            ** Transmit Modulation (Register 2)
+            */
+            ADF7021_REG2 = (uint32_t)0b0010;                // register 2
+            ADF7021_REG2 |= (uint32_t)m_rfPower << 13;      // power level
+            ADF7021_REG2 |= (uint32_t)0b110001 << 7;        // PA
+            ADF7021_REG2 |= (uint32_t)0b10 << 28;           // invert data (and RC alpha = 0.5)
+            ADF7021_REG2 |= (uint32_t)(p25Dev / div2) << 19; // deviation
 #if defined(ENABLE_P25_WIDE) || defined(ADF7021_DISABLE_RC_4FSK)
-        ADF7021_REG2 |= (uint32_t)0b011 << 4;           // modulation (4FSK)
+            ADF7021_REG2 |= (uint32_t)0b011 << 4;           // modulation (4FSK)
 #else
-        ADF7021_REG2 |= (uint32_t)0b111 << 4;           // modulation (RC 4FSK)
+            ADF7021_REG2 |= (uint32_t)0b111 << 4;           // modulation (RC 4FSK)
 #endif
+        }
         break;
     default: // GMSK
-        // Dev: 1200 Hz, symb rate = 4800
+        {
+            // Dev: 1200 Hz, symb rate = 4800
 
-        /*
-        ** Tx/Rx Clock (Register 3) & AFC (Register 10)
-        */
-        ADF7021_REG3 = ADF7021_REG3_DEFAULT;
-        ADF7021_REG10 = ADF7021_REG10_DEFAULT;
+            /*
+            ** Tx/Rx Clock (Register 3) & AFC (Register 10)
+            */
+            ADF7021_REG3 = ADF7021_REG3_DEFAULT;
+            ADF7021_REG10 = ADF7021_REG10_DEFAULT;
 
-        /*
-        ** Demodulator Setup (Register 4)
-        */
-        // K=32
-        ADF7021_REG4 = (uint32_t)0b0100 << 0;           // register 4
-        ADF7021_REG4 |= (uint32_t)0b001 << 4;           // mode, GMSK
-        ADF7021_REG4 |= (uint32_t)0b1 << 7;             // dot product
-        ADF7021_REG4 |= (uint32_t)0b10 << 8;            // invert data
-        ADF7021_REG4 |= (uint32_t)ADF7021_DISC_BW_DEFAULT << 10; // discriminator BW
-        ADF7021_REG4 |= (uint32_t)ADF7021_POST_BW_DEFAULT << 20; // post demod BW
-        ADF7021_REG4 |= (uint32_t)0b00 << 30;           // IF filter (12.5 kHz)
+            /*
+            ** Demodulator Setup (Register 4)
+            */
+            // K=32
+            ADF7021_REG4 = (uint32_t)0b0100 << 0;           // register 4
+            ADF7021_REG4 |= (uint32_t)0b001 << 4;           // mode, GMSK
+            ADF7021_REG4 |= (uint32_t)0b1 << 7;             // dot product
+            ADF7021_REG4 |= (uint32_t)0b10 << 8;            // invert data
+            ADF7021_REG4 |= (uint32_t)ADF7021_DISC_BW_DEFAULT << 10; // discriminator BW
+            ADF7021_REG4 |= (uint32_t)ADF7021_POST_BW_DEFAULT << 20; // post demod BW
+            ADF7021_REG4 |= (uint32_t)0b00 << 30;           // IF filter (12.5 kHz)
 
-        /*
-        ** 3FSK/4FSK Demod (Register 13)
-        */
-        ADF7021_REG13 = (uint32_t)0b1101 << 0;          // register 13
-        ADF7021_REG13 |= (uint32_t)ADF7021_SLICER_TH_DEFAULT << 4; // slicer threshold
+            /*
+            ** 3FSK/4FSK Demod (Register 13)
+            */
+            ADF7021_REG13 = (uint32_t)0b1101 << 0;          // register 13
+            ADF7021_REG13 |= (uint32_t)ADF7021_SLICER_TH_DEFAULT << 4; // slicer threshold
 
-        /*
-        ** Transmit Modulation (Register 2)
-        */
-        ADF7021_REG2 = (uint32_t)0b0010;                // register 2
-        ADF7021_REG2 |= (uint32_t)m_rfPower << 13;      // power level
-        ADF7021_REG2 |= (uint32_t)0b110001 << 7;        // PA
-        ADF7021_REG2 |= (uint32_t)0b00 << 28;           // normal
-        ADF7021_REG2 |= (uint32_t)(ADF7021_DEV_DEFAULT / div2) << 19; // deviation
-        ADF7021_REG2 |= (uint32_t)0b001 << 4;           // modulation (GMSK)
+            /*
+            ** Transmit Modulation (Register 2)
+            */
+            ADF7021_REG2 = (uint32_t)0b0010;                // register 2
+            ADF7021_REG2 |= (uint32_t)m_rfPower << 13;      // power level
+            ADF7021_REG2 |= (uint32_t)0b110001 << 7;        // PA
+            ADF7021_REG2 |= (uint32_t)0b00 << 28;           // normal
+            ADF7021_REG2 |= (uint32_t)(ADF7021_DEV_DEFAULT / div2) << 19; // deviation
+            ADF7021_REG2 |= (uint32_t)0b001 << 4;           // modulation (GMSK)
+        }
         break;
     }
 
@@ -665,124 +726,162 @@ void IO::rf2Conf(DVM_STATE modemState)
 
     switch (modemState) {
     case STATE_DMR: // 4FSK
-        // Dev: +1 symb 648 Hz, symb rate = 4800
+        {
+            // Dev: +1 symb 648 Hz, symb rate = 4800
 
-        /*
-        ** Tx/Rx Clock (Register 3) & AFC (Register 10)
-        */
-        ADF7021_REG3 = ADF7021_REG3_DMR;
-        ADF7021_REG10 = ADF7021_REG10_DMR;
+            /*
+            ** Tx/Rx Clock (Register 3) & AFC (Register 10)
+            */
+            ADF7021_REG3 = ADF7021_REG3_DMR;
+            ADF7021_REG10 = ADF7021_REG10_DMR;
 
-        /*
-        ** Demodulator Setup (Register 4)
-        */
-        // K=32
-        ADF7021_REG4 = (uint32_t)0b0100 << 0;           // register 4
-        ADF7021_REG4 |= (uint32_t)0b011 << 4;           // mode, 4FSK
-        ADF7021_REG4 |= (uint32_t)0b0 << 7;             // cross product
-        ADF7021_REG4 |= (uint32_t)0b11 << 8;            // invert clk/data
-        ADF7021_REG4 |= (uint32_t)ADF7021_DISC_BW_DMR << 10; // discriminator BW
-        ADF7021_REG4 |= (uint32_t)ADF7021_POST_BW_DMR << 20; // post demod BW
-        ADF7021_REG4 |= (uint32_t)0b10 << 30;           // IF filter (25 kHz)
+            /*
+            ** Demodulator Setup (Register 4)
+            */
+            uint16_t discBW = ADF7021_DISC_BW_DMR;
+            if (discBW + m_dmrDiscBWAdj < 0U)
+                discBW = 0U;
+            else
+                discBW = ADF7021_DISC_BW_DMR + m_dmrDiscBWAdj;
+            if (discBW > ADF7021_DISC_BW_MAX)
+                discBW = ADF7021_DISC_BW_MAX;
 
-        /*
-        ** 3FSK/4FSK Demod (Register 13)
-        */
-        ADF7021_REG13 = (uint32_t)0b1101 << 0;          // register 13
-        ADF7021_REG13 |= (uint32_t)ADF7021_SLICER_TH_DMR << 4; // slicer threshold
+            uint16_t postBW = ADF7021_POST_BW_DMR;
+            if (postBW + m_dmrPostBWAdj < 0)
+                postBW = 0U;
+            else
+                postBW = ADF7021_POST_BW_DMR + m_dmrPostBWAdj;
+            if (postBW > ADF7021_POST_BW_MAX)
+                postBW = ADF7021_POST_BW_MAX;
 
-        /*
-        ** Transmit Modulation (Register 2)
-        */
-        ADF7021_REG2 = (uint32_t)0b0010;                // register 2
-        ADF7021_REG2 |= (uint32_t)m_rfPower << 13;      // power level
-        ADF7021_REG2 |= (uint32_t)0b110001 << 7;        // PA
-        ADF7021_REG2 |= (uint32_t)0b10 << 28;           // invert data (and RC alpha = 0.5)
-        ADF7021_REG2 |= (uint32_t)(m_dmrDev / div2) << 19; // deviation
+            // K=32
+            ADF7021_REG4 = (uint32_t)0b0100 << 0;           // register 4
+            ADF7021_REG4 |= (uint32_t)0b011 << 4;           // mode, 4FSK
+            ADF7021_REG4 |= (uint32_t)0b0 << 7;             // cross product
+            ADF7021_REG4 |= (uint32_t)0b11 << 8;            // invert clk/data
+            ADF7021_REG4 |= (uint32_t)(discBW & 0x3FFU) << 10; // discriminator BW
+            ADF7021_REG4 |= (uint32_t)(postBW & 0xFFFU) << 20; // post demod BW
+            ADF7021_REG4 |= (uint32_t)0b10 << 30;           // IF filter (25 kHz)
+
+            /*
+            ** 3FSK/4FSK Demod (Register 13)
+            */
+            ADF7021_REG13 = (uint32_t)0b1101 << 0;          // register 13
+            ADF7021_REG13 |= (uint32_t)ADF7021_SLICER_TH_DMR << 4; // slicer threshold
+
+            /*
+            ** Transmit Modulation (Register 2)
+            */
+            ADF7021_REG2 = (uint32_t)0b0010;                // register 2
+            ADF7021_REG2 |= (uint32_t)m_rfPower << 13;      // power level
+            ADF7021_REG2 |= (uint32_t)0b110001 << 7;        // PA
+            ADF7021_REG2 |= (uint32_t)0b10 << 28;           // invert data (and RC alpha = 0.5)
+            ADF7021_REG2 |= (uint32_t)(dmrDev / div2) << 19; // deviation
 #if defined(ADF7021_DISABLE_RC_4FSK)
-        ADF7021_REG2 |= (uint32_t)0b011 << 4;           // modulation (4FSK)
+            ADF7021_REG2 |= (uint32_t)0b011 << 4;           // modulation (4FSK)
 #else
-        ADF7021_REG2 |= (uint32_t)0b111 << 4;           // modulation (RC 4FSK)
+            ADF7021_REG2 |= (uint32_t)0b111 << 4;           // modulation (RC 4FSK)
 #endif
+        }
         break;
 
     case STATE_P25: // 4FSK
-        // Dev: +1 symb 600 Hz, symb rate = 4800
+        {
+            // Dev: +1 symb 600 Hz, symb rate = 4800
 
-        /*
-        ** Tx/Rx Clock (Register 3) & AFC (Register 10)
-        */
-        ADF7021_REG3 = ADF7021_REG3_P25;
-        ADF7021_REG10 = ADF7021_REG10_P25;
+            /*
+            ** Tx/Rx Clock (Register 3) & AFC (Register 10)
+            */
+            ADF7021_REG3 = ADF7021_REG3_P25;
+            ADF7021_REG10 = ADF7021_REG10_P25;
 
-        /*
-        ** Demodulator Setup (Register 4)
-        */
-        // K=32
-        ADF7021_REG4 = (uint32_t)0b0100 << 0;           // register 4
-        ADF7021_REG4 |= (uint32_t)0b011 << 4;           // mode, 4FSK
-        ADF7021_REG4 |= (uint32_t)0b0 << 7;             // cross product
-        ADF7021_REG4 |= (uint32_t)0b11 << 8;            // invert clk/data
-        ADF7021_REG4 |= (uint32_t)ADF7021_DISC_BW_P25 << 10; // discriminator BW
-        ADF7021_REG4 |= (uint32_t)ADF7021_POST_BW_P25 << 20; // post demod BW
-        ADF7021_REG4 |= (uint32_t)0b00 << 30;           // IF filter (12.5 kHz)
+            /*
+            ** Demodulator Setup (Register 4)
+            */
+            uint16_t discBW = ADF7021_DISC_BW_P25;
+            if (discBW + m_dmrDiscBWAdj < 0U)
+                discBW = 0U;
+            else
+                discBW = ADF7021_DISC_BW_P25 + m_dmrDiscBWAdj;
+            if (discBW > ADF7021_DISC_BW_MAX)
+                discBW = ADF7021_DISC_BW_MAX;
 
-        /*
-        ** 3FSK/4FSK Demod (Register 13)
-        */
-        ADF7021_REG13 = (uint32_t)0b1101 << 0;          // register 13
-        ADF7021_REG13 |= (uint32_t)ADF7021_SLICER_TH_P25 << 4; // slicer threshold
+            uint16_t postBW = ADF7021_POST_BW_P25;
+            if (postBW + m_dmrPostBWAdj < 0)
+                postBW = 0U;
+            else
+                postBW = ADF7021_POST_BW_P25 + m_dmrPostBWAdj;
+            if (postBW > ADF7021_POST_BW_MAX)
+                postBW = ADF7021_POST_BW_MAX;
 
-        /*
-        ** Transmit Modulation (Register 2)
-        */
-        ADF7021_REG2 = (uint32_t)0b0010;                // register 2
-        ADF7021_REG2 |= (uint32_t)m_rfPower << 13;      // power level
-        ADF7021_REG2 |= (uint32_t)0b110001 << 7;        // PA
-        ADF7021_REG2 |= (uint32_t)0b10 << 28;           // invert data (and RC alpha = 0.5)
-        ADF7021_REG2 |= (uint32_t)(m_p25Dev / div2) << 19; // deviation
+            // K=32
+            ADF7021_REG4 = (uint32_t)0b0100 << 0;           // register 4
+            ADF7021_REG4 |= (uint32_t)0b011 << 4;           // mode, 4FSK
+            ADF7021_REG4 |= (uint32_t)0b0 << 7;             // cross product
+            ADF7021_REG4 |= (uint32_t)0b11 << 8;            // invert clk/data
+            ADF7021_REG4 |= (uint32_t)(discBW & 0x3FFU) << 10; // discriminator BW
+            ADF7021_REG4 |= (uint32_t)(postBW & 0xFFFU) << 20; // post demod BW
+            ADF7021_REG4 |= (uint32_t)0b00 << 30;           // IF filter (12.5 kHz)
+
+            /*
+            ** 3FSK/4FSK Demod (Register 13)
+            */
+            ADF7021_REG13 = (uint32_t)0b1101 << 0;          // register 13
+            ADF7021_REG13 |= (uint32_t)ADF7021_SLICER_TH_P25 << 4; // slicer threshold
+
+            /*
+            ** Transmit Modulation (Register 2)
+            */
+            ADF7021_REG2 = (uint32_t)0b0010;                // register 2
+            ADF7021_REG2 |= (uint32_t)m_rfPower << 13;      // power level
+            ADF7021_REG2 |= (uint32_t)0b110001 << 7;        // PA
+            ADF7021_REG2 |= (uint32_t)0b10 << 28;           // invert data (and RC alpha = 0.5)
+            ADF7021_REG2 |= (uint32_t)(p25Dev / div2) << 19; // deviation
 #if defined(ENABLE_P25_WIDE) || defined(ADF7021_DISABLE_RC_4FSK)
-        ADF7021_REG2 |= (uint32_t)0b011 << 4;           // modulation (4FSK)
+            ADF7021_REG2 |= (uint32_t)0b011 << 4;           // modulation (4FSK)
 #else
-        ADF7021_REG2 |= (uint32_t)0b111 << 4;           // modulation (RC 4FSK)
+            ADF7021_REG2 |= (uint32_t)0b111 << 4;           // modulation (RC 4FSK)
 #endif
+        }
         break;
     default: // GMSK
-        // Dev: 1200 Hz, symb rate = 4800
+        {
+            // Dev: 1200 Hz, symb rate = 4800
 
-        /*
-        ** Tx/Rx Clock (Register 3) & AFC (Register 10)
-        */
-        ADF7021_REG3 = ADF7021_REG3_DEFAULT;
-        ADF7021_REG10 = ADF7021_REG10_DEFAULT;
+            /*
+            ** Tx/Rx Clock (Register 3) & AFC (Register 10)
+            */
+            ADF7021_REG3 = ADF7021_REG3_DEFAULT;
+            ADF7021_REG10 = ADF7021_REG10_DEFAULT;
 
-        /*
-        ** Demodulator Setup (Register 4)
-        */
-        // K=32
-        ADF7021_REG4 = (uint32_t)0b0100 << 0;           // register 4
-        ADF7021_REG4 |= (uint32_t)0b001 << 4;           // mode, GMSK
-        ADF7021_REG4 |= (uint32_t)0b1 << 7;             // dot product
-        ADF7021_REG4 |= (uint32_t)0b10 << 8;            // invert data
-        ADF7021_REG4 |= (uint32_t)ADF7021_DISC_BW_DEFAULT << 10; // discriminator BW
-        ADF7021_REG4 |= (uint32_t)ADF7021_POST_BW_DEFAULT << 20; // post demod BW
-        ADF7021_REG4 |= (uint32_t)0b00 << 30;           // IF filter (12.5 kHz)
+            /*
+            ** Demodulator Setup (Register 4)
+            */
+            // K=32
+            ADF7021_REG4 = (uint32_t)0b0100 << 0;           // register 4
+            ADF7021_REG4 |= (uint32_t)0b001 << 4;           // mode, GMSK
+            ADF7021_REG4 |= (uint32_t)0b1 << 7;             // dot product
+            ADF7021_REG4 |= (uint32_t)0b10 << 8;            // invert data
+            ADF7021_REG4 |= (uint32_t)ADF7021_DISC_BW_DEFAULT << 10; // discriminator BW
+            ADF7021_REG4 |= (uint32_t)ADF7021_POST_BW_DEFAULT << 20; // post demod BW
+            ADF7021_REG4 |= (uint32_t)0b00 << 30;           // IF filter (12.5 kHz)
 
-        /*
-        ** 3FSK/4FSK Demod (Register 13)
-        */
-        ADF7021_REG13 = (uint32_t)0b1101 << 0;          // register 13
-        ADF7021_REG13 |= (uint32_t)ADF7021_SLICER_TH_DEFAULT << 4; // slicer threshold
+            /*
+            ** 3FSK/4FSK Demod (Register 13)
+            */
+            ADF7021_REG13 = (uint32_t)0b1101 << 0;          // register 13
+            ADF7021_REG13 |= (uint32_t)ADF7021_SLICER_TH_DEFAULT << 4; // slicer threshold
 
-        /*
-        ** Transmit Modulation (Register 2)
-        */
-        ADF7021_REG2 = (uint32_t)0b0010;                // register 2
-        ADF7021_REG2 |= (uint32_t)m_rfPower << 13;      // power level
-        ADF7021_REG2 |= (uint32_t)0b110001 << 7;        // PA
-        ADF7021_REG2 |= (uint32_t)0b00 << 28;           // normal
-        ADF7021_REG2 |= (uint32_t)(ADF7021_DEV_DEFAULT / div2) << 19; // deviation
-        ADF7021_REG2 |= (uint32_t)0b001 << 4;           // modulation (GMSK)
+            /*
+            ** Transmit Modulation (Register 2)
+            */
+            ADF7021_REG2 = (uint32_t)0b0010;                // register 2
+            ADF7021_REG2 |= (uint32_t)m_rfPower << 13;      // power level
+            ADF7021_REG2 |= (uint32_t)0b110001 << 7;        // PA
+            ADF7021_REG2 |= (uint32_t)0b00 << 28;           // normal
+            ADF7021_REG2 |= (uint32_t)(ADF7021_DEV_DEFAULT / div2) << 19; // deviation
+            ADF7021_REG2 |= (uint32_t)0b001 << 4;           // modulation (GMSK)
+        }
         break;
     }
 
@@ -892,8 +991,25 @@ void IO::rf2Conf(DVM_STATE modemState)
 /// <param name="p25TXLevel"></param>
 void IO::setDeviations(uint8_t dmrTXLevel, uint8_t p25TXLevel)
 {
-    m_dmrDev = uint16_t((ADF7021_DEV_DMR * uint16_t(dmrTXLevel)) / 128U);
-    m_p25Dev = uint16_t((ADF7021_DEV_P25 * uint16_t(p25TXLevel)) / 128U);
+    dmrDev = uint16_t((ADF7021_DEV_DMR * uint16_t(dmrTXLevel)) / 128U);
+    p25Dev = uint16_t((ADF7021_DEV_P25 * uint16_t(p25TXLevel)) / 128U);
+}
+
+/// <summary>
+/// Sets the RF adjustment parameters.
+/// </summary>
+/// <param name="dmrDevAdj"></param>
+/// <param name="p25DevAdj"></param>
+/// <param name="dmrDiscBWAdj"></param>
+/// <param name="p25DiscBWAdj"></param>
+/// <param name="dmrPostBWAdj"></param>
+/// <param name="p25PostBWAdj"></param>
+void IO::setRFAdjust(int8_t dmrDiscBWAdj, int8_t p25DiscBWAdj, int8_t dmrPostBWAdj, int8_t p25PostBWAdj)
+{
+    m_dmrDiscBWAdj = dmrDiscBWAdj;
+    m_p25DiscBWAdj = p25DiscBWAdj;
+    m_dmrPostBWAdj = dmrPostBWAdj;
+    m_p25PostBWAdj = p25PostBWAdj;
 }
 
 /// <summary>
@@ -920,7 +1036,7 @@ void IO::updateCal()
     ADF7021_REG2 |= (uint32_t)0b110001 << 7;            // PA
     ADF7021_REG2 |= (uint32_t)0b10 << 28;               // invert data (and RC alpha = 0.5)
     if (m_modemState == STATE_DMR) {
-        ADF7021_REG2 |= (uint32_t)(m_dmrDev / div2) << 19; // DMR deviation
+        ADF7021_REG2 |= (uint32_t)(dmrDev / div2) << 19; // DMR deviation
         ADF7021_REG2 |= (uint32_t)0b111 << 4;           // modulation (RC 4FSK)
     }
 
@@ -1093,7 +1209,11 @@ void IO::configureBand()
         // NOTE: I've included support for this band, but, this could be problematic due to
         // the external VCO control on most (if not all) hotspots
         ADF7021_REG1 = ADF7021_REG1_UHF_T;          // UHF (470 - 520), external VCO
+#if defined(FORCE_UHF_INTERAL_L)
+        div2 = 2U;
+#else
         div2 = 1U;
+#endif
     }
 
     /** 842 - 900mhz */
@@ -1176,12 +1296,12 @@ uint32_t CIO::TXfreq()
 
 uint16_t CIO::devDMR()
 {
-  return (uint16_t)((ADF7021_PFD * m_dmrDev) / (f_div * 65536));
+  return (uint16_t)((ADF7021_PFD * dmrDev) / (f_div * 65536));
 }
 
 uint16_t CIO::devP25()
 {
-  return (uint16_t)((ADF7021_PFD * m_p25Dev) / (f_div * 65536));
+  return (uint16_t)((ADF7021_PFD * p25Dev) / (f_div * 65536));
 }
 
 void CIO::printConf()

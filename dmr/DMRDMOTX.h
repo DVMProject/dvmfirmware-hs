@@ -43,13 +43,13 @@ namespace dmr
     //  Constants
     // ---------------------------------------------------------------------------
 
-#define DMRDMO_FIXED_DELAY 300  // 300 = 62.49ms
-                                // Delay Value * 0.2083 = Preamble Length (ms)
+    #define DMRDMO_FIXED_DELAY 300  // 300 = 62.49ms
+                                    // Delay Value * 0.2083 = Preamble Length (ms)
 
-// ---------------------------------------------------------------------------
-//  Class Declaration
-//      Implements transmitter logic for DMR DMO mode operation.
-// ---------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------
+    //  Class Declaration
+    //      Implements transmitter logic for DMR DMO mode operation.
+    // ---------------------------------------------------------------------------
 
     class DSP_FW_API DMRDMOTX {
     public:
@@ -61,9 +61,6 @@ namespace dmr
 
         /// <summary>Write data to the local buffer.</summary>
         uint8_t writeData(const uint8_t* data, uint8_t length);
-
-        /// <summary>Helper to set the calibration state for Tx.</summary>
-        void setCal(bool start);
 
         /// <summary>Sets the FDMA preamble count.</summary>
         void setPreambleCount(uint8_t preambleCnt);
@@ -79,11 +76,6 @@ namespace dmr
         uint16_t m_poPtr;
 
         uint32_t m_preambleCnt;
-
-        bool m_cal;
-
-        /// <summary></summary>
-        void createCal();
 
         /// <summary></summary>
         void writeByte(uint8_t c);

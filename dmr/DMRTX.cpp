@@ -34,8 +34,6 @@
 
 using namespace dmr;
 
-#if defined(DUPLEX)
-
 // ---------------------------------------------------------------------------
 //  Constants
 // ---------------------------------------------------------------------------
@@ -119,6 +117,7 @@ void DMRTX::process()
             break;
 
         case DMRTXSTATE_CAL:
+            createCal();
             break;
 
         default:
@@ -279,6 +278,15 @@ void DMRTX::setStart(bool start)
 }
 
 /// <summary>
+/// Helper to set the calibration state for Tx.
+/// </summary>
+/// <param name="start"></param>
+void DMRTX::setCal(bool start)
+{
+    m_state = start ? DMRTXSTATE_CAL : DMRTXSTATE_IDLE;
+}
+
+/// <summary>
 /// Helper to get how much space the slot 1 ring buffer has for samples.
 /// </summary>
 /// <returns></returns>
@@ -370,6 +378,42 @@ void DMRTX::createData(uint8_t slotIndex)
 /// <summary>
 ///
 /// </summary>
+void DMRTX::createCal()
+{
+    // 1.2 kHz sine wave generation
+    if (m_modemState == STATE_DMR_CAL) {
+        for (unsigned int i = 0U; i < DMR_FRAME_LENGTH_BYTES; i++) {
+            m_poBuffer[i] = DMR_START_SYNC;
+            m_markBuffer[i] = MARK_NONE;
+        }
+
+        m_poLen = DMR_FRAME_LENGTH_BYTES;
+    }
+
+    // 80 Hz square wave generation
+    if (m_modemState == STATE_DMR_LF_CAL) {
+        for (unsigned int i = 0U; i < 7U; i++) {
+            m_poBuffer[i] = 0x55U; // +3, +3, ... pattern
+            m_markBuffer[i] = MARK_NONE;
+        }
+
+        m_poBuffer[7U] = 0x5FU; // +3, +3, -3, -3 pattern
+
+        for (unsigned int i = 8U; i < 15U; i++) {
+            m_poBuffer[i] = 0xFFU; // -3, -3, ... pattern
+            m_markBuffer[i] = MARK_NONE;
+        }
+
+        m_poLen = 15U;
+    }
+
+    m_poLen = DMR_FRAME_LENGTH_BYTES;
+    m_poPtr = 0U;
+}
+
+/// <summary>
+///
+/// </summary>
 /// <param name="txSlotIndex"></param>
 /// <param name="rxSlotIndex"></param>
 void DMRTX::createCACH(uint8_t txSlotIndex, uint8_t rxSlotIndex)
@@ -452,5 +496,3 @@ void DMRTX::writeByte(uint8_t c, uint8_t control)
         io.write(&bit, 1, &control_tmp);
     }
 }
-
-#endif // DUPLEX

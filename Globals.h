@@ -85,7 +85,6 @@ const uint8_t   MARK_NONE = 0x00U;
 // ---------------------------------------------------------------------------
 
 extern DVM_STATE m_modemState;
-extern DVM_STATE m_calState;
 extern DVM_STATE m_modemStatePrev;
 
 extern bool m_cwIdState;
@@ -106,12 +105,12 @@ extern uint8_t m_control;
 extern SerialPort serial;
 extern IO io;
 
-#if defined(DUPLEX)
 /** DMR BS */
+#if defined(DUPLEX)
 extern dmr::DMRIdleRX dmrIdleRX;
 extern dmr::DMRRX dmrRX;
-extern dmr::DMRTX dmrTX;
 #endif
+extern dmr::DMRTX dmrTX;
 
 /** DMR MS-DMO */
 extern dmr::DMRDMORX dmrDMORX;

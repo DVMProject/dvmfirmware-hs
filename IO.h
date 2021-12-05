@@ -132,7 +132,7 @@ public:
     void getUDID(uint8_t* buffer);
 
     /// <summary></summary>
-    void updateCal();
+    void updateCal(DVM_STATE modemState);
 
     /// <summary></summary>
     void delayBit(void);
@@ -203,6 +203,8 @@ private:
 #endif
     /// <summary></summary>
     void configureBand();
+    /// <summary></summary>
+    void configureTxRx(DVM_STATE modemState);
 
     /// <summary></summary>
     void setTX();

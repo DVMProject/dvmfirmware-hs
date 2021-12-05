@@ -38,7 +38,6 @@
 // ---------------------------------------------------------------------------
 
 DVM_STATE m_modemState = STATE_IDLE;
-DVM_STATE m_calState = STATE_IDLE;
 DVM_STATE m_modemStatePrev = STATE_IDLE;
 
 bool m_cwIdState = false;
@@ -64,12 +63,12 @@ bool m_dcd = false;
 
 uint8_t m_control;
 
-#if defined(DUPLEX)
 /** DMR BS */
+#if defined(DUPLEX)
 dmr::DMRIdleRX dmrIdleRX;
 dmr::DMRRX dmrRX;
-dmr::DMRTX dmrTX;
 #endif
+dmr::DMRTX dmrTX;
 
 /** DMR MS-DMO */
 dmr::DMRDMORX dmrDMORX;
@@ -107,7 +106,7 @@ void loop()
     serial.process();
 
     // The following is for transmitting
-    if (m_dmrEnable && m_modemState == STATE_DMR && m_calState == STATE_IDLE) {
+    if (m_dmrEnable && m_modemState == STATE_DMR) {
 #if defined(DUPLEX)
         if (m_duplex)
             dmrTX.process();
@@ -122,16 +121,15 @@ void loop()
         p25TX.process();
 
     if (m_modemState == STATE_DMR_DMO_CAL_1K || m_modemState == STATE_DMR_CAL_1K ||
-        m_modemState == STATE_DMR_LF_CAL || m_modemState == STATE_DMR_CAL)
+        m_modemState == STATE_DMR_LF_CAL || m_modemState == STATE_DMR_CAL ||
+        m_modemState == STATE_INT_CAL)
         calDMR.process();
 
     if (m_modemState == STATE_P25_CAL_1K || m_modemState == STATE_P25_LF_CAL || m_modemState == STATE_P25_CAL)
         calP25.process();
 
-#if defined(SEND_RSSI_DATA)
-    if (m_calState == STATE_RSSI_CAL)
+    if (m_modemState == STATE_RSSI_CAL)
         calRSSI.process();
-#endif
 
     if (m_modemState == STATE_CW || m_modemState == STATE_IDLE)
         cwIdTX.process();

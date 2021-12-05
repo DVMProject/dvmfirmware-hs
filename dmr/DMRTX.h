@@ -36,8 +36,6 @@
 #include "dmr/DMRDefines.h"
 #include "SerialBuffer.h"
 
-#if defined(DUPLEX)
-
 namespace dmr
 {
     // ---------------------------------------------------------------------------
@@ -78,6 +76,8 @@ namespace dmr
 
         /// <summary>Helper to set the start state for Tx.</summary>
         void setStart(bool start);
+        /// <summary>Helper to set the calibration state for Tx.</summary>
+        void setCal(bool start);
 
         /// <summary>Helper to get how much space the slot 1 ring buffer has for samples.</summary>
         uint8_t getSpace1() const;
@@ -122,12 +122,12 @@ namespace dmr
         void createData(uint8_t slotIndex);
         /// <summary></summary>
         void createCACH(uint8_t txSlotIndex, uint8_t rxSlotIndex);
+        /// <summary></summary>
+        void createCal();
 
         /// <summary></summary>
         void writeByte(uint8_t c, uint8_t control);
     };
 } // namespace dmr
-
-#endif // DUPLEX
 
 #endif // __DMR_TX_H__

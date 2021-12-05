@@ -103,8 +103,7 @@ SerialPort::SerialPort() :
     m_buffer(),
     m_ptr(0U),
     m_len(0U),
-    m_debug(false),
-    m_firstCal(false)
+    m_debug(false)
 {
     // stub
 }
@@ -193,6 +192,8 @@ void SerialPort::process()
                     break;
 
                 case CMD_CAL_DATA:
+                    DEBUG_DUMP(m_buffer + 3U, 2U);
+                    DEBUG2("SerialPort: process(): CAL_DATA: len = ", m_len - 3U);
                     if (m_modemState == STATE_DMR_DMO_CAL_1K || m_modemState == STATE_DMR_CAL_1K ||
                         m_modemState == STATE_DMR_LF_CAL || m_modemState == STATE_DMR_CAL)
                         err = calDMR.write(m_buffer + 3U, m_len - 3U);
@@ -359,6 +360,46 @@ void SerialPort::process()
         m_ptr = 0U;
         m_len = 0U;
     }
+}
+
+/// <summary>
+/// Helper to check if the modem is in a calibration state.
+/// </summary>
+/// <param name="state"></param>
+/// <returns></returns>
+bool SerialPort::isCalState(DVM_STATE state)
+{
+    // calibration mode check
+    if (state != STATE_P25_CAL_1K &&
+        state != STATE_DMR_DMO_CAL_1K && state != STATE_DMR_CAL_1K &&
+        state != STATE_DMR_LF_CAL && state != STATE_P25_LF_CAL &&
+        state != STATE_RSSI_CAL &&
+        state != STATE_P25_CAL && state != STATE_DMR_CAL &&
+        state != STATE_INT_CAL)
+        return true;
+    
+    return false;
+}
+
+/// <summary>
+/// Helper to determine digital mode if the modem is in a calibration state.
+/// </summary>
+/// <param name="state"></param>
+/// <returns></returns>
+DVM_STATE SerialPort::calRelativeState(DVM_STATE state)
+{
+    if (isCalState(state)) {
+        if (state == STATE_DMR_DMO_CAL_1K || state == STATE_DMR_CAL_1K ||
+            state == STATE_DMR_LF_CAL || state == STATE_DMR_CAL ||
+            state == STATE_RSSI_CAL || state == STATE_INT_CAL) {
+            return STATE_DMR;
+        } else if(state != STATE_P25_CAL_1K && state != STATE_P25_LF_CAL &&
+            state == STATE_P25_CAL) {
+            return STATE_P25;
+        }
+    }
+    
+    return STATE_CW;
 }
 
 /// <summary>
@@ -898,37 +939,25 @@ uint8_t SerialPort::setConfig(const uint8_t* data, uint8_t length)
     uint8_t dmrTXLevel = data[10U];
     uint8_t p25TXLevel = data[12U];
 
-    io.setDeviations(dmrTXLevel, p25TXLevel);
-
-    if (modemState == STATE_DMR_CAL || modemState == STATE_DMR_DMO_CAL_1K || modemState == STATE_RSSI_CAL ||
-        modemState == STATE_INT_CAL) {
-        m_dmrEnable = true;
-        m_modemState = STATE_DMR;
-        m_calState = modemState;
-        if (m_firstCal)
-            io.updateCal();
-        if (modemState == STATE_RSSI_CAL)
-            io.rf1Conf(STATE_DMR, true);
-    } else {
-        m_modemState = modemState;
-        m_calState = STATE_IDLE;
-    }
+    m_modemState = modemState;
 
     m_dmrEnable = dmrEnable;
     m_p25Enable = p25Enable;
     m_duplex = !simplex;
 
 #if !defined(DUPLEX)
-    if (m_duplex && m_calState == STATE_IDLE) {
+    if (m_duplex) {
         DEBUG1("Full duplex not supported with this firmware");
         return RSN_INVALID_REQUEST;
     }
 #elif defined(DUPLEX) && (defined(ZUMSPOT_ADF7021) || defined(LONESTAR_USB) || defined(SKYBRIDGE_HS))
-    if (io.isDualBand() && m_duplex && m_calState == STATE_IDLE) {
+    if (io.isDualBand() && m_duplex) {
         DEBUG1("Full duplex is not supported on this board");
         return RSN_INVALID_REQUEST;
     }
 #endif
+
+    io.setDeviations(dmrTXLevel, p25TXLevel);
 
     p25TX.setPreambleCount(fdmaPreamble);
     dmrDMOTX.setPreambleCount(fdmaPreamble);
@@ -944,19 +973,11 @@ uint8_t SerialPort::setConfig(const uint8_t* data, uint8_t length)
 
     dmrDMORX.setColorCode(colorCode);
 
-    if (!m_firstCal || (modemState != STATE_DMR_CAL && modemState != STATE_DMR_DMO_CAL_1K &&
-        modemState != STATE_RSSI_CAL && modemState != STATE_INT_CAL)) {
-        if(m_dmrEnable)
-            io.rf1Conf(STATE_DMR, true);
-        else if(m_p25Enable)
-            io.rf1Conf(STATE_P25, true);
+    if (m_modemState != STATE_IDLE && isCalState(m_modemState)) {
+        io.updateCal(calRelativeState(m_modemState));
     }
 
     io.start();
-
-    if (modemState == STATE_DMR_CAL || modemState == STATE_DMR_DMO_CAL_1K ||
-        modemState == STATE_RSSI_CAL || modemState == STATE_INT_CAL)
-        m_firstCal = true;
 
     return RSN_OK;
 }
@@ -973,7 +994,6 @@ uint8_t SerialPort::setMode(const uint8_t* data, uint8_t length)
         return RSN_ILLEGAL_LENGTH;
 
     DVM_STATE modemState = DVM_STATE(data[0U]);
-    DVM_STATE tmpState;
 
     if (modemState == m_modemState)
         return RSN_OK;
@@ -982,19 +1002,7 @@ uint8_t SerialPort::setMode(const uint8_t* data, uint8_t length)
     if (ret != RSN_OK)
         return ret;
 
-    if (modemState == STATE_DMR_CAL || modemState == STATE_DMR_DMO_CAL_1K ||
-        modemState == STATE_RSSI_CAL || modemState == STATE_INT_CAL) {
-        m_dmrEnable = true;
-        tmpState = STATE_DMR;
-        m_calState = modemState;
-        if (m_firstCal)
-            io.updateCal();
-    } else {
-        tmpState = modemState;
-        m_calState = STATE_IDLE;
-    }
-
-    setMode(tmpState);
+    setMode(modemState);
 
     return RSN_OK;
 }
@@ -1107,11 +1115,6 @@ void SerialPort::setMode(DVM_STATE modemState)
     }
 
     m_modemState = modemState;
-
-    if ((modemState != STATE_IDLE) && (m_modemStatePrev != modemState)) {
-        DEBUG1("SerialPort: setMode(): setting RF hardware");
-        io.rf1Conf(modemState, true);
-    }
 
     io.setMode(m_modemState);
 }

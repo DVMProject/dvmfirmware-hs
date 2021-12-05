@@ -145,6 +145,11 @@ public:
     /// <summary>Process data from serial port.</summary>
     void process();
 
+    ///  <summary>Helper to check if the modem is in a calibration state.</summary>
+    bool isCalState(DVM_STATE state);
+    ///  <summary>Helper to determine digital mode if the modem is in a calibration state.</summary>
+    DVM_STATE calRelativeState(DVM_STATE state);
+
     /// <summary>Write DMR frame data to serial port.</summary>
     void writeDMRData(bool slot, const uint8_t* data, uint8_t length);
     /// <summary>Write lost DMR frame data to serial port.</summary>
@@ -178,8 +183,7 @@ private:
     uint8_t m_ptr;
     uint8_t m_len;
 
-    bool    m_debug;
-    bool    m_firstCal;
+    bool m_debug;
 
     /// <summary>Write acknowlegement.</summary>
     void sendACK();

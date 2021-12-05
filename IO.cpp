@@ -268,8 +268,22 @@ void IO::setDecode(bool dcd)
 /// </summary>
 void IO::setMode(DVM_STATE modemState)
 {
-    setDMRInt(modemState == STATE_DMR);
-    setP25Int(modemState == STATE_P25);
+    DVM_STATE relativeState = modemState;
+
+    if ((modemState != STATE_IDLE) && (m_modemStatePrev != modemState)) {
+        DEBUG2("IO: setMode(): setting RF hardware", modemState);
+        if (serial.isCalState(modemState)) {
+            relativeState = serial.calRelativeState(modemState);
+        }
+    }
+    else {
+        return;
+    }
+
+    rf1Conf(relativeState, true);
+
+    setDMRInt(relativeState == STATE_DMR);
+    setP25Int(relativeState == STATE_P25);
 }
 
 /// <summary>

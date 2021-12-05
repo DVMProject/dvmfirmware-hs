@@ -113,19 +113,21 @@ CalDMR::CalDMR() :
 /// </summary>
 void CalDMR::process()
 {
-    switch (m_calState) {
+    switch (m_modemState) {
     case STATE_DMR_CAL:
     case STATE_DMR_LF_CAL:
         if (m_transmit) {
-            dmrDMOTX.setCal(true);
-            dmrDMOTX.process();
+            dmrTX.setCal(true);
+            dmrTX.process();
         }
         else {
-            dmrDMOTX.setCal(false);
+            dmrTX.setCal(false);
         }
         break;
     case STATE_DMR_CAL_1K:
+#if defined(DUPLEX)
         dmr1kcal();
+#endif
         break;
     case STATE_DMR_DMO_CAL_1K:
         dmrDMO1kcal();
@@ -181,6 +183,7 @@ void CalDMR::createDataDMO1k(uint8_t n)
 /// </summary>
 void CalDMR::dmr1kcal()
 {
+#if defined(DUPLEX)
     dmrTX.process();
 
     uint16_t space = dmrTX.getSpace2();
@@ -223,6 +226,7 @@ void CalDMR::dmr1kcal()
         m_state = DMRCAL1K_IDLE;
         break;
     }
+#endif
 }
 
 /// <summary>

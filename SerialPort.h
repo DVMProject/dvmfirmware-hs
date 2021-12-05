@@ -121,6 +121,8 @@ enum CMD_REASON_CODE {
 
     RSN_INVALID_P25_CORR_COUNT = 16U,
 
+    RSN_HS_NO_DUAL_MODE = 32U,
+
     RSN_DMR_DISABLED = 63U,
     RSN_P25_DISABLED = 64U,
 };
@@ -128,6 +130,7 @@ enum CMD_REASON_CODE {
 const uint8_t DVM_FRAME_START = 0xFEU;
 
 #define SERIAL_SPEED 115200
+#define STATE_SCAN_MAX 3
 
 // ---------------------------------------------------------------------------
 //  Class Declaration

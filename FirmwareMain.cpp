@@ -38,12 +38,9 @@
 // ---------------------------------------------------------------------------
 
 DVM_STATE m_modemState = STATE_IDLE;
-DVM_STATE m_modemStatePrev = STATE_IDLE;
 
 bool m_cwIdState = false;
 uint8_t m_cwIdTXLevel = 30;
-
-uint32_t m_modeTimerCnt;
 
 #ifdef ENABLE_DMR
 bool m_dmrEnable = true;
@@ -101,9 +98,9 @@ void setup()
 
 void loop()
 {
-    io.process();
-  
     serial.process();
+    
+    io.process();
 
     // The following is for transmitting
     if (m_dmrEnable && m_modemState == STATE_DMR) {

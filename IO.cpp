@@ -53,9 +53,6 @@ IO::IO():
     m_rxBuffer(1024U),
     m_txBuffer(1024U),
     m_ledCount(0U),
-    m_scanEnable(false),
-    m_scanPauseCnt(0U),
-    m_scanPos(0U),
     m_ledValue(true),
     m_watchdog(0U),
     m_int1Counter(0U),
@@ -83,7 +80,6 @@ IO::IO():
 #endif
 
     selfTest();
-    m_modeTimerCnt = 0U;
 }
 
 /// <summary>
@@ -91,30 +87,6 @@ IO::IO():
 /// </summary>
 void IO::start()
 {
-    m_totalModes = 0U;
-
-    if (m_dmrEnable) {
-        m_modes[m_totalModes] = STATE_DMR;
-        m_totalModes++;
-    }
-    if (m_p25Enable) {
-        m_modes[m_totalModes] = STATE_P25;
-        m_totalModes++;
-    }
-
-#if defined(ENABLE_SCAN_MODE)
-    if (m_totalModes > 1U) {
-        m_scanEnable = true;
-    }
-    else {
-        m_scanEnable = false;
-        setMode(m_modemState);
-    }
-#else
-    m_scanEnable = false;
-    setMode(m_modemState);
-#endif
-
     if (m_started)
         return;
 
@@ -129,18 +101,19 @@ void IO::start()
 void IO::process()
 {
     uint8_t bit;
-    uint32_t scantime;
+    uint32_t scanTime;
     uint8_t control;
 
     m_ledCount++;
     if (m_started) {
         // Two seconds timeout
         if (m_watchdog >= 19200U) {
+/*            
             if (m_modemState == STATE_DMR || m_modemState == STATE_P25) {
                 m_modemState = STATE_IDLE;
                 setMode(m_modemState);
             }
-
+*/
             m_watchdog = 0U;
         }
 
@@ -159,42 +132,22 @@ void IO::process()
         return;
     }
 
-    // Switch off the transmitter if needed
+    // switch off the transmitter if needed
     if (m_txBuffer.getData() == 0U && m_tx) {
         if (m_cwIdState) { 
             // check for CW ID end of transmission
             m_cwIdState = false;
-            
-            // restoring previous mode
-            if (m_totalModes) {
-                io.rf1Conf(m_modemStatePrev, true);
-            }
+            io.rf1Conf(m_modemState, true);
         }
 
         setRX(false);
     }
 
-    if (m_modemStatePrev == STATE_DMR)
-        scantime = SCAN_TIME * 2U;
-    else if (m_modemStatePrev == STATE_P25)
-        scantime = SCAN_TIME;
-    else
-        scantime = SCAN_TIME;
-
-    if (m_modeTimerCnt >= scantime) {
-        m_modeTimerCnt = 0U;
-        if ((m_modemState == STATE_IDLE) && (m_scanPauseCnt == 0U) && m_scanEnable && !m_cwIdState) {
-            m_scanPos = (m_scanPos + 1U) % m_totalModes;
-
-            setMode(m_modes[m_scanPos]);
-            io.rf1Conf(m_modes[m_scanPos], true);
-        }
-    }
-
     if (m_rxBuffer.getData() >= 1U) {
         m_rxBuffer.get(bit, control);
 
-        if (m_modemStatePrev == STATE_DMR) {
+        if (m_modemState == STATE_DMR) {
+            /** Digital Mobile Radio */
 #if defined(DUPLEX)
             if (m_duplex) {
                 if (m_tx)
@@ -208,7 +161,8 @@ void IO::process()
             dmrDMORX.databit(bit);
 #endif
         }
-        else if (m_modemStatePrev == STATE_P25) {
+        else if (m_modemState == STATE_P25) {
+            /** Project 25 */
             p25RX.databit(bit);
         }
     }
@@ -255,10 +209,8 @@ uint16_t IO::getSpace() const
 /// <param name="dcd"></param>
 void IO::setDecode(bool dcd)
 {
-    if (dcd != m_dcd) {
-        m_scanPauseCnt = 1U;
+    if (dcd != m_dcd)
         setCOSInt(dcd ? true : false);
-    }
 
     m_dcd = dcd;
 }
@@ -270,15 +222,11 @@ void IO::setMode(DVM_STATE modemState)
 {
     DVM_STATE relativeState = modemState;
 
-    if ((modemState != STATE_IDLE) && (m_modemStatePrev != modemState)) {
-        DEBUG2("IO: setMode(): setting RF hardware", modemState);
-        if (serial.isCalState(modemState)) {
-            relativeState = serial.calRelativeState(modemState);
-        }
+    if (serial.isCalState(modemState)) {
+        relativeState = serial.calRelativeState(modemState);
     }
-    else {
-        return;
-    }
+
+    DEBUG3("IO: setMode(): setting RF hardware", modemState, relativeState);
 
     rf1Conf(relativeState, true);
 

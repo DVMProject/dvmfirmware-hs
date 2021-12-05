@@ -257,14 +257,7 @@ void IO::interrupt1()
     }
 
     m_watchdog++;
-    m_modeTimerCnt++;
     m_int1Counter++;
-
-    if (m_scanPauseCnt >= SCAN_PAUSE)
-        m_scanPauseCnt = 0U;
-
-    if (m_scanPauseCnt != 0U)
-        m_scanPauseCnt++;
 }
 
 #if defined(DUPLEX)
@@ -299,8 +292,7 @@ void IO::rf1Conf(DVM_STATE modemState, bool reset)
 
     uint32_t txFrequencyTmp, rxFrequencyTmp;
 
-    if (modemState != STATE_CW)
-        m_modemStatePrev = modemState;
+    DEBUG3("IO: rf1Conf(): configuring ADF for Tx/Rx; modemState/reset", modemState, reset);
 
 #if defined (ZUMSPOT_ADF7021) || defined(SKYBRIDGE_HS)
     io.checkBand(m_rxFrequency, m_txFrequency);
@@ -500,6 +492,8 @@ void IO::rf1Conf(DVM_STATE modemState, bool reset)
 /// <param name="reset"></param>
 void IO::rf2Conf(DVM_STATE modemState)
 {
+    DEBUG2("IO: rf2Conf(): configuring 2nd ADF for Rx; modemState", modemState);
+
     // configure ADF Tx/RX
     configureTxRx(modemState);
 
@@ -685,6 +679,8 @@ void IO::updateCal(DVM_STATE modemState)
     AD7021_CONTROL = ADF7021_REG2;
     AD7021_1_IOCTL();
 
+    DEBUG2("IO: updateCal(): updating ADF calibration; modemState", modemState);
+
     if (m_tx)
         setTX();
     else
@@ -850,6 +846,8 @@ void IO::configureBand()
         f_div = 2U;
     else
         f_div = 1U;
+
+    DEBUG3("IO: configureBand(): configuring ADF freq band; reg1/f_div", ADF7021_REG1, f_div);
 }
 
 /// <summary>
@@ -1078,6 +1076,9 @@ void IO::configureTxRx(DVM_STATE modemState)
         }
         break;
     }
+
+    DEBUG4("IO: configureTxRx(): configuring ADF Tx/Rx states; dmrSymDev/p25SymDev/rfPower", (uint16_t)((ADF7021_PFD * dmrDev) / (f_div * 65536)),
+        (uint16_t)((ADF7021_PFD * p25Dev) / (f_div * 65536)), m_rfPower);
 }
 
 /// <summary>
@@ -1126,40 +1127,5 @@ void IO::setRX(bool doSle)
         }
     }
 }
-
-
-#if defined(ENABLE_DEBUG)
-
-uint32_t CIO::RXfreq()
-{
-  return (uint32_t)((float)(ADF7021_PFD / f_div) * ((float)((32768 * m_RX_N_divider) + m_RX_F_divider) / 32768.0)) + 100000;
-}
-
-uint32_t CIO::TXfreq()
-{
-  return (uint32_t)((float)(ADF7021_PFD / f_div) * ((float)((32768 * m_TX_N_divider) + m_TX_F_divider) / 32768.0));
-}
-
-uint16_t CIO::devDMR()
-{
-  return (uint16_t)((ADF7021_PFD * dmrDev) / (f_div * 65536));
-}
-
-uint16_t CIO::devP25()
-{
-  return (uint16_t)((ADF7021_PFD * p25Dev) / (f_div * 65536));
-}
-
-void CIO::printConf()
-{
-  DEBUG1("MMDVM_HS FW configuration:");
-  DEBUG2I("TX freq (Hz):", TXfreq());
-  DEBUG2I("RX freq (Hz):", RXfreq());
-  DEBUG2("Power set:", m_power);
-  DEBUG2("DMR +1 sym dev (Hz):", devDMR());
-  DEBUG2("P25 +1 sym dev (Hz):", devP25());
-}
-
-#endif
 
 #endif // ENABLE_ADF7021

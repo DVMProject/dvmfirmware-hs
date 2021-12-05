@@ -259,8 +259,6 @@ void DMRDMORX::correlateSync()
         if (m_endPtr >= DMO_BUFFER_LENGTH_BITS)
             m_endPtr -= DMO_BUFFER_LENGTH_BITS;
 
-        m_modeTimerCnt = 0;
-
         DEBUG4("DMRDMORX: correlateSync(): dataPtr/startPtr/endPtr", m_dataPtr, m_startPtr, m_endPtr);
     }
     else if ((countBits64((m_bitBuffer & DMR_SYNC_BITS_MASK) ^ DMR_MS_VOICE_SYNC_BITS) <= MAX_SYNC_BYTES_ERRS) || \
@@ -275,8 +273,6 @@ void DMRDMORX::correlateSync()
         m_endPtr = m_dataPtr + DMR_SLOT_TYPE_LENGTH_BITS / 2U + DMR_INFO_LENGTH_BITS / 2U;
         if (m_endPtr >= DMO_BUFFER_LENGTH_BITS)
             m_endPtr -= DMO_BUFFER_LENGTH_BITS;
-
-        m_modeTimerCnt = 0;
 
         DEBUG4("DMRDMORX: correlateSync(): dataPtr/startPtr/endPtr", m_dataPtr, m_startPtr, m_endPtr);
     }

@@ -85,12 +85,9 @@ const uint8_t   MARK_NONE = 0x00U;
 // ---------------------------------------------------------------------------
 
 extern DVM_STATE m_modemState;
-extern DVM_STATE m_modemStatePrev;
 
 extern bool m_cwIdState;
 extern uint8_t m_cwIdTXLevel;
-
-extern uint32_t m_modeTimerCnt;
 
 extern bool m_dmrEnable;
 extern bool m_p25Enable;

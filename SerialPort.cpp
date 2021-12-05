@@ -370,13 +370,14 @@ void SerialPort::process()
 bool SerialPort::isCalState(DVM_STATE state)
 {
     // calibration mode check
-    if (state != STATE_P25_CAL_1K &&
-        state != STATE_DMR_DMO_CAL_1K && state != STATE_DMR_CAL_1K &&
-        state != STATE_DMR_LF_CAL && state != STATE_P25_LF_CAL &&
-        state != STATE_RSSI_CAL &&
-        state != STATE_P25_CAL && state != STATE_DMR_CAL &&
-        state != STATE_INT_CAL)
+    if (state == STATE_P25_CAL_1K ||
+        state == STATE_DMR_DMO_CAL_1K || state == STATE_DMR_CAL_1K ||
+        state == STATE_DMR_LF_CAL || state == STATE_P25_LF_CAL ||
+        state == STATE_RSSI_CAL ||
+        state == STATE_P25_CAL || state == STATE_DMR_CAL ||
+        state == STATE_INT_CAL) {
         return true;
+    }
     
     return false;
 }
@@ -393,7 +394,7 @@ DVM_STATE SerialPort::calRelativeState(DVM_STATE state)
             state == STATE_DMR_LF_CAL || state == STATE_DMR_CAL ||
             state == STATE_RSSI_CAL || state == STATE_INT_CAL) {
             return STATE_DMR;
-        } else if(state != STATE_P25_CAL_1K && state != STATE_P25_LF_CAL &&
+        } else if(state == STATE_P25_CAL_1K || state == STATE_P25_LF_CAL ||
             state == STATE_P25_CAL) {
             return STATE_P25;
         }
@@ -943,6 +944,10 @@ uint8_t SerialPort::setConfig(const uint8_t* data, uint8_t length)
 
     m_dmrEnable = dmrEnable;
     m_p25Enable = p25Enable;
+
+    if (m_dmrEnable && m_p25Enable)
+        return RSN_HS_NO_DUAL_MODE;
+
     m_duplex = !simplex;
 
 #if !defined(DUPLEX)
@@ -976,6 +981,8 @@ uint8_t SerialPort::setConfig(const uint8_t* data, uint8_t length)
     if (m_modemState != STATE_IDLE && isCalState(m_modemState)) {
         io.updateCal(calRelativeState(m_modemState));
     }
+
+    setMode(m_modemState);
 
     io.start();
 

@@ -41,9 +41,6 @@
 //  Constants
 // ---------------------------------------------------------------------------
 
-#define SCAN_TIME 1920
-#define SCAN_PAUSE 20000
-
 #if defined(DUPLEX)
 #if defined(STM32_USB_HOST)
 #define CAL_DLY_LOOP 98950U
@@ -179,13 +176,6 @@ private:
     BitBuffer m_txBuffer;
 
     uint32_t m_ledCount;
-
-    bool m_scanEnable;
-    uint32_t m_scanPauseCnt;
-    uint8_t m_scanPos;
-
-    uint8_t m_totalModes;
-    DVM_STATE m_modes[6];
     bool m_ledValue;
 
     volatile uint32_t m_watchdog;

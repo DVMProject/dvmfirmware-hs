@@ -39,12 +39,10 @@ using namespace p25;
 //  Constants
 // ---------------------------------------------------------------------------
 
-const uint8_t MAX_SYNC_BYTES_START_ERRS = 2U;
-const uint8_t MAX_SYNC_BYTES_ERRS = 4U;
+const uint8_t MAX_SYNC_BITS_START_ERRS = 2U;
+const uint8_t MAX_SYNC_BITS_ERRS = 4U;
 
 const uint16_t MAX_SYNC_FRAMES = 7U;
-
-const uint8_t CORRELATION_COUNTDOWN = 6U;
 
 const uint16_t NOENDPTR = 9999U;
 
@@ -58,15 +56,9 @@ P25RX::P25RX() :
     m_bitBuffer(0x00U),
     m_buffer(),
     m_dataPtr(0U),
-    m_minSyncPtr(0U),
-    m_maxSyncPtr(NOENDPTR),
-    m_startPtr(0U),
     m_endPtr(NOENDPTR),
-    m_syncPtr(0U),
     m_lostCount(0U),
-    m_countdown(0U),
     m_nac(0xF7EU),
-    m_corrCountdown(CORRELATION_COUNTDOWN),
     m_state(P25RXS_NONE),
     m_duid(0xFFU)
 {
@@ -79,18 +71,11 @@ P25RX::P25RX() :
 void P25RX::reset()
 {
     m_bitBuffer = 0x00U;
- 
     m_dataPtr = 0U;
 
-    m_minSyncPtr = 0U;
-    m_maxSyncPtr = NOENDPTR;
-
-    m_startPtr = 0U;
     m_endPtr = NOENDPTR;
-    m_syncPtr = 0U;
 
     m_lostCount = 0U;
-    m_countdown = 0U;
 
     m_state = P25RXS_NONE;
 
@@ -103,11 +88,19 @@ void P25RX::reset()
 /// <param name="bit"></param>
 void P25RX::databit(bool bit)
 {
-    _WRITE_BIT(m_buffer, m_dataPtr, bit);
-
     m_bitBuffer <<= 1;
     if (bit)
         m_bitBuffer |= 0x01U;
+
+    if (m_state != P25RXS_NONE) {
+        _WRITE_BIT(m_buffer, m_dataPtr, bit);
+
+        m_dataPtr++;
+        if (m_dataPtr > P25_LDU_FRAME_LENGTH_BITS) {
+            m_duid = 0xFFU;
+            m_dataPtr = 0U;
+        }
+    }
 
     if (m_state == P25RXS_SYNC) {
         processBit(bit);
@@ -121,36 +114,15 @@ void P25RX::databit(bool bit)
     else {
         bool ret = correlateSync();
         if (ret) {
-            // on the first sync, start the countdown to the state change
-            if (m_countdown == 0U) {
-                io.setDecode(true);
+            DEBUG3("P25RX: databit(): dataPtr/endPtr", m_dataPtr, m_endPtr);
 
-                m_countdown = m_corrCountdown;
-                DEBUG2("P25RX: databit(): correlation countdown", m_countdown);
-            }
-        }
-
-        if (m_countdown > 0U)
-            m_countdown--;
-
-        if (m_countdown == 1U) {
-            m_minSyncPtr = m_syncPtr + P25_HDU_FRAME_LENGTH_BITS - 1U;
-            if (m_minSyncPtr >= P25_LDU_FRAME_LENGTH_BITS)
-                m_minSyncPtr -= P25_LDU_FRAME_LENGTH_BITS;
-
-            m_maxSyncPtr = m_syncPtr + P25_HDU_FRAME_LENGTH_BITS + 1U;
-            if (m_maxSyncPtr >= P25_LDU_FRAME_LENGTH_BITS)
-                m_maxSyncPtr -= P25_LDU_FRAME_LENGTH_BITS;
+            for (uint8_t i = 0U; i < P25_SYNC_LENGTH_BYTES; i++)
+                m_buffer[i] = P25_SYNC_BYTES[i];
 
             m_state = P25RXS_SYNC;
-            m_countdown = 0U;
-        }
-    }
 
-    m_dataPtr++;
-    if (m_dataPtr >= P25_LDU_FRAME_LENGTH_BITS) {
-        m_duid = 0xFFU;
-        m_dataPtr = 0U;
+            io.setDecode(true);
+        }
     }
 }
 
@@ -163,15 +135,6 @@ void P25RX::setNAC(uint16_t nac)
     m_nac = nac;
 }
 
-/// <summary>
-/// Sets the P25 sync correlation countdown.
-/// </summary>
-/// <param name="count">Correlation Countdown Count.</param>
-void P25RX::setCorrCount(uint8_t count)
-{
-    m_corrCountdown = count;
-}
-
 // ---------------------------------------------------------------------------
 //  Private Class Members
 // ---------------------------------------------------------------------------
@@ -181,22 +144,11 @@ void P25RX::setCorrCount(uint8_t count)
 /// <param name="bit"></param>
 void P25RX::processBit(bool bit)
 {
-    if (m_minSyncPtr < m_maxSyncPtr) {
-        if (m_dataPtr >= m_minSyncPtr && m_dataPtr <= m_maxSyncPtr)
-            correlateSync();
-    }
-    else {
-        if (m_dataPtr >= m_minSyncPtr || m_dataPtr <= m_maxSyncPtr)
-            correlateSync();
-    }
+    // process NID
+    if (m_dataPtr == P25_SYNC_LENGTH_BITS + P25_NID_LENGTH_BITS + 1) {
+        DEBUG3("P25RX: processBit(): dataPtr/endPtr", m_dataPtr, m_endPtr);
 
-    // initial sample processing does not have an end pointer -- we simply wait till we've read
-    // the bits up to the maximum sync pointer
-    if (m_dataPtr == m_maxSyncPtr) {
-        DEBUG4("P25RX: processBit(): dataPtr/startPtr/endPtr", m_dataPtr, m_startPtr, m_maxSyncPtr);
-        DEBUG4("P25RX: processBit(): lostCount/maxSyncPtr/minSyncPtr", m_lostCount, m_maxSyncPtr, m_minSyncPtr);
-
-        if (!decodeNid(m_startPtr)) {
+        if (!decodeNid()) {
             io.setDecode(false);
 
             serial.writeP25Lost();
@@ -206,60 +158,39 @@ void P25RX::processBit(bool bit)
             switch (m_duid) {
             case P25_DUID_HDU:
                 {
-                    DEBUG2("P25RX: processBit(): sync found in HDU pos", m_syncPtr);
-
-                    uint8_t frame[P25_HDU_FRAME_LENGTH_BYTES + 1U];
-                    bitsToBytes(m_startPtr + P25_NID_LENGTH_BITS, P25_HDU_FRAME_LENGTH_BITS, frame);
-
-                    frame[0U] = 0x01U;
-                    serial.writeP25Data(frame, P25_HDU_FRAME_LENGTH_BYTES + 1U);
-                    reset();
+                    DEBUG2("P25RX: processBit(): sync found in HDU pos", m_dataPtr);
+                    m_endPtr = P25_HDU_FRAME_LENGTH_BITS;
                 }
                 break;
             case P25_DUID_TDU:
                 {
-                    DEBUG2("P25RX: processBit(): sync found in TDU pos", m_syncPtr);
-                    
-                    uint8_t frame[P25_TDU_FRAME_LENGTH_BYTES + 1U];
-                    bitsToBytes(m_startPtr + P25_NID_LENGTH_BITS, P25_TDU_FRAME_LENGTH_BITS, frame);
-
-                    frame[0U] = 0x01U;
-                    serial.writeP25Data(frame, P25_TDU_FRAME_LENGTH_BYTES + 1U);
-                    reset();
-            }
+                    DEBUG2("P25RX: processBit(): sync found in TDU pos", m_dataPtr);
+                    m_endPtr = P25_TDU_FRAME_LENGTH_BITS;
+                }
                 break;
             case P25_DUID_LDU1:
                 m_state = P25RXS_VOICE;
+                m_endPtr = P25_LDU_FRAME_LENGTH_BITS;
                 return;
             case P25_DUID_TSDU:
                 {
-                    DEBUG2("P25RX: processBit(): sync found in TSDU pos", m_syncPtr);
-
-                    uint8_t frame[P25_TSDU_FRAME_LENGTH_BYTES + 1U];
-                    bitsToBytes(m_startPtr + P25_NID_LENGTH_BITS, P25_TSDU_FRAME_LENGTH_BITS, frame);
-
-                    frame[0U] = 0x01U;
-                    serial.writeP25Data(frame, P25_TSDU_FRAME_LENGTH_BYTES + 1U);
-                    reset();
-            }
+                    DEBUG2("P25RX: processBit(): sync found in TSDU pos", m_dataPtr);
+                    m_endPtr = P25_TSDU_FRAME_LENGTH_BITS;
+                }
                 break;
             case P25_DUID_LDU2:
                 m_state = P25RXS_VOICE;
+                m_endPtr = P25_LDU_FRAME_LENGTH_BITS;
                 return;
             case P25_DUID_PDU:
                 m_state = P25RXS_DATA;
+                m_endPtr = P25_LDU_FRAME_LENGTH_BITS;
                 return;
             case P25_DUID_TDULC:
                 {
-                    DEBUG2("P25RX: processBit(): sync found in TDULC pos", m_syncPtr);
-            
-                    uint8_t frame[P25_TDULC_FRAME_LENGTH_BYTES + 1U];
-                    bitsToBytes(m_startPtr + P25_NID_LENGTH_BITS, P25_TDULC_FRAME_LENGTH_BITS, frame);
-
-                    frame[0U] = 0x01U;
-                    serial.writeP25Data(frame, P25_TDULC_FRAME_LENGTH_BYTES + 1U);
-                    reset();
-            }
+                    DEBUG2("P25RX: processBit(): sync found in TDULC pos", m_dataPtr);
+                    m_endPtr = P25_TDULC_FRAME_LENGTH_BITS;
+                }
                 break;
             default:
                 {
@@ -271,22 +202,24 @@ void P25RX::processBit(bool bit)
         }
     }
 
-    m_minSyncPtr = m_syncPtr + P25_LDU_FRAME_LENGTH_BITS - 1U;
-    if (m_minSyncPtr >= P25_LDU_FRAME_LENGTH_BITS)
-        m_minSyncPtr -= P25_LDU_FRAME_LENGTH_BITS;
-
-    m_maxSyncPtr = m_syncPtr + 1U;
-    if (m_maxSyncPtr >= P25_LDU_FRAME_LENGTH_BITS)
-        m_maxSyncPtr -= P25_LDU_FRAME_LENGTH_BITS;
-
-    m_lostCount = MAX_SYNC_FRAMES;
-
     if (m_state == P25RXS_VOICE) {
+        m_lostCount = MAX_SYNC_FRAMES;
         processVoice(bit);
     }
 
     if (m_state == P25RXS_DATA) {
+        m_lostCount = MAX_SYNC_FRAMES;
         processData(bit);
+    }
+
+    // since we aren't processing voice or data -- simply wait till we've reached the end pointer
+    if (m_dataPtr == m_endPtr) {
+        uint8_t frame[P25_HDU_FRAME_LENGTH_BYTES + 1U];
+        ::memcpy(frame + 1U, m_buffer, m_endPtr / 8U);
+
+        frame[0U] = 0x01U;
+        serial.writeP25Data(frame, (m_endPtr / 8U) + 1U);
+        reset();
     }
 }
 
@@ -296,31 +229,66 @@ void P25RX::processBit(bool bit)
 /// <param name="bit"></param>
 void P25RX::processVoice(bool bit)
 {
-    if (m_minSyncPtr < m_maxSyncPtr) {
-        if (m_dataPtr >= m_minSyncPtr && m_dataPtr <= m_maxSyncPtr)
-            correlateSync();
-    }
-    else {
-        if (m_dataPtr >= m_minSyncPtr || m_dataPtr <= m_maxSyncPtr)
-            correlateSync();
+    // only search for a sync in the right place +-2 bits
+    if (m_dataPtr >= (P25_SYNC_LENGTH_BITS - 2U) && m_dataPtr <= (P25_SYNC_LENGTH_BITS + 2U)) {
+        correlateSync();
     }
 
-    if (m_dataPtr == m_endPtr) {
-        if (m_lostCount == MAX_SYNC_FRAMES) {
-            m_minSyncPtr = m_syncPtr + P25_LDU_FRAME_LENGTH_BITS - 1U;
-            if (m_minSyncPtr >= P25_LDU_FRAME_LENGTH_BITS)
-                m_minSyncPtr -= P25_LDU_FRAME_LENGTH_BITS;
+    // process NID
+    if (m_dataPtr == P25_SYNC_LENGTH_BITS + P25_NID_LENGTH_BITS + 1) {
+        DEBUG3("P25RX: processVoice(): dataPtr/endPtr", m_dataPtr, m_endPtr);
 
-            m_maxSyncPtr = m_syncPtr + 1U;
-            if (m_maxSyncPtr >= P25_LDU_FRAME_LENGTH_BITS)
-                m_maxSyncPtr -= P25_LDU_FRAME_LENGTH_BITS;
+        if (!decodeNid()) {
+            io.setDecode(false);
+
+            serial.writeP25Lost();
+            reset();
         }
+        else {
+            switch (m_duid) {
+            case P25_DUID_TDU:
+                {
+                    DEBUG2("P25RX: processVoice(): sync found in TDU pos", m_dataPtr);
+                    m_endPtr = P25_TDU_FRAME_LENGTH_BITS;
+                }
+                break;
+            case P25_DUID_LDU1:
+                m_endPtr = P25_LDU_FRAME_LENGTH_BITS;
+                return;
+            case P25_DUID_LDU2:
+                m_endPtr = P25_LDU_FRAME_LENGTH_BITS;
+                return;
+            default:
+                {
+                    DEBUG3("P25RX: processVoice(): illegal DUID in NID", m_nac, m_duid);
+                    reset();
+                }
+                return;
+            }
+        }
+    }
 
+    // if we've reached the end pointer and the DUID is a TDU; send it
+    if (m_dataPtr == m_endPtr && m_duid == P25_DUID_TDU)
+    {
+        DEBUG2("P25RX: processVoice(): sync found in TDU pos", m_dataPtr);
+
+        uint8_t frame[P25_TDU_FRAME_LENGTH_BYTES + 1U];
+        ::memcpy(frame + 1U, m_buffer, m_endPtr / 8U);
+
+        frame[0U] = 0x01U;
+        serial.writeP25Data(frame, P25_TDU_FRAME_LENGTH_BYTES + 1U);
+
+        io.setDecode(false);
+
+        reset();
+        return;
+    }
+
+    // process voice frame
+    if (m_dataPtr == m_endPtr) {
         m_lostCount--;
-
-        DEBUG4("P25RX: processVoice(): dataPtr/startPtr/endPtr", m_dataPtr, m_startPtr, m_endPtr);
-        DEBUG4("P25RX: processVoice(): lostCount/maxSyncPtr/minSyncPtr", m_lostCount, m_maxSyncPtr, m_minSyncPtr);
-
+        
         // we've not seen a data sync for too long, signal sync lost and change to P25RXS_NONE
         if (m_lostCount == 0U) {
             DEBUG1("P25RX: processVoice(): sync timeout in LDU, lost lock");
@@ -331,49 +299,22 @@ void P25RX::processVoice(bool bit)
             reset();
         }
         else {
-            if (!decodeNid(m_startPtr)) {
-                io.setDecode(false);
+            DEBUG2("P25RX: processVoice(): sync found in LDU pos", m_dataPtr);
 
-                serial.writeP25Lost();
-                reset();
-            }
-            else {
-                if (m_duid == P25_DUID_TDU) {
-                    DEBUG2("P25RX: processBit(): sync found in TDU pos", m_syncPtr);
+            uint8_t frame[P25_LDU_FRAME_LENGTH_BYTES + 3U];
+            ::memcpy(frame + 1U, m_buffer, m_endPtr / 8U);
 
-                    uint8_t frame[P25_TDU_FRAME_LENGTH_BYTES + 1U];
-                    bitsToBytes(m_startPtr + P25_NID_LENGTH_BITS, P25_TDU_FRAME_LENGTH_BITS, frame);
-
-                    frame[0U] = 0x01U;
-                    serial.writeP25Data(frame, P25_TDU_FRAME_LENGTH_BYTES + 1U);
-
-                    io.setDecode(false);
-
-                    reset();
-                    return;
-                }
-
-                DEBUG2("P25RX: processVoice(): sync found in LDU pos", m_syncPtr);
-
-                uint8_t frame[P25_LDU_FRAME_LENGTH_BYTES + 3U];
-                bitsToBytes(m_startPtr + P25_NID_LENGTH_BITS, P25_LDU_FRAME_LENGTH_BITS, frame);
-
-                frame[0U] = m_lostCount == (MAX_SYNC_FRAMES - 1U) ? 0x01U : 0x00U;
+            frame[0U] = m_lostCount == (MAX_SYNC_FRAMES - 1U) ? 0x01U : 0x00U;
 #if defined(SEND_RSSI_DATA)
-                if (m_rssiCount > 0U) {
-                    uint16_t rssi = m_rssiAccum / m_rssiCount;
-                    frame[217U] = (rssi >> 8) & 0xFFU;
-                    frame[218U] = (rssi >> 0) & 0xFFU;
+            uint16_t rssi = io.readRSSI();
+            frame[217U] = (rssi >> 8) & 0xFFU;
+            frame[218U] = (rssi >> 0) & 0xFFU;
 
-                    serial.writeP25Data(false, frame, P25_LDU_FRAME_LENGTH_BYTES + 3U);
-                }
-                else {
-                    serial.writeP25Data(false, frame, P25_LDU_FRAME_LENGTH_BYTES + 1U);
-                }
+            serial.writeP25Data(false, frame, P25_LDU_FRAME_LENGTH_BYTES + 3U);
 #else
-                serial.writeP25Data(frame, P25_LDU_FRAME_LENGTH_BYTES + 1U);
+            serial.writeP25Data(frame, P25_LDU_FRAME_LENGTH_BYTES + 1U);
 #endif
-            }
+
         }
     }
 }
@@ -384,31 +325,40 @@ void P25RX::processVoice(bool bit)
 /// <param name="bit"></param>
 void P25RX::processData(bool bit)
 {
-    if (m_minSyncPtr < m_maxSyncPtr) {
-        if (m_dataPtr >= m_minSyncPtr && m_dataPtr <= m_maxSyncPtr)
-            correlateSync();
-    }
-    else {
-        if (m_dataPtr >= m_minSyncPtr || m_dataPtr <= m_maxSyncPtr)
-            correlateSync();
+    // only search for a sync in the right place +-2 bits
+    if (m_dataPtr >= (P25_SYNC_LENGTH_BITS - 2U) && m_dataPtr <= (P25_SYNC_LENGTH_BITS + 2U)) {
+        correlateSync();
     }
 
-    if (m_dataPtr == m_endPtr) {
-        if (m_lostCount == MAX_SYNC_FRAMES) {
-            m_minSyncPtr = m_syncPtr + P25_LDU_FRAME_LENGTH_BITS - 1U;
-            if (m_minSyncPtr >= P25_LDU_FRAME_LENGTH_BITS)
-                m_minSyncPtr -= P25_LDU_FRAME_LENGTH_BITS;
+    // process NID
+    if (m_dataPtr == P25_SYNC_LENGTH_BITS + P25_NID_LENGTH_BITS + 1) {
+        DEBUG3("P25RX: processVoice(): dataPtr/endPtr", m_dataPtr, m_endPtr);
 
-            m_maxSyncPtr = m_syncPtr + 1U;
-            if (m_maxSyncPtr >= P25_LDU_FRAME_LENGTH_BITS)
-                m_maxSyncPtr -= P25_LDU_FRAME_LENGTH_BITS;
+        if (!decodeNid()) {
+            io.setDecode(false);
+
+            serial.writeP25Lost();
+            reset();
         }
+        else {
+            switch (m_duid) {
+            case P25_DUID_PDU:
+                m_endPtr = P25_LDU_FRAME_LENGTH_BITS;
+                return;
+            default:
+                {
+                    DEBUG3("P25RX: processData(): illegal DUID in NID", m_nac, m_duid);
+                    reset();
+                }
+                return;
+            }
+        }
+    }
 
+    // process voice frame
+    if (m_dataPtr == m_endPtr) {
         m_lostCount--;
-
-        DEBUG4("P25RX: processData(): dataPtr/startPtr/endPtr", m_dataPtr, m_startPtr, m_endPtr);
-        DEBUG4("P25RX: processData(): lostCount/maxSyncPtr/minSyncPtr", m_lostCount, m_maxSyncPtr, m_minSyncPtr);
-
+        
         // we've not seen a data sync for too long, signal sync lost and change to P25RXS_NONE
         if (m_lostCount == 0U) {
             DEBUG1("P25RX: processData(): sync timeout in PDU, lost lock");
@@ -419,34 +369,13 @@ void P25RX::processData(bool bit)
             reset();
         }
         else {
-            if (!decodeNid(m_startPtr)) {
-                io.setDecode(false);
+            DEBUG2("P25RX: processData(): sync found in PDU pos", m_dataPtr);
 
-                serial.writeP25Lost();
-                reset();
-            }
-            else {
-                DEBUG2("P25RX: processData(): sync found in PDU pos", m_syncPtr);
+            uint8_t frame[P25_LDU_FRAME_LENGTH_BYTES + 1U];
+            ::memcpy(frame + 1U, m_buffer, m_endPtr / 8U);
 
-                uint8_t frame[P25_LDU_FRAME_LENGTH_BYTES + 3U];
-                bitsToBytes(m_startPtr + P25_NID_LENGTH_BITS, P25_LDU_FRAME_LENGTH_BITS, frame);
-
-                frame[0U] = m_lostCount == (MAX_SYNC_FRAMES - 1U) ? 0x01U : 0x00U;
-#if defined(SEND_RSSI_DATA)
-                if (m_rssiCount > 0U) {
-                    uint16_t rssi = m_rssiAccum / m_rssiCount;
-                    frame[217U] = (rssi >> 8) & 0xFFU;
-                    frame[218U] = (rssi >> 0) & 0xFFU;
-
-                    serial.writeP25Data(false, frame, P25_LDU_FRAME_LENGTH_BYTES + 3U);
-                }
-                else {
-                    serial.writeP25Data(false, frame, P25_LDU_FRAME_LENGTH_BYTES + 1U);
-                }
-#else
-                serial.writeP25Data(frame, P25_LDU_FRAME_LENGTH_BYTES + 1U);
-#endif
-            }
+            frame[0U] = m_lostCount == (MAX_SYNC_FRAMES - 1U) ? 0x01U : 0x00U;
+            serial.writeP25Data(frame, P25_LDU_FRAME_LENGTH_BYTES + 1U);
         }
     }
 }
@@ -459,27 +388,22 @@ bool P25RX::correlateSync()
 {
     uint8_t maxErrs;
     if (m_state == P25RXS_NONE)
-        maxErrs = MAX_SYNC_BYTES_START_ERRS;
+        maxErrs = MAX_SYNC_BITS_START_ERRS;
     else
-        maxErrs = MAX_SYNC_BYTES_ERRS;
+        maxErrs = MAX_SYNC_BITS_ERRS;
 
     uint8_t errs = countBits64((m_bitBuffer & P25_SYNC_BITS_MASK) ^ P25_SYNC_BITS);
     if (errs <= maxErrs) {
         DEBUG2("P25RX: correlateSync(): correlateSync errs", errs);
 
-        m_syncPtr = m_dataPtr;
-
-        m_startPtr = m_dataPtr + P25_LDU_FRAME_LENGTH_BITS - P25_SYNC_LENGTH_BITS + 1;
-        if (m_startPtr >= P25_LDU_FRAME_LENGTH_BITS)
-            m_startPtr -= P25_LDU_FRAME_LENGTH_BITS;
-
-        m_endPtr = m_dataPtr + P25_LDU_FRAME_LENGTH_BITS - P25_SYNC_LENGTH_BITS - 1U;
+        m_endPtr = m_dataPtr + P25_LDU_FRAME_LENGTH_BITS - P25_SYNC_LENGTH_BITS;
         if (m_endPtr >= P25_LDU_FRAME_LENGTH_BITS)
             m_endPtr -= P25_LDU_FRAME_LENGTH_BITS;
 
         m_lostCount = MAX_SYNC_FRAMES;
+        m_dataPtr = P25_SYNC_LENGTH_BITS;
 
-        DEBUG4("P25RX: correlateSync(): dataPtr/startPtr/endPtr", m_dataPtr, m_startPtr, m_endPtr);
+        DEBUG3("P25RX: correlateSync(): dataPtr/endPtr", m_dataPtr, m_endPtr);
 
         return true;
     }
@@ -490,15 +414,11 @@ bool P25RX::correlateSync()
 /// <summary>
 /// Helper to decode the P25 NID.
 /// </summary>
-/// <param name="start"></param>
-bool P25RX::decodeNid(uint16_t start)
+bool P25RX::decodeNid()
 {
-    uint16_t nidStartPtr = start + P25_SYNC_LENGTH_BITS;
-    if (nidStartPtr >= P25_LDU_FRAME_LENGTH_BITS)
-        nidStartPtr -= P25_LDU_FRAME_LENGTH_BITS;
-
     uint8_t nid[P25_NID_LENGTH_BYTES];
-    bitsToBytes(m_startPtr, P25_NID_LENGTH_BITS, nid);
+    for (int i = 6U; i < 8U; i++)
+        nid[i - 6U] = m_buffer[i];
 
     if (m_nac == 0xF7EU) {
         m_duid = nid[1U] & 0x0FU;
@@ -517,56 +437,4 @@ bool P25RX::decodeNid(uint16_t start)
     }
 
     return false;
-}
-
-/// <summary>
-/// 
-/// </summary>
-/// <param name="start"></param>
-/// <param name="count"></param>
-/// <param name="buffer"></param>
-void P25RX::bitsToBytes(uint16_t start, uint8_t count, uint8_t* buffer)
-{
-    for (uint8_t i = 0U; i < count; i++) {
-        buffer[i] = 0U;
-        buffer[i] |= _READ_BIT(m_buffer, start) << 7;
-        start++;
-        if (start >= P25_LDU_FRAME_LENGTH_BITS)
-            start -= P25_LDU_FRAME_LENGTH_BITS;
-
-        buffer[i] |= _READ_BIT(m_buffer, start) << 6;
-        start++;
-        if (start >= P25_LDU_FRAME_LENGTH_BITS)
-            start -= P25_LDU_FRAME_LENGTH_BITS;
-
-        buffer[i] |= _READ_BIT(m_buffer, start) << 5;
-        start++;
-        if (start >= P25_LDU_FRAME_LENGTH_BITS)
-            start -= P25_LDU_FRAME_LENGTH_BITS;
-
-        buffer[i] |= _READ_BIT(m_buffer, start) << 4;
-        start++;
-        if (start >= P25_LDU_FRAME_LENGTH_BITS)
-            start -= P25_LDU_FRAME_LENGTH_BITS;
-
-        buffer[i] |= _READ_BIT(m_buffer, start) << 3;
-        start++;
-        if (start >= P25_LDU_FRAME_LENGTH_BITS)
-            start -= P25_LDU_FRAME_LENGTH_BITS;
-
-        buffer[i] |= _READ_BIT(m_buffer, start) << 2;
-        start++;
-        if (start >= P25_LDU_FRAME_LENGTH_BITS)
-            start -= P25_LDU_FRAME_LENGTH_BITS;
-
-        buffer[i] |= _READ_BIT(m_buffer, start) << 1;
-        start++;
-        if (start >= P25_LDU_FRAME_LENGTH_BITS)
-            start -= P25_LDU_FRAME_LENGTH_BITS;
-
-        buffer[i] |= _READ_BIT(m_buffer, start) << 0;
-        start++;
-        if (start >= P25_LDU_FRAME_LENGTH_BITS)
-            start -= P25_LDU_FRAME_LENGTH_BITS;
-    }
 }

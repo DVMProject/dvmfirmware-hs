@@ -74,16 +74,16 @@
 #endif
 
 #if defined(ADF7021_14_7456)
-#define DESCR_OSC       "TCXO 14.7456"
+#define DESCR_OSC       "TCXO 14.7456, "
 #endif
 #if defined(ADF7021_12_2880)
-#define DESCR_OSC       "TCXO 12.2880"
+#define DESCR_OSC       "TCXO 12.2880, "
 #endif
 
 #if defined(ENABLE_ADF7021) && defined(ADF7021_N_VER)
-#define RF_CHIP         "ADF7021N"
+#define RF_CHIP         "ADF7021N, "
 #elif defined(ENABLE_ADF7021)
-#define RF_CHIP         "ADF7021"
+#define RF_CHIP         "ADF7021, "
 #endif
 
 #define DESCRIPTION        "Digital Voice Modem DSP Hotspot [" BOARD_INFO "] (" RF_CHIP DESCR_DMR DESCR_P25 DESCR_OSC DESCR_RSSI "CW Id)"
@@ -900,10 +900,6 @@ uint8_t SerialPort::setConfig(const uint8_t* data, uint8_t length)
 
     io.setDeviations(dmrTXLevel, p25TXLevel);
 
-    uint8_t p25CorrCount = data[11U];
-    if (p25CorrCount > 255U)
-        return RSN_INVALID_P25_CORR_COUNT;
-
     if (modemState == STATE_DMR_CAL || modemState == STATE_DMR_DMO_CAL_1K || modemState == STATE_RSSI_CAL ||
         modemState == STATE_INT_CAL) {
         m_dmrEnable = true;
@@ -938,7 +934,6 @@ uint8_t SerialPort::setConfig(const uint8_t* data, uint8_t length)
     dmrDMOTX.setPreambleCount(fdmaPreamble);
 
     p25RX.setNAC(nac);
-    p25RX.setCorrCount(p25CorrCount);
 
 #if defined(DUPLEX)
     dmrTX.setColorCode(colorCode);

@@ -42,9 +42,6 @@ using namespace dmr;
 //  Constants
 // ---------------------------------------------------------------------------
 
-const uint16_t SCAN_START = 390U;
-const uint16_t SCAN_END = 500U;
-
 const uint8_t MAX_SYNC_BYTES_ERRS = 3U;
 
 const uint8_t MAX_SYNC_LOST_FRAMES = 13U;
@@ -132,15 +129,24 @@ bool DMRSlotRX::databit(bool bit)
         return m_state != DMRRXS_NONE;
 
     if (m_state == DMRRXS_NONE) {
-        if (m_dataPtr >= SCAN_START && m_dataPtr <= SCAN_END)
-            correlateSync();
+        correlateSync();
     }
     else {
+        uint16_t min = m_syncPtr + DMR_BUFFER_LENGTH_BITS - 2U;
+        uint16_t max = m_syncPtr + 2U;
 
-        uint16_t min = m_syncPtr - 1U;
-        uint16_t max = m_syncPtr + 1U;
-        if (m_dataPtr >= min && m_dataPtr <= max)
-            correlateSync();
+        if (min >= DMR_BUFFER_LENGTH_BITS)
+            min -= DMR_BUFFER_LENGTH_BITS;
+        if (max >= DMR_BUFFER_LENGTH_BITS)
+            max -= DMR_BUFFER_LENGTH_BITS;
+
+        if (min < max) {
+            if (m_dataPtr >= min && m_dataPtr <= max)
+                correlateSync();
+        } else {
+            if (m_dataPtr >= min || m_dataPtr <= max)
+                correlateSync();
+        }        
     }
 
     if (m_dataPtr == m_endPtr) {

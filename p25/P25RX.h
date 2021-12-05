@@ -66,28 +66,18 @@ namespace p25
 
         /// <summary>Sets the P25 NAC.</summary>
         void setNAC(uint16_t nac);
-        /// <summary>Sets the P25 sync correlation countdown.</summary>
-        void setCorrCount(uint8_t count);
 
     private:
         uint64_t m_bitBuffer;
-        uint8_t m_buffer[P25_LDU_FRAME_LENGTH_BITS / 8U + 3U];
+        uint8_t m_buffer[P25_LDU_FRAME_LENGTH_BYTES + 3U];
 
         uint16_t m_dataPtr;
 
-        uint16_t m_minSyncPtr;
-        uint16_t m_maxSyncPtr;
-
-        uint16_t m_startPtr;
         uint16_t m_endPtr;
-        uint16_t m_syncPtr;
 
         uint16_t m_lostCount;
-        uint8_t m_countdown;
 
         uint16_t m_nac;
-
-        uint8_t m_corrCountdown;
 
         P25RX_STATE m_state;
 
@@ -104,10 +94,7 @@ namespace p25
         bool correlateSync();
 
         /// <summary>Helper to decode the P25 NID.</summary>
-        bool decodeNid(uint16_t start);
-
-        /// <summary></summary>
-        void bitsToBytes(uint16_t start, uint8_t count, uint8_t* buffer);
+        bool decodeNid();
     };
 } // namespace p25
 

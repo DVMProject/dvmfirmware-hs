@@ -120,9 +120,9 @@ void P25RX::databit(bool bit)
                 m_buffer[i] = P25_SYNC_BYTES[i];
 
             m_state = P25RXS_SYNC;
-
-            io.setDecode(true);
         }
+
+        io.setDecode(m_state != P25RXS_NONE);
     }
 }
 

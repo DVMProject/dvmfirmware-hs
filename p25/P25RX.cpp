@@ -62,7 +62,7 @@ P25RX::P25RX() :
     m_state(P25RXS_NONE),
     m_duid(0xFFU)
 {
-    /* stub */
+    ::memset(m_buffer, 0x00U, P25_LDU_FRAME_LENGTH_BYTES + 3U);
 }
 
 /// <summary>
@@ -115,10 +115,6 @@ void P25RX::databit(bool bit)
         bool ret = correlateSync();
         if (ret) {
             DEBUG3("P25RX: databit(): dataPtr/endPtr", m_dataPtr, m_endPtr);
-
-            for (uint8_t i = 0U; i < P25_SYNC_LENGTH_BYTES; i++)
-                m_buffer[i] = P25_SYNC_BYTES[i];
-
             m_state = P25RXS_SYNC;
         }
 
@@ -214,6 +210,9 @@ void P25RX::processBit(bool bit)
 
     // since we aren't processing voice or data -- simply wait till we've reached the end pointer
     if (m_dataPtr == m_endPtr) {
+        // DEBUG3("P25RX: m_buffer dump endPtr/endPtrB", m_endPtr, m_endPtr / 8U);
+        // DEBUG_DUMP(m_buffer, P25_LDU_FRAME_LENGTH_BYTES + 3U);
+
         uint8_t frame[P25_HDU_FRAME_LENGTH_BYTES + 1U];
         ::memcpy(frame + 1U, m_buffer, m_endPtr / 8U);
 
@@ -392,9 +391,32 @@ bool P25RX::correlateSync()
     else
         maxErrs = MAX_SYNC_BITS_ERRS;
 
-    uint8_t errs = countBits64((m_bitBuffer & P25_SYNC_BITS_MASK) ^ P25_SYNC_BITS);
+    // unpack sync bytes
+    uint8_t sync[P25_SYNC_BYTES_LENGTH];
+    sync[0U] = (uint8_t)((m_bitBuffer >> 40) & 0xFFU);
+    sync[1U] = (uint8_t)((m_bitBuffer >> 32) & 0xFFU);
+    sync[2U] = (uint8_t)((m_bitBuffer >> 24) & 0xFFU);
+    sync[3U] = (uint8_t)((m_bitBuffer >> 16) & 0xFFU);
+    sync[4U] = (uint8_t)((m_bitBuffer >> 8) & 0xFFU);
+    sync[5U] = (uint8_t)((m_bitBuffer >> 0) & 0xFFU);
+
+    uint8_t errs = 0U;
+    for (uint8_t i = 0U; i < P25_SYNC_BYTES_LENGTH; i++)
+        errs += countBits8(sync[i] ^ P25_SYNC_BYTES[i]);
+
     if (errs <= maxErrs) {
+        ::memset(m_buffer, 0x00U, P25_LDU_FRAME_LENGTH_BYTES + 3U);
+
         DEBUG2("P25RX: correlateSync(): correlateSync errs", errs);
+
+        // DEBUG4("P25RX: correlateSync(): sync [b0 - b2]", sync[0], sync[1], sync[2]);
+        // DEBUG4("P25RX: correlateSync(): sync [b3 - b5]", sync[3], sync[4], sync[5]);
+
+        for (uint8_t i = 0U; i < P25_SYNC_BYTES_LENGTH; i++)
+            m_buffer[i] = sync[i];
+
+        // DEBUG1("P25RX: m_buffer dump");
+        // DEBUG_DUMP(m_buffer, P25_LDU_FRAME_LENGTH_BYTES);
 
         m_endPtr = m_dataPtr + P25_LDU_FRAME_LENGTH_BITS - P25_SYNC_LENGTH_BITS;
         if (m_endPtr >= P25_LDU_FRAME_LENGTH_BITS)

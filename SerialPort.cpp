@@ -192,8 +192,6 @@ void SerialPort::process()
                     break;
 
                 case CMD_CAL_DATA:
-                    DEBUG_DUMP(m_buffer + 3U, 2U);
-                    DEBUG2("SerialPort: process(): CAL_DATA: len = ", m_len - 3U);
                     if (m_modemState == STATE_DMR_DMO_CAL_1K || m_modemState == STATE_DMR_CAL_1K ||
                         m_modemState == STATE_DMR_LF_CAL || m_modemState == STATE_DMR_CAL)
                         err = calDMR.write(m_buffer + 3U, m_len - 3U);

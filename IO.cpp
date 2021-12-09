@@ -35,14 +35,6 @@
 #include "IO.h"
 
 // ---------------------------------------------------------------------------
-//  Globals
-// ---------------------------------------------------------------------------
-
-uint32_t m_rxFrequency;
-uint32_t m_txFrequency;
-uint8_t m_rfPower;
-
-// ---------------------------------------------------------------------------
 //  Public Class Members
 // ---------------------------------------------------------------------------
 /// <summary>
@@ -56,7 +48,11 @@ IO::IO():
     m_ledValue(true),
     m_watchdog(0U),
     m_int1Counter(0U),
-    m_int2Counter(0U)
+    m_int2Counter(0U),
+    m_rxFrequency(DEFAULT_FREQUENCY),
+    m_txFrequency(DEFAULT_FREQUENCY),
+    m_rfPower(0U),
+    m_gainMode(ADF_GAIN_AUTO)    
 {
     initInt();
 
@@ -240,9 +236,11 @@ void IO::setMode(DVM_STATE modemState)
 /// <param name="rxFreq"></param>
 /// <param name="txFreq"></param>
 /// <param name="rfPower"></param>
-uint8_t IO::setRFParams(uint32_t rxFreq, uint32_t txFreq, uint8_t rfPower)
+/// <param name="gainMode"></param>
+uint8_t IO::setRFParams(uint32_t rxFreq, uint32_t txFreq, uint8_t rfPower, ADF_GAIN_MODE gainMode)
 {
     m_rfPower = rfPower >> 2;
+    m_gainMode = gainMode;
 
     // check frequency ranges
     if (!(

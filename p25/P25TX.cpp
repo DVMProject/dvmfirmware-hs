@@ -124,21 +124,21 @@ void P25TX::process()
 /// <returns></returns>
 uint8_t P25TX::writeData(const uint8_t* data, uint8_t length)
 {
-  if (length < (P25_TDU_FRAME_LENGTH_BYTES + 1U))
-    return RSN_ILLEGAL_LENGTH;
+    if (length < (P25_TDU_FRAME_LENGTH_BYTES + 1U))
+        return RSN_ILLEGAL_LENGTH;
 
-  uint16_t space = m_fifo.getSpace();
-  DEBUG3("P25TX: writeData(): dataLength/fifoLength", length, space);
-  if (space < length) {
-      m_fifo.reset();
-      return RSN_RINGBUFF_FULL;
-  }
+    uint16_t space = m_fifo.getSpace();
+    DEBUG3("P25TX: writeData(): dataLength/fifoLength", length, space);
+    if (space < length) {
+        m_fifo.reset();
+        return RSN_RINGBUFF_FULL;
+    }
 
-  m_fifo.put(length - 1U);
-  for (uint8_t i = 0U; i < (length - 1U); i++)
-      m_fifo.put(data[i + 1U]);
+    m_fifo.put(length - 1U);
+    for (uint8_t i = 0U; i < (length - 1U); i++)
+        m_fifo.put(data[i + 1U]);
 
-  return RSN_OK;
+    return RSN_OK;
 }
 
 /// <summary>

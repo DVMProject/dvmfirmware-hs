@@ -56,12 +56,19 @@
 #endif
 
 // ---------------------------------------------------------------------------
-//  Global Externs
+//  Constants
 // ---------------------------------------------------------------------------
 
-extern uint32_t m_rxFrequency;
-extern uint32_t m_txFrequency;
-extern uint8_t m_rfPower;
+enum ADF_GAIN_MODE {
+    // AGC automatic, default settings
+    ADF_GAIN_AUTO = 0U,
+    // AGC automatic with high LNA linearity
+    ADF_GAIN_AUTO_LIN = 1U,
+    // AGC OFF, lowest gain
+    ADF_GAIN_LOW = 2U,
+    // AGC OFF, highest gain
+    ADF_GAIN_HIGH = 3U
+};
 
 // ---------------------------------------------------------------------------
 //  Class Declaration
@@ -108,7 +115,7 @@ public:
     /// <summary></summary>
     void setDeviations(uint8_t dmrTXLevel, uint8_t p25TXLevel);
     /// <summary>Sets the RF parameters.</summary>
-    uint8_t setRFParams(uint32_t rxFreq, uint32_t txFreq, uint8_t rfPower);
+    uint8_t setRFParams(uint32_t rxFreq, uint32_t txFreq, uint8_t rfPower, ADF_GAIN_MODE gainMode);
     /// <summary>Sets the RF adjustment parameters.</summary>
     void setRFAdjust(int8_t dmrDiscBWAdj, int8_t p25DiscBWAdj, int8_t dmrPostBWAdj, int8_t p25PostBWAdj);
 
@@ -182,6 +189,11 @@ private:
 
     volatile uint16_t m_int1Counter;
     volatile uint16_t m_int2Counter;
+
+    uint32_t m_rxFrequency;
+    uint32_t m_txFrequency;
+    uint8_t m_rfPower;
+    ADF_GAIN_MODE m_gainMode;
 
     /// <summary>Helper to check the frequencies are within band ranges of the ADF7021.</summary>
     void checkBand(uint32_t rxFreq, uint32_t txFreq);

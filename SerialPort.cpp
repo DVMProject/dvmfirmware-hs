@@ -1134,11 +1134,12 @@ void SerialPort::setMode(DVM_STATE modemState)
 /// <returns></returns>
 uint8_t SerialPort::setRFParams(const uint8_t* data, uint8_t length)
 {
-    if (length < 14U)
+    if (length < 15U)
         return RSN_ILLEGAL_LENGTH;
 
     uint32_t rxFreq, txFreq;
     uint8_t rfPower;
+    ADF_GAIN_MODE gainMode;
 
     rxFreq = data[1U] << 0;
     rxFreq |= data[2U] << 8;
@@ -1176,7 +1177,9 @@ uint8_t SerialPort::setRFParams(const uint8_t* data, uint8_t length)
     if (p25PostBWAdj < -128)
         return RSN_INVALID_REQUEST;
 
+    gainMode = (ADF_GAIN_MODE)data[14U];
+
     io.setRFAdjust(dmrDiscBWAdj, p25DiscBWAdj, dmrPostBWAdj, p25PostBWAdj);
 
-    return io.setRFParams(rxFreq, txFreq, rfPower);
+    return io.setRFParams(rxFreq, txFreq, rfPower, gainMode);
 }

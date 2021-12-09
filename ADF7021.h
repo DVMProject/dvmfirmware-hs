@@ -46,6 +46,8 @@
 #define LOW 0
 #define HIGH 1
 
+#define DEFAULT_FREQUENCY       433075000
+
 /** Band Tables */
 /** 136 - 174 mhz */
 #define VHF_MIN                 136000000

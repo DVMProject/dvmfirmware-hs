@@ -77,12 +77,12 @@ DMRDMORX::DMRDMORX() :
 /// </summary>
 void DMRDMORX::reset()
 {
-  m_syncPtr   = 0U;
-  m_control   = CONTROL_NONE;
-  m_syncCount = 0U;
-  m_state     = DMORXS_NONE;
-  m_startPtr  = 0U;
-  m_endPtr    = NOENDPTR;
+    m_syncPtr = 0U;
+    m_control = CONTROL_NONE;
+    m_syncCount = 0U;
+    m_state = DMORXS_NONE;
+    m_startPtr = 0U;
+    m_endPtr = NOENDPTR;
 }
 
 /// <summary>
@@ -360,7 +360,7 @@ void DMRDMORX::bitsToBytes(uint16_t start, uint8_t count, uint8_t* buffer)
         start++;
         if (start >= DMO_BUFFER_LENGTH_BITS)
             start -= DMO_BUFFER_LENGTH_BITS;
- 
+
         buffer[i] |= _READ_BIT(m_buffer, start) << 0;
         start++;
         if (start >= DMO_BUFFER_LENGTH_BITS)

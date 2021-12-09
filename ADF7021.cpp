@@ -428,15 +428,21 @@ void IO::rf1Conf(DVM_STATE modemState, bool reset)
     /*
     ** AGC (Register 9)
     */
-#if defined(AD7021_GAIN_AUTO)
-    AD7021_CONTROL = 0x000231E9; // AGC ON, normal operation
-#elif defined(AD7021_GAIN_AUTO_LIN)
-    AD7021_CONTROL = 0x100231E9; // AGC ON, LNA high linearity
-#elif defined(AD7021_GAIN_LOW)
-    AD7021_CONTROL = 0x120631E9; // AGC OFF, low gain, LNA high linearity
-#elif defined(AD7021_GAIN_HIGH)
-    AD7021_CONTROL = 0x00A631E9; // AGC OFF, high gain
-#endif
+   switch (m_gainMode) {
+        case ADF_GAIN_AUTO_LIN:
+            AD7021_CONTROL = 0x100231E9; // AGC ON, LNA high linearity
+            break;
+        case ADF_GAIN_LOW:
+            AD7021_CONTROL = 0x120631E9; // AGC OFF, low gain, LNA high linearity
+            break;
+        case ADF_GAIN_HIGH:
+            AD7021_CONTROL = 0x00A631E9; // AGC OFF, high gain
+            break;
+        case ADF_GAIN_AUTO:
+        default:
+            AD7021_CONTROL = 0x000231E9; // AGC ON, normal operation
+            break;
+    }
     AD7021_1_IOCTL();
 
     /*
@@ -1015,7 +1021,7 @@ void IO::configureTxRx(DVM_STATE modemState)
             ADF7021_REG2 |= (uint32_t)0b110001 << 7;        // PA
             ADF7021_REG2 |= (uint32_t)0b10 << 28;           // invert data (and RC alpha = 0.5)
             ADF7021_REG2 |= (uint32_t)(p25Dev / div2) << 19; // deviation
-#if defined(ENABLE_P25_WIDE) || defined(ADF7021_DISABLE_RC_4FSK)
+#if defined(ADF7021_DISABLE_RC_4FSK)
             ADF7021_REG2 |= (uint32_t)0b011 << 4;           // modulation (4FSK)
 #else
             ADF7021_REG2 |= (uint32_t)0b111 << 4;           // modulation (RC 4FSK)

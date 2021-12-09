@@ -98,17 +98,11 @@ typedef unsigned long long  ulong64_t;
 // Allow the P25 protocol
 #define ENABLE_P25
 
-// Enable P25 Wide modulation
-// #define ENABLE_P25_WIDE
-
 // Enable ADF7021 support
 #define ENABLE_ADF7021
 
 // Bidirectional Data pin (Enable Standard TX/RX Data Interface of ADF7021)
 #define BIDIR_DATA_PIN
-
-// Enable full duplex support with dual ADF7021 (valid for homebrew hotspots only)
-// #define DUPLEX
 
 // TCXO of the ADF7021
 // For 14.7456 MHz:
@@ -116,15 +110,8 @@ typedef unsigned long long  ulong64_t;
 // For 12.2880 MHz:
 // #define ADF7021_12_2880
 
-// Configure receiver gain for ADF7021
-// AGC automatic, default settings
-#define AD7021_GAIN_AUTO
-// AGC automatic with high LNA linearity
-// #define AD7021_GAIN_AUTO_LIN
-// AGC OFF, lowest gain
-// #define AD7021_GAIN_LOW
-// AGC OFF, highest gain
-// #define AD7021_GAIN_HIGH
+// Enable full duplex support with dual ADF7021 (valid for homebrew hotspots only)
+// #define DUPLEX
 
 // Disable TX Raised Cosine filter for 4FSK modulation in ADF7021
 // #define ADF7021_DISABLE_RC_4FSK
@@ -142,14 +129,13 @@ typedef unsigned long long  ulong64_t;
 // Force the internal L (internal VCO inductor) for UHF 380 and T-band
 #define FORCE_UHF_INTERAL_L
 
-// Enable mode detection
-#define ENABLE_SCAN_MODE
-
 // Pass RSSI information to the host
 // #define SEND_RSSI_DATA
 
 // Enable for RPi 3B+, USB mode
-// #define LONG_USB_RESET
+#if defined(STM32_USB_HOST)
+#define LONG_USB_RESET
+#endif
 
 const uint8_t BIT_MASK_TABLE[] = { 0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02U, 0x01U };
 

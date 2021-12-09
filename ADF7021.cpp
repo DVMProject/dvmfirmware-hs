@@ -292,7 +292,7 @@ void IO::rf1Conf(DVM_STATE modemState, bool reset)
 
     uint32_t txFrequencyTmp, rxFrequencyTmp;
 
-    DEBUG3("IO::rf1Conf(): configuring ADF for Tx/Rx; modemState/reset", modemState, reset);
+    DEBUG4("IO::rf1Conf(): configuring ADF for Tx/Rx; modemState/reset/rxGain", modemState, reset, m_gainMode);
 
 #if defined (ZUMSPOT_ADF7021) || defined(SKYBRIDGE_HS)
     io.checkBand(m_rxFrequency, m_txFrequency);
@@ -498,7 +498,7 @@ void IO::rf1Conf(DVM_STATE modemState, bool reset)
 /// <param name="reset"></param>
 void IO::rf2Conf(DVM_STATE modemState)
 {
-    DEBUG2("IO::rf2Conf(): configuring 2nd ADF for Rx; modemState", modemState);
+    DEBUG3("IO::rf2Conf(): configuring 2nd ADF for Rx; modemState/rxGain", modemState, m_gainMode);
 
     // configure ADF Tx/RX
     configureTxRx(modemState);
@@ -559,15 +559,21 @@ void IO::rf2Conf(DVM_STATE modemState)
     /*
     ** AGC (Register 9)
     */
-#if defined(AD7021_GAIN_AUTO)
-    AD7021_CONTROL = 0x000231E9; // AGC ON, normal operation
-#elif defined(AD7021_GAIN_AUTO_LIN)
-    AD7021_CONTROL = 0x100231E9; // AGC ON, LNA high linearity
-#elif defined(AD7021_GAIN_LOW)
-    AD7021_CONTROL = 0x120631E9; // AGC OFF, low gain, LNA high linearity
-#elif defined(AD7021_GAIN_HIGH)
-    AD7021_CONTROL = 0x00A631E9; // AGC OFF, high gain
-#endif
+   switch (m_gainMode) {
+        case ADF_GAIN_AUTO_LIN:
+            AD7021_CONTROL = 0x100231E9; // AGC ON, LNA high linearity
+            break;
+        case ADF_GAIN_LOW:
+            AD7021_CONTROL = 0x120631E9; // AGC OFF, low gain, LNA high linearity
+            break;
+        case ADF_GAIN_HIGH:
+            AD7021_CONTROL = 0x00A631E9; // AGC OFF, high gain
+            break;
+        case ADF_GAIN_AUTO:
+        default:
+            AD7021_CONTROL = 0x000231E9; // AGC ON, normal operation
+            break;
+    }
     AD7021_2_IOCTL();
 
     /*

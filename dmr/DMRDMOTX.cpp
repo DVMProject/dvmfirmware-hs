@@ -75,11 +75,11 @@ void DMRDMOTX::process()
             m_poLen = m_preambleCnt;
         }
         else {
-            for (unsigned int i = 0U; i < 72U; i++)
-                m_poBuffer[i] = DMR_START_SYNC;
-
             for (unsigned int i = 0U; i < DMR_FRAME_LENGTH_BYTES; i++)
-                m_poBuffer[i + 39U] = m_fifo.get();
+                    m_poBuffer[i] = m_fifo.get();
+
+            for (unsigned int i = 0U; i < 39U; i++)
+                    m_poBuffer[i + DMR_FRAME_LENGTH_BYTES] = PR_FILL[i];                    
 
             m_poLen = 72U;
         }

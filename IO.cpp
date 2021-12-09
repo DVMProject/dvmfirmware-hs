@@ -226,7 +226,7 @@ void IO::setMode(DVM_STATE modemState)
         relativeState = serial.calRelativeState(modemState);
     }
 
-    DEBUG3("IO: setMode(): setting RF hardware", modemState, relativeState);
+    DEBUG3("IO::setMode(): setting RF hardware", modemState, relativeState);
 
     rf1Conf(relativeState, true);
 

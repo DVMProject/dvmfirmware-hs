@@ -292,7 +292,7 @@ void IO::rf1Conf(DVM_STATE modemState, bool reset)
 
     uint32_t txFrequencyTmp, rxFrequencyTmp;
 
-    DEBUG3("IO: rf1Conf(): configuring ADF for Tx/Rx; modemState/reset", modemState, reset);
+    DEBUG3("IO::rf1Conf(): configuring ADF for Tx/Rx; modemState/reset", modemState, reset);
 
 #if defined (ZUMSPOT_ADF7021) || defined(SKYBRIDGE_HS)
     io.checkBand(m_rxFrequency, m_txFrequency);
@@ -492,7 +492,7 @@ void IO::rf1Conf(DVM_STATE modemState, bool reset)
 /// <param name="reset"></param>
 void IO::rf2Conf(DVM_STATE modemState)
 {
-    DEBUG2("IO: rf2Conf(): configuring 2nd ADF for Rx; modemState", modemState);
+    DEBUG2("IO::rf2Conf(): configuring 2nd ADF for Rx; modemState", modemState);
 
     // configure ADF Tx/RX
     configureTxRx(modemState);
@@ -679,7 +679,7 @@ void IO::updateCal(DVM_STATE modemState)
     AD7021_CONTROL = ADF7021_REG2;
     AD7021_1_IOCTL();
 
-    DEBUG2("IO: updateCal(): updating ADF calibration; modemState", modemState);
+    DEBUG2("IO::updateCal(): updating ADF calibration; modemState", modemState);
 
     if (m_tx)
         setTX();
@@ -847,7 +847,7 @@ void IO::configureBand()
     else
         f_div = 1U;
 
-    DEBUG3("IO: configureBand(): configuring ADF freq band; reg1/f_div", ADF7021_REG1, f_div);
+    DEBUG3("IO::configureBand(): configuring ADF freq band; reg1/f_div", ADF7021_REG1, f_div);
 }
 
 /// <summary>
@@ -856,6 +856,39 @@ void IO::configureBand()
 /// <param name="modemState"></param>
 void IO::configureTxRx(DVM_STATE modemState)
 {
+    uint16_t dmrDiscBW = ADF7021_DISC_BW_DMR, dmrPostBW = ADF7021_POST_BW_DMR;
+    uint16_t p25DiscBW = ADF7021_DISC_BW_P25, p25PostBW = ADF7021_POST_BW_P25;
+
+    // configure DMR discriminator and post demodulator BW
+    if (dmrDiscBW + m_dmrDiscBWAdj < 0U)
+        dmrDiscBW = 0U;
+    else
+        dmrDiscBW = ADF7021_DISC_BW_DMR + m_dmrDiscBWAdj;
+    if (dmrDiscBW > ADF7021_DISC_BW_MAX)
+        dmrDiscBW = ADF7021_DISC_BW_MAX;
+
+    if (dmrPostBW + m_dmrPostBWAdj < 0)
+        dmrPostBW = 0U;
+    else
+        dmrPostBW = ADF7021_POST_BW_DMR + m_dmrPostBWAdj;
+    if (dmrPostBW > ADF7021_POST_BW_MAX)
+        dmrPostBW = ADF7021_POST_BW_MAX;
+
+    // configure P25 discriminator and post demodulator BW
+    if (p25DiscBW + m_p25DiscBWAdj < 0U)
+        p25DiscBW = 0U;
+    else
+        p25DiscBW = ADF7021_DISC_BW_P25 + m_p25DiscBWAdj;
+    if (p25DiscBW > ADF7021_DISC_BW_MAX)
+        p25DiscBW = ADF7021_DISC_BW_MAX;
+
+    if (p25PostBW + m_p25PostBWAdj < 0)
+        p25PostBW = 0U;
+    else
+        p25PostBW = ADF7021_POST_BW_P25 + m_p25PostBWAdj;
+    if (p25PostBW > ADF7021_POST_BW_MAX)
+        p25PostBW = ADF7021_POST_BW_MAX;
+
     /*
     ** Configure the remaining registers based on modem state.
     */
@@ -874,29 +907,13 @@ void IO::configureTxRx(DVM_STATE modemState)
             /*
             ** Demodulator Setup (Register 4)
             */
-            uint16_t discBW = ADF7021_DISC_BW_DMR;
-            if (discBW + m_dmrDiscBWAdj < 0U)
-                discBW = 0U;
-            else
-                discBW = ADF7021_DISC_BW_DMR + m_dmrDiscBWAdj;
-            if (discBW > ADF7021_DISC_BW_MAX)
-                discBW = ADF7021_DISC_BW_MAX;
-
-            uint16_t postBW = ADF7021_POST_BW_DMR;
-            if (postBW + m_dmrPostBWAdj < 0)
-                postBW = 0U;
-            else
-                postBW = ADF7021_POST_BW_DMR + m_dmrPostBWAdj;
-            if (postBW > ADF7021_POST_BW_MAX)
-                postBW = ADF7021_POST_BW_MAX;
-
             // K=32
             ADF7021_REG4 = (uint32_t)0b0100 << 0;           // register 4
             ADF7021_REG4 |= (uint32_t)0b011 << 4;           // mode, 4FSK
             ADF7021_REG4 |= (uint32_t)0b0 << 7;             // cross product
             ADF7021_REG4 |= (uint32_t)0b11 << 8;            // invert clk/data
-            ADF7021_REG4 |= (uint32_t)(discBW & 0x3FFU) << 10; // discriminator BW
-            ADF7021_REG4 |= (uint32_t)(postBW & 0xFFFU) << 20; // post demod BW
+            ADF7021_REG4 |= (uint32_t)(dmrDiscBW & 0x3FFU) << 10; // discriminator BW
+            ADF7021_REG4 |= (uint32_t)(dmrPostBW & 0xFFFU) << 20; // post demod BW
             ADF7021_REG4 |= (uint32_t)0b10 << 30;           // IF filter (25 kHz)
 
             /*
@@ -930,30 +947,15 @@ void IO::configureTxRx(DVM_STATE modemState)
             /*
             ** Demodulator Setup (Register 4)
             */
-            uint16_t discBW = ADF7021_DISC_BW_DMR;
-            if (discBW + m_dmrDiscBWAdj < 0U)
-                discBW = 0U;
-            else
-                discBW = ADF7021_DISC_BW_DMR + m_dmrDiscBWAdj;
-            if (discBW > ADF7021_DISC_BW_MAX)
-                discBW = ADF7021_DISC_BW_MAX;
-
-            uint16_t postBW = ADF7021_POST_BW_DMR;
-            if (postBW + m_dmrPostBWAdj < 0)
-                postBW = 0U;
-            else
-                postBW = ADF7021_POST_BW_DMR + m_dmrPostBWAdj;
-            if (postBW > ADF7021_POST_BW_MAX)
-                postBW = ADF7021_POST_BW_MAX;
-
             // K=32
             ADF7021_REG4 = (uint32_t)0b0100 << 0;           // register 4
             ADF7021_REG4 |= (uint32_t)0b011 << 4;           // mode, 4FSK
             ADF7021_REG4 |= (uint32_t)0b0 << 7;             // cross product
             ADF7021_REG4 |= (uint32_t)0b11 << 8;            // invert clk/data
-            ADF7021_REG4 |= (uint32_t)(discBW & 0x3FFU) << 10; // discriminator BW
-            ADF7021_REG4 |= (uint32_t)(postBW & 0xFFFU) << 20; // post demod BW
-            ADF7021_REG4 |= (uint32_t)0b10 << 30;           // IF filter (25 kHz)
+            ADF7021_REG4 |= (uint32_t)(dmrDiscBW & 0x3FFU) << 10; // discriminator BW
+            ADF7021_REG4 |= (uint32_t)(dmrPostBW & 0xFFFU) << 20; // post demod BW
+            ADF7021_REG4 |= (uint32_t)0b00 << 30;           // IF filter (12.5 kHz)
+            //ADF7021_REG4 |= (uint32_t)0b10 << 30;           // IF filter (25 kHz)
 
             /*
             ** 3FSK/4FSK Demod (Register 13)
@@ -990,29 +992,13 @@ void IO::configureTxRx(DVM_STATE modemState)
             /*
             ** Demodulator Setup (Register 4)
             */
-            uint16_t discBW = ADF7021_DISC_BW_P25;
-            if (discBW + m_dmrDiscBWAdj < 0U)
-                discBW = 0U;
-            else
-                discBW = ADF7021_DISC_BW_P25 + m_dmrDiscBWAdj;
-            if (discBW > ADF7021_DISC_BW_MAX)
-                discBW = ADF7021_DISC_BW_MAX;
-
-            uint16_t postBW = ADF7021_POST_BW_P25;
-            if (postBW + m_dmrPostBWAdj < 0)
-                postBW = 0U;
-            else
-                postBW = ADF7021_POST_BW_P25 + m_dmrPostBWAdj;
-            if (postBW > ADF7021_POST_BW_MAX)
-                postBW = ADF7021_POST_BW_MAX;
-
             // K=32
             ADF7021_REG4 = (uint32_t)0b0100 << 0;           // register 4
             ADF7021_REG4 |= (uint32_t)0b011 << 4;           // mode, 4FSK
             ADF7021_REG4 |= (uint32_t)0b0 << 7;             // cross product
             ADF7021_REG4 |= (uint32_t)0b11 << 8;            // invert clk/data
-            ADF7021_REG4 |= (uint32_t)(discBW & 0x3FFU) << 10; // discriminator BW
-            ADF7021_REG4 |= (uint32_t)(postBW & 0xFFFU) << 20; // post demod BW
+            ADF7021_REG4 |= (uint32_t)(p25DiscBW & 0x3FFU) << 10; // discriminator BW
+            ADF7021_REG4 |= (uint32_t)(p25PostBW & 0xFFFU) << 20; // post demod BW
             ADF7021_REG4 |= (uint32_t)0b00 << 30;           // IF filter (12.5 kHz)
 
             /*
@@ -1077,7 +1063,8 @@ void IO::configureTxRx(DVM_STATE modemState)
         break;
     }
 
-    DEBUG4("IO: configureTxRx(): configuring ADF Tx/Rx states; dmrSymDev/p25SymDev/rfPower", (uint16_t)((ADF7021_PFD * dmrDev) / (f_div * 65536)),
+    DEBUG5("IO::configureTxRx(): configuring ADF Tx/Rx values; dmrDiscBW/dmrPostBW/p25DiscBW/p25PostBW", dmrDiscBW, dmrPostBW, p25DiscBW, p25PostBW);
+    DEBUG4("IO::configureTxRx(): configuring ADF Tx/Rx values; dmrSymDev/p25SymDev/rfPower", (uint16_t)((ADF7021_PFD * dmrDev) / (f_div * 65536)),
         (uint16_t)((ADF7021_PFD * p25Dev) / (f_div * 65536)), m_rfPower);
 }
 

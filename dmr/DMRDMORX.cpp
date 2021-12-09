@@ -39,7 +39,7 @@ using namespace dmr;
 //  Constants
 // ---------------------------------------------------------------------------
 
-const uint8_t MAX_SYNC_BYTES_ERRS   = 3U;
+const uint8_t MAX_SYNC_BYTES_ERRS   = 2U;
 
 const uint8_t MAX_SYNC_LOST_FRAMES  = 13U;
 
@@ -246,35 +246,73 @@ void DMRDMORX::setColorCode(uint8_t colorCode)
 /// </summary>
 void DMRDMORX::correlateSync()
 {
-    if ((countBits64((m_bitBuffer & DMR_SYNC_BITS_MASK) ^ DMR_MS_DATA_SYNC_BITS) <= MAX_SYNC_BYTES_ERRS) || \
-        (countBits64((m_bitBuffer & DMR_SYNC_BITS_MASK) ^ DMR_S2_DATA_SYNC_BITS) <= MAX_SYNC_BYTES_ERRS)) {
-        m_control = CONTROL_DATA;
-        m_syncPtr = m_dataPtr;
+    uint8_t errs = countBits32((m_bitBuffer & DMR_SYNC_BITS_MASK) ^ DMR_MS_DATA_SYNC_BITS);
 
-        m_startPtr = m_dataPtr + DMO_BUFFER_LENGTH_BITS - DMR_SLOT_TYPE_LENGTH_BITS / 2U - DMR_INFO_LENGTH_BITS / 2U - DMR_SYNC_LENGTH_BITS + 1;
-        if (m_startPtr >= DMO_BUFFER_LENGTH_BITS)
-            m_startPtr -= DMO_BUFFER_LENGTH_BITS;
+    // The voice sync is the complement of the data sync
+    bool data = (errs <= MAX_SYNC_BYTES_ERRS);
+    bool voice = (errs >= (DMR_SYNC_LENGTH_SYMBOLS - MAX_SYNC_BYTES_ERRS));
 
-        m_endPtr = m_dataPtr + DMR_SLOT_TYPE_LENGTH_BITS / 2U + DMR_INFO_LENGTH_BITS / 2U;
-        if (m_endPtr >= DMO_BUFFER_LENGTH_BITS)
-            m_endPtr -= DMO_BUFFER_LENGTH_BITS;
+    // unpack sync bytes
+    uint8_t sync[DMR_SYNC_BYTES_LENGTH];
+    sync[0U] = (uint8_t)((m_bitBuffer >> 48) & 0xFFU);
+    sync[1U] = (uint8_t)((m_bitBuffer >> 40) & 0xFFU);
+    sync[2U] = (uint8_t)((m_bitBuffer >> 32) & 0xFFU);
+    sync[3U] = (uint8_t)((m_bitBuffer >> 24) & 0xFFU);
+    sync[4U] = (uint8_t)((m_bitBuffer >> 16) & 0xFFU);
+    sync[5U] = (uint8_t)((m_bitBuffer >> 8) & 0xFFU);
+    sync[6U] = (uint8_t)((m_bitBuffer >> 0) & 0xFFU);
 
-        DEBUG4("DMRDMORX: correlateSync(): dataPtr/startPtr/endPtr", m_dataPtr, m_startPtr, m_endPtr);
+    if (data) {            
+        uint8_t errs = 0U;
+        for (uint8_t i = 0U; i < DMR_SYNC_BYTES_LENGTH; i++)
+            errs += countBits8((sync[i] & DMR_SYNC_BYTES_MASK[i]) ^ DMR_MS_DATA_SYNC_BYTES[i]);
+
+        if (errs <= MAX_SYNC_BYTES_ERRS) {
+            DEBUG2("DMRDMORX: correlateSync(): correlateSync errs", errs);
+
+            DEBUG4("DMRDMORX: correlateSync(): sync [b0 - b2]", sync[0], sync[1], sync[2]);
+            DEBUG4("DMRDMORX: correlateSync(): sync [b3 - b5]", sync[3], sync[4], sync[5]);
+            DEBUG2("DMRDMORX: correlateSync(): sync [b6]", sync[6]);
+
+            m_control = CONTROL_DATA;
+            m_syncPtr = m_dataPtr;
+
+            m_startPtr = m_dataPtr + DMO_BUFFER_LENGTH_BITS - DMR_SLOT_TYPE_LENGTH_BITS / 2U - DMR_INFO_LENGTH_BITS / 2U - DMR_SYNC_LENGTH_BITS + 1;
+            if (m_startPtr >= DMO_BUFFER_LENGTH_BITS)
+                m_startPtr -= DMO_BUFFER_LENGTH_BITS;
+
+            m_endPtr = m_dataPtr + DMR_SLOT_TYPE_LENGTH_BITS / 2U + DMR_INFO_LENGTH_BITS / 2U;
+            if (m_endPtr >= DMO_BUFFER_LENGTH_BITS)
+                m_endPtr -= DMO_BUFFER_LENGTH_BITS;
+
+            DEBUG4("DMRDMORX: correlateSync(): dataPtr/startPtr/endPtr", m_dataPtr, m_startPtr, m_endPtr);
+        }
     }
-    else if ((countBits64((m_bitBuffer & DMR_SYNC_BITS_MASK) ^ DMR_MS_VOICE_SYNC_BITS) <= MAX_SYNC_BYTES_ERRS) || \
-        (countBits64((m_bitBuffer & DMR_SYNC_BITS_MASK) ^ DMR_S2_VOICE_SYNC_BITS) <= MAX_SYNC_BYTES_ERRS)) {
-        m_control = CONTROL_VOICE;
-        m_syncPtr = m_dataPtr;
+    else {            
+        uint8_t errs = 0U;
+        for (uint8_t i = 0U; i < DMR_SYNC_BYTES_LENGTH; i++)
+            errs += countBits8((sync[i] & DMR_SYNC_BYTES_MASK[i]) ^ DMR_MS_VOICE_SYNC_BYTES[i]);
 
-        m_startPtr = m_dataPtr + DMO_BUFFER_LENGTH_BITS - DMR_SLOT_TYPE_LENGTH_BITS / 2U - DMR_INFO_LENGTH_BITS / 2U - DMR_SYNC_LENGTH_BITS + 1;
-        if (m_startPtr >= DMO_BUFFER_LENGTH_BITS)
-            m_startPtr -= DMO_BUFFER_LENGTH_BITS;
+        if (errs <= MAX_SYNC_BYTES_ERRS) {
+            DEBUG2("DMRDMORX: correlateSync(): correlateSync errs", errs);
 
-        m_endPtr = m_dataPtr + DMR_SLOT_TYPE_LENGTH_BITS / 2U + DMR_INFO_LENGTH_BITS / 2U;
-        if (m_endPtr >= DMO_BUFFER_LENGTH_BITS)
-            m_endPtr -= DMO_BUFFER_LENGTH_BITS;
+            DEBUG4("DMRDMORX: correlateSync(): sync [b0 - b2]", sync[0], sync[1], sync[2]);
+            DEBUG4("DMRDMORX: correlateSync(): sync [b3 - b5]", sync[3], sync[4], sync[5]);
+            DEBUG2("DMRDMORX: correlateSync(): sync [b6]", sync[6]);
 
-        DEBUG4("DMRDMORX: correlateSync(): dataPtr/startPtr/endPtr", m_dataPtr, m_startPtr, m_endPtr);
+            m_control = CONTROL_VOICE;
+            m_syncPtr = m_dataPtr;
+
+            m_startPtr = m_dataPtr + DMO_BUFFER_LENGTH_BITS - DMR_SLOT_TYPE_LENGTH_BITS / 2U - DMR_INFO_LENGTH_BITS / 2U - DMR_SYNC_LENGTH_BITS + 1;
+            if (m_startPtr >= DMO_BUFFER_LENGTH_BITS)
+                m_startPtr -= DMO_BUFFER_LENGTH_BITS;
+
+            m_endPtr = m_dataPtr + DMR_SLOT_TYPE_LENGTH_BITS / 2U + DMR_INFO_LENGTH_BITS / 2U;
+            if (m_endPtr >= DMO_BUFFER_LENGTH_BITS)
+                m_endPtr -= DMO_BUFFER_LENGTH_BITS;
+
+            DEBUG4("DMRDMORX: correlateSync(): dataPtr/startPtr/endPtr", m_dataPtr, m_startPtr, m_endPtr);
+        }
     }
 }
 

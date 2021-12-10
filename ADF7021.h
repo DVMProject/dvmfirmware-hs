@@ -171,7 +171,7 @@
 // Bug in ADI evaluation software, use datasheet formula (4FSK)
 #define ADF7021_DISC_BW_DEFAULT 522U // K=85
 #define ADF7021_DISC_BW_DMR     393U // K=32
-#define ADF7021_DISC_BW_P25     394U // K=32
+#define ADF7021_DISC_BW_P25     393U // K=32
 
 // Post demodulator bandwith
 #define ADF7021_POST_BW_DEFAULT 10U
@@ -280,7 +280,7 @@
 // Bug in ADI evaluation software, use datasheet formula (4FSK)
 #define ADF7021_DISC_BW_DEFAULT 522U // K=85
 #define ADF7021_DISC_BW_DMR     491U // K=32
-#define ADF7021_DISC_BW_P25     493U // K=32
+#define ADF7021_DISC_BW_P25     491U // K=32
 
 // Post demodulator bandwith
 #define ADF7021_POST_BW_DEFAULT 10U

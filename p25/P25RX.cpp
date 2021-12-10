@@ -409,8 +409,8 @@ bool P25RX::correlateSync()
 
         DEBUG2("P25RX: correlateSync(): correlateSync errs", errs);
 
-        // DEBUG4("P25RX: correlateSync(): sync [b0 - b2]", sync[0], sync[1], sync[2]);
-        // DEBUG4("P25RX: correlateSync(): sync [b3 - b5]", sync[3], sync[4], sync[5]);
+        DEBUG4("P25RX: correlateSync(): sync [b0 - b2]", sync[0], sync[1], sync[2]);
+        DEBUG4("P25RX: correlateSync(): sync [b3 - b5]", sync[3], sync[4], sync[5]);
 
         for (uint8_t i = 0U; i < P25_SYNC_BYTES_LENGTH; i++)
             m_buffer[i] = sync[i];

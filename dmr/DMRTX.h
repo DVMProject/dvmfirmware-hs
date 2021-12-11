@@ -116,7 +116,7 @@ namespace dmr
         uint32_t m_abortCount[2U];
         bool m_abort[2U];
 
-        uint8_t m_control_old;
+        uint8_t m_controlPrev;
 
         /// <summary></summary>
         void createData(uint8_t slotIndex);

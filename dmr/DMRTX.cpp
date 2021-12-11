@@ -79,7 +79,7 @@ DMRTX::DMRTX() :
     m_frameCount(0U),
     m_abortCount(),
     m_abort(),
-    m_control_old(0U)
+    m_controlPrev(MARK_NONE)
 {
     ::memcpy(m_newShortLC, EMPTY_SHORT_LC, 12U);
     ::memcpy(m_shortLC, EMPTY_SHORT_LC, 12U);
@@ -476,7 +476,7 @@ void DMRTX::writeByte(uint8_t c, uint8_t control)
 {
     uint8_t bit;
     uint8_t mask = 0x80U;
-    uint8_t control_tmp = m_control_old;
+    uint8_t controlToWrite = m_controlPrev;
 
     for (uint8_t i = 0U; i < 8U; i++, c <<= 1) {
         if ((c & mask) == mask)
@@ -486,13 +486,13 @@ void DMRTX::writeByte(uint8_t c, uint8_t control)
 
         if (i == 7U) {
             if (control == MARK_SLOT2)
-                control_tmp = true;
+                controlToWrite = true;
             else if (control == MARK_SLOT1)
-                control_tmp = false;
+                controlToWrite = false;
 
-            m_control_old = control_tmp;
+            m_controlPrev = controlToWrite;
         }
 
-        io.write(&bit, 1, &control_tmp);
+        io.write(&bit, 1, &controlToWrite);
     }
 }

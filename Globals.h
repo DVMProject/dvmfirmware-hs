@@ -69,6 +69,9 @@ const uint8_t   MARK_SLOT1 = 0x08U;
 const uint8_t   MARK_SLOT2 = 0x04U;
 const uint8_t   MARK_NONE = 0x00U;
 
+const uint8_t   CONTROL_SLOT1 = 0x00U;
+const uint8_t   CONTROL_SLOT2 = 0x01U;
+
 // ---------------------------------------------------------------------------
 //  Macros
 // ---------------------------------------------------------------------------

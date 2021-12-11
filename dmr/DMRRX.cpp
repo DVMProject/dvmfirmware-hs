@@ -67,12 +67,12 @@ void DMRRX::databit(bool bit, const uint8_t control)
 {
     bool dcd1 = false;
     bool dcd2 = false;
-
+   
     switch (control) {
-    case MARK_SLOT1:
+    case CONTROL_SLOT1:
         m_slot1RX.start();
         break;
-    case MARK_SLOT2:
+    case CONTROL_SLOT2:
         m_slot2RX.start();
         break;
     default:

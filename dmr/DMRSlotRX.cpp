@@ -286,12 +286,6 @@ void DMRSlotRX::setRxDelay(uint8_t delay)
 /// <param name="first"></param>
 void DMRSlotRX::correlateSync()
 {
-    uint8_t errs = countBits32((m_bitBuffer & DMR_SYNC_BITS_MASK) ^ DMR_MS_DATA_SYNC_BITS);
-
-    // The voice sync is the complement of the data sync
-    bool data = (errs <= MAX_SYNC_BYTES_ERRS);
-    bool voice = (errs >= (DMR_SYNC_LENGTH_SYMBOLS - MAX_SYNC_BYTES_ERRS));
-
     // unpack sync bytes
     uint8_t sync[DMR_SYNC_BYTES_LENGTH];
     sync[0U] = (uint8_t)((m_bitBuffer >> 48) & 0xFFU);
@@ -302,57 +296,52 @@ void DMRSlotRX::correlateSync()
     sync[5U] = (uint8_t)((m_bitBuffer >> 8) & 0xFFU);
     sync[6U] = (uint8_t)((m_bitBuffer >> 0) & 0xFFU);
 
-    if (data) {            
+    if (countBits64((m_bitBuffer & DMR_SYNC_BITS_MASK) ^ DMR_MS_DATA_SYNC_BITS) <= MAX_SYNC_BYTES_ERRS) {
         uint8_t errs = 0U;
         for (uint8_t i = 0U; i < DMR_SYNC_BYTES_LENGTH; i++)
             errs += countBits8((sync[i] & DMR_SYNC_BYTES_MASK[i]) ^ DMR_MS_DATA_SYNC_BYTES[i]);
 
-        if (errs <= MAX_SYNC_BYTES_ERRS) {
-            DEBUG3("DMRSlotRX: correlateSync(): correlateSync slot/errs",  m_slot ? 2U : 1U, errs);
+        DEBUG2("DMRSlotRX: correlateSync(): correlateSync errs", errs);
 
-            DEBUG4("DMRSlotRX: correlateSync(): sync [b0 - b2]", sync[0], sync[1], sync[2]);
-            DEBUG4("DMRSlotRX: correlateSync(): sync [b3 - b5]", sync[3], sync[4], sync[5]);
-            DEBUG2("DMRSlotRX: correlateSync(): sync [b6]", sync[6]);
+        DEBUG4("DMRSlotRX: correlateSync(): sync [b0 - b2]", sync[0], sync[1], sync[2]);
+        DEBUG4("DMRSlotRX: correlateSync(): sync [b3 - b5]", sync[3], sync[4], sync[5]);
+        DEBUG2("DMRSlotRX: correlateSync(): sync [b6]", sync[6]);
 
-            m_control = CONTROL_DATA;
-            m_syncPtr = m_dataPtr;
+        m_control = CONTROL_DATA;
+        m_syncPtr = m_dataPtr;
 
-            m_startPtr = m_dataPtr + DMR_BUFFER_LENGTH_BITS - DMR_SLOT_TYPE_LENGTH_BITS / 2U - DMR_INFO_LENGTH_BITS / 2U - DMR_SYNC_LENGTH_BITS + 1;
-            if (m_startPtr >= DMR_BUFFER_LENGTH_BITS)
-                m_startPtr -= DMR_BUFFER_LENGTH_BITS;
+        m_startPtr = m_dataPtr + DMR_BUFFER_LENGTH_BITS - DMR_SLOT_TYPE_LENGTH_BITS / 2U - DMR_INFO_LENGTH_BITS / 2U - DMR_SYNC_LENGTH_BITS + 1;
+        if (m_startPtr >= DMR_BUFFER_LENGTH_BITS)
+            m_startPtr -= DMR_BUFFER_LENGTH_BITS;
 
-            m_endPtr = m_dataPtr + DMR_SLOT_TYPE_LENGTH_BITS / 2U + DMR_INFO_LENGTH_BITS / 2U;
-            if (m_endPtr >= DMR_BUFFER_LENGTH_BITS)
-                m_endPtr -= DMR_BUFFER_LENGTH_BITS;
+        m_endPtr = m_dataPtr + DMR_SLOT_TYPE_LENGTH_BITS / 2U + DMR_INFO_LENGTH_BITS / 2U;
+        if (m_endPtr >= DMR_BUFFER_LENGTH_BITS)
+            m_endPtr -= DMR_BUFFER_LENGTH_BITS;
 
-            DEBUG4("DMRSlotRX: correlateSync(): dataPtr/startPtr/endPtr", m_dataPtr, m_startPtr, m_endPtr);
-        }
-    }
-    else {            
+        DEBUG4("DMRSlotRX: correlateSync(): dataPtr/startPtr/endPtr", m_dataPtr, m_startPtr, m_endPtr);
+    } else if (countBits64((m_bitBuffer & DMR_SYNC_BITS_MASK) ^ DMR_MS_VOICE_SYNC_BITS) <= MAX_SYNC_BYTES_ERRS) {
         uint8_t errs = 0U;
         for (uint8_t i = 0U; i < DMR_SYNC_BYTES_LENGTH; i++)
             errs += countBits8((sync[i] & DMR_SYNC_BYTES_MASK[i]) ^ DMR_MS_VOICE_SYNC_BYTES[i]);
 
-        if (errs <= MAX_SYNC_BYTES_ERRS) {
-            DEBUG3("DMRSlotRX: correlateSync(): correlateSync slot/errs",  m_slot ? 2U : 1U, errs);
+        DEBUG2("DMRSlotRX: correlateSync(): correlateSync errs", errs);
 
-            DEBUG4("DMRSlotRX: correlateSync(): sync [b0 - b2]", sync[0], sync[1], sync[2]);
-            DEBUG4("DMRSlotRX: correlateSync(): sync [b3 - b5]", sync[3], sync[4], sync[5]);
-            DEBUG2("DMRSlotRX: correlateSync(): sync [b6]", sync[6]);
+        DEBUG4("DMRSlotRX: correlateSync(): sync [b0 - b2]", sync[0], sync[1], sync[2]);
+        DEBUG4("DMRSlotRX: correlateSync(): sync [b3 - b5]", sync[3], sync[4], sync[5]);
+        DEBUG2("DMRSlotRX: correlateSync(): sync [b6]", sync[6]);
 
-            m_control = CONTROL_VOICE;
-            m_syncPtr = m_dataPtr;
+        m_control = CONTROL_VOICE;
+        m_syncPtr = m_dataPtr;
 
-            m_startPtr = m_dataPtr + DMR_BUFFER_LENGTH_BITS - DMR_SLOT_TYPE_LENGTH_BITS / 2U - DMR_INFO_LENGTH_BITS / 2U - DMR_SYNC_LENGTH_BITS + 1;
-            if (m_startPtr >= DMR_BUFFER_LENGTH_BITS)
-                m_startPtr -= DMR_BUFFER_LENGTH_BITS;
+        m_startPtr = m_dataPtr + DMR_BUFFER_LENGTH_BITS - DMR_SLOT_TYPE_LENGTH_BITS / 2U - DMR_INFO_LENGTH_BITS / 2U - DMR_SYNC_LENGTH_BITS + 1;
+        if (m_startPtr >= DMR_BUFFER_LENGTH_BITS)
+            m_startPtr -= DMR_BUFFER_LENGTH_BITS;
 
-            m_endPtr = m_dataPtr + DMR_SLOT_TYPE_LENGTH_BITS / 2U + DMR_INFO_LENGTH_BITS / 2U;
-            if (m_endPtr >= DMR_BUFFER_LENGTH_BITS)
-                m_endPtr -= DMR_BUFFER_LENGTH_BITS;
+        m_endPtr = m_dataPtr + DMR_SLOT_TYPE_LENGTH_BITS / 2U + DMR_INFO_LENGTH_BITS / 2U;
+        if (m_endPtr >= DMR_BUFFER_LENGTH_BITS)
+            m_endPtr -= DMR_BUFFER_LENGTH_BITS;
 
-            DEBUG4("DMRSlotRX: correlateSync(): dataPtr/startPtr/endPtr", m_dataPtr, m_startPtr, m_endPtr);
-        }
+        DEBUG4("DMRSlotRX: correlateSync(): dataPtr/startPtr/endPtr", m_dataPtr, m_startPtr, m_endPtr);
     }
 }
 
@@ -415,16 +404,10 @@ void DMRSlotRX::bitsToBytes(uint16_t start, uint8_t count, uint8_t* buffer)
 void DMRSlotRX::writeRSSIData(uint8_t* frame)
 {
 #if defined(SEND_RSSI_DATA)
-    // Calculate RSSI average over a burst period. We don't take into account 2.5 ms at the beginning and 2.5 ms at the end
-    uint16_t start = m_startPtr + DMR_SYNC_LENGTH_SAMPLES / 2U;
+    uint16_t rssi = io.readRSSI();
 
-    uint32_t accum = 0U;
-    for (uint16_t i = 0U; i < (DMR_FRAME_LENGTH_SAMPLES - DMR_SYNC_LENGTH_SAMPLES); i++)
-        accum += m_rssi[start++];
-
-    uint16_t avg = accum / (DMR_FRAME_LENGTH_SAMPLES - DMR_SYNC_LENGTH_SAMPLES);
-    frame[34U] = (avg >> 8) & 0xFFU;
-    frame[35U] = (avg >> 0) & 0xFFU;
+    frame[34U] = (rssi >> 8) & 0xFFU;
+    frame[35U] = (rssi >> 0) & 0xFFU;
 
     serial.writeDMRData(m_slot, frame, DMR_FRAME_LENGTH_BYTES + 3U);
 #else

@@ -85,14 +85,31 @@
 
 #define ADF_BIT_READ(value, bit) (((value) >> (bit)) & 0x01)
 
-#if defined(ADF7021_DISABLE_RC_4FSK)
-#define ADF7021_EVEN_BIT        true
-#else
 #define ADF7021_EVEN_BIT        false
-#endif // ADF7021_DISABLE_RC_4FSK
 
 #define ADF7021_DISC_BW_MAX     660
 #define ADF7021_POST_BW_MAX     1023
+
+#if defined(ADF7021_ENABLE_4FSK_AFC)
+
+#if defined(ADF7021_AFC_POS)
+
+#define AFC_OFFSET_DMR          -125
+#define AFC_OFFSET_P25          -125
+
+#else
+
+#define AFC_OFFSET_DMR          125
+#define AFC_OFFSET_P25          125
+
+#endif // ADF7021_AFC_POS
+
+#else
+
+#define AFC_OFFSET_DMR          0
+#define AFC_OFFSET_P25          0
+
+#endif // ADF7021_ENABLE_4FSK_AFC
 
 /*
     - Most of the registers values are obteined from ADI eval software:
@@ -198,24 +215,10 @@
 #define ADF7021_REG10_DMR       0x01FE473A
 #define ADF7021_REG10_P25       0x01FE473A
 
-#if defined(ADF7021_AFC_POS)
-
-#define AFC_OFFSET_DMR          -250
-#define AFC_OFFSET_P25          -250
-
-#else
-
-#define AFC_OFFSET_DMR          250
-#define AFC_OFFSET_P25          250
-
-#endif // ADF7021_AFC_POS
-
 #else
 
 #define ADF7021_REG10_DMR       0x049E472A
 #define ADF7021_REG10_P25       0x049E472A
-#define AFC_OFFSET_DMR          0
-#define AFC_OFFSET_P25          0
 
 #endif // ADF7021_ENABLE_4FSK_AFC
 
@@ -307,24 +310,10 @@
 #define ADF7021_REG10_DMR       0x01FE557A
 #define ADF7021_REG10_P25       0x01FE557A
 
-#if defined(ADF7021_AFC_POS)
-
-#define AFC_OFFSET_DMR          -250
-#define AFC_OFFSET_P25          -250
-
-#else
-
-#define AFC_OFFSET_DMR          250
-#define AFC_OFFSET_P25          250
-
-#endif // ADF7021_AFC_POS
-
 #else
 
 #define ADF7021_REG10_DMR       0x049E556A
 #define ADF7021_REG10_P25       0x049E556A
-#define AFC_OFFSET_DMR          0
-#define AFC_OFFSET_P25          0
 
 #endif // ADF7021_ENABLE_4FSK_AFC
 

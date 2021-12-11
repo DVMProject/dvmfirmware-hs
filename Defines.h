@@ -111,17 +111,13 @@ typedef unsigned long long  ulong64_t;
 // #define ADF7021_12_2880
 
 // Enable full duplex support with dual ADF7021 (valid for homebrew hotspots only)
-// #define DUPLEX
-
-// Disable TX Raised Cosine filter for 4FSK modulation in ADF7021
-// #define ADF7021_DISABLE_RC_4FSK
+ #define DUPLEX
 
 // Support for ADF7021-N version: 
 // #define ADF7021_N_VER
 
-// Enable AFC support for DMR, YSF, P25, and M17 (experimental)
-// (AFC is already enabled by default in D-Star)
-// #define ADF7021_ENABLE_4FSK_AFC
+// Enable AFC support for DMR and P25 (experimental)
+#define ADF7021_ENABLE_4FSK_AFC
 
 // Configure AFC with positive initial frequency offset
 // #define ADF7021_AFC_POS
@@ -146,6 +142,6 @@ const uint8_t BIT_MASK_TABLE[] = { 0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x0
 // ---------------------------------------------------------------------------
 
 #define _WRITE_BIT(p, i, b) p[(i) >> 3] = (b) ? (p[(i) >> 3] | BIT_MASK_TABLE[(i) & 7]) : (p[(i)>>3] & ~BIT_MASK_TABLE[(i) & 7])
-#define _READ_BIT(p, i)     (p[(i) >> 3] & BIT_MASK_TABLE[(i) & 7])
+#define _READ_BIT(p, i)     ((p[(i) >> 3] & BIT_MASK_TABLE[(i) & 7]) >> (7 - ((i) & 7)))
 
 #endif // __DEFINES_H__

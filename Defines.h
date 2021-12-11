@@ -117,7 +117,7 @@ typedef unsigned long long  ulong64_t;
 // #define ADF7021_N_VER
 
 // Enable AFC support for DMR and P25 (experimental)
-#define ADF7021_ENABLE_4FSK_AFC
+// #define ADF7021_ENABLE_4FSK_AFC
 
 // Configure AFC with positive initial frequency offset
 // #define ADF7021_AFC_POS

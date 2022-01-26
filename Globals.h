@@ -49,8 +49,8 @@
 #if defined(DUPLEX)
 #include "dmr/DMRIdleRX.h"
 #include "dmr/DMRRX.h"
-#include "dmr/DMRTX.h"
 #endif
+#include "dmr/DMRTX.h"
 #include "dmr/DMRDMORX.h"
 #include "dmr/DMRDMOTX.h"
 #include "dmr/CalDMR.h"

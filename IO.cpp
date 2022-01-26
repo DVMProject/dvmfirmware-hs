@@ -291,6 +291,8 @@ uint8_t IO::setRFParams(uint32_t rxFreq, uint32_t txFreq, uint8_t rfPower, ADF_G
     m_rxFrequency = rxFreq;
     m_txFrequency = txFreq;
 
+    DEBUG5("IO::setRFParams(): setting RF params", m_rxFrequency, m_txFrequency, m_rfPower, m_gainMode);
+
     return RSN_OK;
 }
 

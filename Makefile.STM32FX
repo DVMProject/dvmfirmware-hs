@@ -139,7 +139,7 @@ pihat-7021-r2: CXXFLAGS+=-DZUMSPOT_ADF7021 -DSTM32_USART1_HOST
 pihat-7021-r2: hs
 pihat-7021-r2-duplex: CFLAGS+=-DDUPLEX
 pihat-7021-r2-duplex: CXXFLAGS+=-DDUPLEX
-pihat-7021-r2-duplex: pihat-7021-r2-duplex
+pihat-7021-r2-duplex: pihat-7021-r2
 
 lonestar-usb: CFLAGS+=-DLONESTAR_USB -DSTM32_USB_HOST
 lonestar-usb: CXXFLAGS+=-DLONESTAR_USB -DSTM32_USB_HOST
@@ -157,16 +157,6 @@ mmdvm-hs-hat-usb: bl
 mmdvm-hs-hat-usb-dual: CFLAGS+=-DDUPLEX
 mmdvm-hs-hat-usb-dual: CXXFLAGS+=-DDUPLEX
 mmdvm-hs-hat-usb-dual: mmdvm-hs-hat-usb
-
-pi-f4: CFLAGS+=$(CFLAGS_F4) $(DEFS_PI_F4)
-pi-f4: CXXFLAGS+=$(CXXFLAGS_F4) $(DEFS_PI_F4)
-pi-f4: LDFLAGS+=$(LDFLAGS_F4)
-pi-f4: release_f4
-
-f446: CFLAGS+=$(CFLAGS_F4) $(DEFS_F446)
-f446: CXXFLAGS+=$(CXXFLAGS_F4) $(DEFS_F446)
-f446: LDFLAGS+=$(LDFLAGS_F4)
-f446: release_f4
 
 hs: CFLAGS+=$(CFLAGS_F1) $(DEFS_F1_HS)
 hs: CXXFLAGS+=$(CXXFLAGS_F1) $(DEFS_F1_HS)

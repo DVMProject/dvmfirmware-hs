@@ -95,6 +95,9 @@ enum DVM_COMMANDS {
     CMD_ACK = 0x70U,
     CMD_NAK = 0x7FU,
 
+    CMD_FLSH_READ = 0xE0U,
+    CMD_FLSH_WRITE = 0xE1U,
+
     CMD_DEBUG1 = 0xF1U,
     CMD_DEBUG2 = 0xF2U,
     CMD_DEBUG3 = 0xF3U,
@@ -120,6 +123,11 @@ enum CMD_REASON_CODE {
     RSN_INVALID_DMR_RX_DELAY = 15U,
 
     RSN_INVALID_P25_CORR_COUNT = 16U,
+
+    RSN_NO_INTERNAL_FLASH = 20U,
+    RSN_FAILED_ERASE_FLASH = 21U,
+    RSN_FAILED_WRITE_FLASH = 22U,
+    RSN_FLASH_WRITE_TOO_BIG = 23U,
 
     RSN_HS_NO_DUAL_MODE = 32U,
 
@@ -206,6 +214,11 @@ private:
     void setMode(DVM_STATE modemState);
     /// <summary>Sets the RF parameters.</summary>
     uint8_t setRFParams(const uint8_t* data, uint8_t length);
+
+    /// <summary></summary>
+    void flashRead();
+    /// <summary></summary>
+    uint8_t flashWrite(const uint8_t* data, uint8_t length);
 
     // Hardware specific routines
     /// <summary></summary>

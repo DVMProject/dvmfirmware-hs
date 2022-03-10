@@ -33,6 +33,24 @@
 #include "SerialPort.h"
 #include "STM_UART.h"
 
+#if defined(STM32F10X_MD)
+#include <stm32f10x_flash.h>
+
+#if defined(STM32_USB_HOST)
+#include <usb_serial.h>
+#endif
+
+#if defined(STM32_USART1_HOST) && defined(STM32_USB_HOST)
+#error "You have to select STM32_USART1_HOST or STM32_USB_HOST, but not both"
+#endif
+
+// ---------------------------------------------------------------------------
+//  Constants
+// ---------------------------------------------------------------------------
+
+#define STM32_CNF_PAGE_ADDR (uint32_t)0x0800FC00
+#define STM32_CNF_PAGE      ((uint32_t *)0x0800FC00)
+
 /*
     Pin definitions:
 
@@ -43,16 +61,6 @@
     - Serial repeater
     USART2 - TXD PA2  - RXD PA3 
 */
-
-#if defined(STM32F10X_MD)
-
-#if defined(STM32_USB_HOST)
-#include <usb_serial.h>
-#endif
-
-#if defined(STM32_USART1_HOST) && defined(STM32_USB_HOST)
-#error "You have to select STM32_USART1_HOST or STM32_USB_HOST, but not both"
-#endif
 
 #if defined(STM32_USART1_HOST) || defined(SERIAL_REPEATER_USART1)
 // ---------------------------------------------------------------------------
@@ -195,6 +203,80 @@ void InitUSART2(int speed)
 // ---------------------------------------------------------------------------
 //  Private Class Members
 // ---------------------------------------------------------------------------
+/// <summary>
+///
+/// </summary>
+void SerialPort::flashRead()
+{
+    uint8_t reply[249U];
+
+    reply[0U] = DVM_FRAME_START;
+    reply[1U] = 249U;
+    reply[2U] = CMD_FLSH_READ;
+
+    ::memcpy(reply + 3U, (void*)STM32_CNF_PAGE, 246U);
+
+    DEBUG1("SerialPort: flashRead(): read bytes from flash");
+
+    writeInt(1U, reply, 249U);
+}
+
+/// <summary>
+///
+/// </summary>
+/// <param name="data"></param>
+/// <param name="length"></param>
+uint8_t SerialPort::flashWrite(const uint8_t* data, uint8_t length)
+{
+    if (length > 249U) {
+        return RSN_FLASH_WRITE_TOO_BIG;
+    }
+
+    DEBUG1("SerialPort: flashWrite(): unlocking flash");
+
+    FLASH_Unlock();
+    FLASH_ClearFlag(FLASH_FLAG_BSY | FLASH_FLAG_EOP | FLASH_FLAG_PGERR | FLASH_FLAG_WRPRTERR);
+
+#if defined(STM32F4XX)
+    DEBUG1("SerialPort: flashWrite(): erasing flash sector");
+    if (FLASH_EraseSector(STM32_CNF_SECTOR, VoltageRange_3) != FLASH_COMPLETE) {
+        FLASH_Lock();
+        return RSN_FAILED_ERASE_FLASH;
+    }
+#elif defined(STM32F10X_MD)
+    DEBUG1("SerialPort: flashWrite(): erasing flash page");
+    if (FLASH_ErasePage(STM32_CNF_PAGE_ADDR) != FLASH_COMPLETE) {
+        FLASH_Lock();
+        return RSN_FAILED_ERASE_FLASH;
+    }
+#endif
+
+    // write data to the user flash area
+    uint32_t address = STM32_CNF_PAGE_ADDR;
+    uint8_t i = 0U;
+    while (i < length) {
+        uint32_t word =
+            (data[i + 3] << 24) +
+            (data[i + 2] << 16) +
+            (data[i + 1] << 8) +
+            (data[i + 0] << 0);
+
+        DEBUG3("SerialPort: flashWrite(): writing byte data", address, i);
+        if (FLASH_ProgramWord(address, word) == FLASH_COMPLETE) {
+            address += 4;
+            i += 4;
+        }
+        else {
+            FLASH_Lock();
+            return RSN_FAILED_WRITE_FLASH;
+        }
+    }
+
+    DEBUG1("SerialPort: flashWrite(): finished writing, locking flash");
+    FLASH_Lock();
+    return RSN_OK;
+}
+
 /// <summary>
 ///
 /// </summary>

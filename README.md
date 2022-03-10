@@ -11,13 +11,7 @@ Please see the various Makefile's included in the project for more information. 
 * Makefile.STM32FX - This makefile is used for targeting a generic STM32F103 with an ADF7021 RF SoC device.
 
 * For STM32F103 using Ubuntu OS install the standard ARM embedded toolchain (typically arm-gcc-none-eabi).
-  1. Create a directory under "/opt" called "tools" and change to the directory:
-    ```
-    mkdir -p /opt/tools
-    cd /opt/tools
-    ```
-  2. Checkout ```https://github.com/juribeparada/STM32F10X_Lib``` to /opt/tools:
-    ```git clone https://github.com/juribeparada/STM32F10X_Lib```
+    - Make sure to clone this repository with the ```--recursive``` option, otherwise the STM32 platform files will be missing!
 
 Use the ```make``` command to build the firmware, choosing the appropriate makefile with the -F switch.
 

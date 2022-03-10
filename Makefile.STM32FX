@@ -1,6 +1,6 @@
 # STM32 library paths
-F1_LIB_PATH=/opt/tools/STM32F10X_Lib
-F4_LIB_PATH=/opt/tools/STM32F4XX_Lib
+F1_LIB_PATH=./STM32F10X_Platform
+F4_LIB_PATH=./STM32F4XX_Platform
 
 # MCU external clock frequency (Hz)
 CLK_PI_F4=12000000

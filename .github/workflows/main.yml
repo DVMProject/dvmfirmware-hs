@@ -1,0 +1,108 @@
+name: dvmfirmware-build
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get branch name
+        id: branch-name
+        uses: tj-actions/branch-names@v5.1
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+        
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout
+        uses: actions/checkout@v2
+        
+      - name: Install Dependencies
+        run: sudo apt-get install -y gcc-arm-none-eabi
+        
+      - name: Sync Git Submodules
+        run: git submodule init && git submodule update
+        
+      - name: Build STM32FX mmdvm-hs-hat-dual Firmware
+        run: |
+          rm -rf obj_f1
+          rm -rf obj_f4
+          rm -f dvm-firmware-hs_f1.bin
+          make -f Makefile.STM32FX mmdvm-hs-hat-dual
+          mv -f dvm-firmware-hs_f1.bin dvm-firmware-hs-hat-dual.bin
+      - name: Build STM32FX mmdvm-hs-hat-usb-dual Firmware
+        run: |
+          rm -rf obj_f1
+          rm -rf obj_f4
+          rm -f dvm-firmware-hs_f1bl.bin
+          make -f Makefile.STM32FX mmdvm-hs-hat-usb-dual
+          mv -f dvm-firmware-hs_f1bl.bin dvm-firmware-hs-hat-dual_usb.bin
+      - name: Build STM32FX mmdvm-hs-hat Firmware
+        run: |
+          rm -rf obj_f1
+          rm -rf obj_f4
+          rm -f dvm-firmware-hs_f1.bin
+          make -f Makefile.STM32FX mmdvm-hs-hat
+          mv -f dvm-firmware-hs_f1.bin dvm-firmware-hs-hat.bin
+      - name: Build STM32FX mmdvm-hs-hat-usb Firmware
+        run: |
+          rm -rf obj_f1
+          rm -rf obj_f4
+          rm -f dvm-firmware-hs_f1bl.bin
+          make -f Makefile.STM32FX mmdvm-hs-hat-usb
+          mv -f dvm-firmware-hs_f1bl.bin dvm-firmware-hs-hat_usb.bin
+        
+      - name: Firmware Hash
+        run: |
+          echo "BRANCH: ${{steps.branch-name.outputs.current_branch}}" >> release.txt
+          echo "COMMIT: ${{github.sha}}" >> release.txt
+          echo >> release.txt
+          echo '```' >> release.txt
+          cat << EOF >> release.txt
+          dvm-firmware-hs-hat-dual.bin
+          size  : $(wc -c     dvm-firmware-hs-hat-dual.bin)
+          md5   : $(md5sum    dvm-firmware-hs-hat-dual.bin)
+          sha1  : $(sha1sum   dvm-firmware-hs-hat-dual.bin)
+          sha256: $(sha256sum dvm-firmware-hs-hat-dual.bin)
+
+          dvm-firmware-hs-hat-dual_usb.bin
+          size  : $(wc -c     dvm-firmware-hs-hat-dual_usb.bin)
+          md5   : $(md5sum    dvm-firmware-hs-hat-dual_usb.bin)
+          sha1  : $(sha1sum   dvm-firmware-hs-hat-dual_usb.bin)
+          sha256: $(sha256sum dvm-firmware-hs-hat-dual_usb.bin)
+
+          dvm-firmware-hs-hat.bin
+          size  : $(wc -c     dvm-firmware-hs-hat.bin)
+          md5   : $(md5sum    dvm-firmware-hs-hat.bin)
+          sha1  : $(sha1sum   dvm-firmware-hs-hat.bin)
+          sha256: $(sha256sum dvm-firmware-hs-hat.bin)
+
+          dvm-firmware-hs-hat_usb.bin
+          size  : $(wc -c     dvm-firmware-hs-hat_usb.bin)
+          md5   : $(md5sum    dvm-firmware-hs-hat_usb.bin)
+          sha1  : $(sha1sum   dvm-firmware-hs-hat_usb.bin)
+          sha256: $(sha256sum dvm-firmware-hs-hat_usb.bin)
+          EOF
+          echo '```' >> release.txt
+          
+      - name: Release Artifacts
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{steps.date.outputs.date}}
+          body_path: release.txt
+          files: |
+            dvm-firmware-hs-hat-dual.bin
+            dvm-firmware-hs-hat-dual_usb.bin
+            dvm-firmware-hs-hat.bin
+            dvm-firmware-hs-hat_usb.bin

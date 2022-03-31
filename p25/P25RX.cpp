@@ -216,7 +216,7 @@ void P25RX::processBit(bool bit)
         uint8_t frame[P25_HDU_FRAME_LENGTH_BYTES + 1U];
         ::memcpy(frame + 1U, m_buffer, m_endPtr / 8U);
 
-        frame[0U] = 0x01U;
+        frame[0U] = 0x01U; // has sync
         serial.writeP25Data(frame, (m_endPtr / 8U) + 1U);
         reset();
     }
@@ -275,7 +275,7 @@ void P25RX::processVoice(bool bit)
         uint8_t frame[P25_TDU_FRAME_LENGTH_BYTES + 1U];
         ::memcpy(frame + 1U, m_buffer, m_endPtr / 8U);
 
-        frame[0U] = 0x01U;
+        frame[0U] = 0x01U; // has sync
         serial.writeP25Data(frame, P25_TDU_FRAME_LENGTH_BYTES + 1U);
 
         io.setDecode(false);
@@ -303,7 +303,7 @@ void P25RX::processVoice(bool bit)
             uint8_t frame[P25_LDU_FRAME_LENGTH_BYTES + 3U];
             ::memcpy(frame + 1U, m_buffer, m_endPtr / 8U);
 
-            frame[0U] = m_lostCount == (MAX_SYNC_FRAMES - 1U) ? 0x01U : 0x00U;
+            frame[0U] = m_lostCount == (MAX_SYNC_FRAMES - 1U) ? 0x01U : 0x00U; // set sync flag
 #if defined(SEND_RSSI_DATA)
             uint16_t rssi = io.readRSSI();
             frame[217U] = (rssi >> 8) & 0xFFU;
@@ -373,7 +373,7 @@ void P25RX::processData(bool bit)
             uint8_t frame[P25_LDU_FRAME_LENGTH_BYTES + 1U];
             ::memcpy(frame + 1U, m_buffer, m_endPtr / 8U);
 
-            frame[0U] = m_lostCount == (MAX_SYNC_FRAMES - 1U) ? 0x01U : 0x00U;
+            frame[0U] = m_lostCount == (MAX_SYNC_FRAMES - 1U) ? 0x01U : 0x00U; // set sync flag
             serial.writeP25Data(frame, P25_LDU_FRAME_LENGTH_BYTES + 1U);
         }
     }

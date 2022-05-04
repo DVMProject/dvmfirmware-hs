@@ -15,7 +15,9 @@ Please see the various Makefile's included in the project for more information. 
 * For STM32F103 using Ubuntu OS install the standard ARM embedded toolchain (typically arm-gcc-none-eabi).
   - Make sure to clone this repository with the ```--recurse-submodules``` option, otherwise the STM32 platform files will be missing! ```git clone --recurse-submodules https://github.com/DVMProject/dvmfirmware-hs.git```
 
-Use the ```make``` command to build the firmware, choosing the appropriate makefile with the -f switch.
+To build the firmware, use the ```make``` command, followed by -f and the correct makefile, followed by the type of board you are using. 
+
+An example of this would be ```make -f Makefile.STM32FX mmdvm-hs-hat-dual``` for a full duplex modem hotspot, attached to GPIO.
 
 ## Firmware installation
 

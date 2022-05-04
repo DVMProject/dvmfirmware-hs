@@ -15,13 +15,39 @@ Please see the various Makefile's included in the project for more information. 
 * For STM32F103 using Ubuntu OS install the standard ARM embedded toolchain (typically arm-gcc-none-eabi).
   - Make sure to clone this repository with the ```--recurse-submodules``` option, otherwise the STM32 platform files will be missing! ```git clone --recurse-submodules https://github.com/DVMProject/dvmfirmware-hs.git```
 
-Use the ```make``` command to build the firmware, choosing the appropriate makefile with the -f switch.
+To build the firmware, use the ```make``` command, followed by -f and the correct makefile, followed by the type of board you are using. 
+
+> **_NOTE:_**  The only two known tested targets are ```mmdvm-hs-hat-dual``` and ```mmdvm-hs-hat-dual-usb```.
+
+An example of this would be ```make -f Makefile.STM32FX mmdvm-hs-hat-dual``` for a full duplex modem hotspot, attached to GPIO.
 
 ## Firmware installation
 
 The device can be used on top on a RPi attached via the GPIO port or standalone and connected via USB. Both variants require different handling of compiling and uploading the firmware, examples on flashing devices are mostly not included here because the methods to flash vary from device to device.
 
 The USB connection requires firmware with bootloader support whereas the GPIO version does not. For USB connection a bootloader has to be installed initally. This requires STlink connection. After that is done the firmware upgrade can be done via the USB connection. The STlink connection can be used as fallback if wrongly configured firmware was installed for example.
+
+### Install the firmware via GPIO on Raspberry Pi
+
+> **_NOTE:_**  Your mileage may vary with these instructions, the hotspot boards are loosely designed around a common factor but not all are created equally.
+
+First you will need to disable the serial console and disable bluetooth. Edit ```/boot/cmdline.txt``` and remove the line ```console=serial0, 115200```.
+Next, you will need to disable bluetooth on the board. Edit ```/boot/config.txt``` and add a line containing ```dtoverlay=disable-bt```. Reboot.
+
+> Most sets of instructions reccomend to download stm32flash from online, however we have found the prepackaged version to work fine.
+
+Once the hotspot is back on, navigate to the build folder where you compiled the firmware. Put a jumper across the J1 points on the board, and the RED heartbeat LED should stop flashing. Run the below command to flash.
+
+```stm32flash -v -w dvm-firmware-hs_f1.bin -i 20,-21,21,-20 -R /dev/ttyAMA0```
+
+You should see the below output if the board flashed successfully.
+```
+Wrote and verified address 0x0800be40 (100.00%) Done.
+
+Resetting device... 
+Reset done.
+```
+
 
 ### Install the firmware with bootloader support for USB connection
 

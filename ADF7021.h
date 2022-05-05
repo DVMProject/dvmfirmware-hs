@@ -131,7 +131,7 @@
 #if defined(ADF7021_14_7456)
 
 // R = 4
-// DEMOD_CLK = 2.4576 MHz (DEFAULT
+// DEMOD_CLK = 2.4576 MHz (DEFAULT)
 // DEMOD_CLK = 4.9152 MHz (DMR, P25)
 #define ADF7021_PFD             3686400.0
 
@@ -170,18 +170,6 @@
 #endif // ENABLE_P25_WIDE
 
 /*
-** Tx/Rx Clock (Register 3)
-*/
-#define ADF7021_REG3_DEFAULT    0x2A4C4193
-#if defined(TEST_DAC)
-#define ADF7021_REG3_DMR        0x2A4C04D3
-#define ADF7021_REG3_P25        0x2A4C04D3
-#else
-#define ADF7021_REG3_DMR        0x2A4C80D3
-#define ADF7021_REG3_P25        0x2A4C80D3
-#endif // TEST_DAC
-
-/*
 ** Demodulator Setup (Register 4)
 */
 // Discriminator bandwith, demodulator
@@ -204,23 +192,6 @@
 ** IF Fine Cal Setup (Register 6)
 */
 #define ADF7021_REG6            0x05070E16
-
-/*
-** AFC (Register 10)
-*/
-#define ADF7021_REG10_DEFAULT   0x0C96473A
-
-#if defined(ADF7021_ENABLE_4FSK_AFC)
-
-#define ADF7021_REG10_DMR       0x01FE473A
-#define ADF7021_REG10_P25       0x01FE473A
-
-#else
-
-#define ADF7021_REG10_DMR       0x049E472A
-#define ADF7021_REG10_P25       0x049E472A
-
-#endif // ADF7021_ENABLE_4FSK_AFC
 
 /** Support for 12.2880 MHz TCXO */
 #elif defined(ADF7021_12_2880)
@@ -265,18 +236,6 @@
 #endif // ENABLE_P25_WIDE
 
 /*
-** Tx/Rx Clock (Register 3)
-*/
-#define ADF7021_REG3_DEFAULT    0x29EC4153
-#if defined(TEST_DAC)
-#define ADF7021_REG3_DMR        0x29EC0493
-#define ADF7021_REG3_P25        0x29EC0493
-#else
-#define ADF7021_REG3_DMR        0x29ECA093
-#define ADF7021_REG3_P25        0x29ECA093
-#endif // TEST_DAC
-
-/*
 ** Demodulator Setup (Register 4)
 */
 // Discriminator bandwith, demodulator
@@ -300,40 +259,88 @@
 */
 #define ADF7021_REG6            0x0505EBB6
 
+#endif // ADF7021_12_2880
+
+/*
+** N Register (Register 0)
+*/
+#define ADF7021_REG0_ADDR       0b0000
+
+/*
+** Transmit Modulation (Register 2)
+*/
+#define ADF7021_REG2_ADDR       0b0010
+
+#define ADF7021_REG2_MOD_GMSK   0b001
+#define ADF7021_REG2_MOD_4FSK   0b011
+#define ADF7021_REG2_MOD_4FSKRC 0b111
+
+#define ADF7021_REG2_PA_DEF     0b110001
+
+#define ADF7021_REG2_INV_NORM   0b00
+#define ADF7021_REG2_INV_CLK    0b01
+#define ADF7021_REG2_INV_DATA   0b10
+#define ADF7021_REG2_INV_CLKDAT 0b11
+
+#define ADF7021_REG2_RC_5       0b0
+#define ADF7021_REG2_RC_7       0b1
+
+/*
+** Tx/Rx Clock (Register 3)
+*/
+#define ADF7021_REG3_ADDR       0b0011
+
+// Baseband Offset Clock Divider
+#define ADF7021_REG3_BBOS_DIV_4 0b00
+#define ADF7021_REG3_BBOS_DIV_8 0b01
+#define ADF7021_REG3_BBOS_DIV_16 0b10
+#define ADF7021_REG3_BBOS_DIV_32 0b11
+
+/*
+** Demodulator Setup (Register 4)
+*/
+#define ADF7021_REG4_ADDR       0b0100
+
+#define ADF7021_REG4_MODE_GMSK  0b001
+#define ADF7021_REG4_MODE_4FSK  0b011
+
+#define ADF7021_REG4_CROSS_PROD 0b0
+#define ADF7021_REG4_DOT_PROD   0b1
+
+#define ADF7021_REG4_INV_NORM   0b00
+#define ADF7021_REG4_INV_CLK    0b01
+#define ADF7021_REG4_INV_DATA   0b10
+#define ADF7021_REG4_INV_CLKDAT 0b11
+
+#define ADF7021_REG4_IF_125K    0b00
+#define ADF7021_REG4_IF_1875K   0b01
+#define ADF7021_REG4_IF_25K     0b10
+
 /*
 ** AFC (Register 10)
 */
-#define ADF7021_REG10_DEFAULT   0x0C96557A
+#define ADF7021_REG10_ADDR      0b1010
 
-#if defined(ADF7021_ENABLE_4FSK_AFC)
-
-#define ADF7021_REG10_DMR       0x01FE557A
-#define ADF7021_REG10_P25       0x01FE557A
-
-#else
-
-#define ADF7021_REG10_DMR       0x049E556A
-#define ADF7021_REG10_P25       0x049E556A
-
-#endif // ADF7021_ENABLE_4FSK_AFC
-
-#endif // ADF7021_12_2880
+#define ADF7021_REG10_AFC_DISABLE 0b0   
+#define ADF7021_REG10_AFC_ENABLE 0b1
 
 /*
 ** 3FSK/4FSK Demod (Register 13)
 */
+#define ADF70210_REG13_ADDR     0b1101
+
 // Slicer threshold for 4FSK demodulator
 #define ADF7021_SLICER_TH_DEFAULT 0U
 
 #if defined(ADF7021_N_VER)
 
-#define ADF7021_SLICER_TH_DMR    51U
-#define ADF7021_SLICER_TH_P25    43U
+#define ADF7021_SLICER_TH_DMR   51U
+#define ADF7021_SLICER_TH_P25   43U
 
 #else
 
-#define ADF7021_SLICER_TH_DMR    57U
-#define ADF7021_SLICER_TH_P25    47U
+#define ADF7021_SLICER_TH_DMR   57U
+#define ADF7021_SLICER_TH_P25   47U
 
 #endif // ADF7021_N_VER
 

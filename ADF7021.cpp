@@ -338,14 +338,14 @@ void IO::rf1Conf(DVM_STATE modemState, bool reset)
     RX_F_Divider = floor(divider + 0.5);
 
     // setup rx register 0
-    ADF7021_RX_REG0 = (uint32_t)0b0000;                 // register 0
+    ADF7021_RX_REG0 = (uint32_t)ADF7021_REG0_ADDR;                      // Register Address 0
 #if defined(BIDIR_DATA_PIN)
-    ADF7021_RX_REG0 |= (uint32_t)0b01001 << 27;         // mux regulator/receive
+    ADF7021_RX_REG0 |= (uint32_t)0b01001 << 27;                         // Mux regulator/receive
 #else
-    ADF7021_RX_REG0 |= (uint32_t)0b01011 << 27;         // mux regulator/uart-spi enabled/receive
+    ADF7021_RX_REG0 |= (uint32_t)0b01011 << 27;                         // Mux regulator/uart-spi enabled/receive
 #endif
-    ADF7021_RX_REG0 |= (uint32_t)RX_N_Divider << 19;    // frequency - 15-bit Frac_N
-    ADF7021_RX_REG0 |= (uint32_t)RX_F_Divider << 4;     // frequency - 8-bit Int_N
+    ADF7021_RX_REG0 |= (uint32_t)RX_N_Divider << 19;                    // Frequency - 8-bit Int_N
+    ADF7021_RX_REG0 |= (uint32_t)RX_F_Divider << 4;                     // Frequency - 15-bit Frac_N
 
     if (div2 == 1U)
         divider = m_txFrequency / (ADF7021_PFD / 2U);
@@ -358,14 +358,14 @@ void IO::rf1Conf(DVM_STATE modemState, bool reset)
     TX_F_Divider = floor(divider + 0.5);
 
     // setup tx register 0
-    ADF7021_TX_REG0 = (uint32_t)0b0000;                 // register 0
+    ADF7021_TX_REG0 = (uint32_t)ADF7021_REG0_ADDR;                      // Register Address 0
 #if defined(BIDIR_DATA_PIN)
-    ADF7021_TX_REG0 |= (uint32_t)0b01000 << 27;         // mux regulator/transmit
+    ADF7021_TX_REG0 |= (uint32_t)0b01000 << 27;                         // Mux regulator/transmit
 #else
-    ADF7021_TX_REG0 |= (uint32_t)0b01010 << 27;         // mux regulator/uart-spi enabled/transmit
+    ADF7021_TX_REG0 |= (uint32_t)0b01010 << 27;                         // Mux regulator/uart-spi enabled/transmit
 #endif
-    ADF7021_TX_REG0 |= (uint32_t)TX_N_Divider << 19;    // frequency - 15-bit Frac_N
-    ADF7021_TX_REG0 |= (uint32_t)TX_F_Divider << 4;     // frequency - 8-bit Int_N
+    ADF7021_TX_REG0 |= (uint32_t)TX_N_Divider << 19;                    // Frequency - 8-bit Int_N
+    ADF7021_TX_REG0 |= (uint32_t)TX_F_Divider << 4;                     // Frequency - 15-bit Frac_N
 
     // configure ADF Tx/RX
     configureTxRx(modemState);
@@ -911,38 +911,86 @@ void IO::configureTxRx(DVM_STATE modemState)
             // Dev: +1 symb (variable), symb rate = 4800
 
             /*
-            ** Tx/Rx Clock (Register 3) & AFC (Register 10)
+            ** Tx/Rx Clock (Register 3)
             */
-            ADF7021_REG3 = ADF7021_REG3_DMR;
-            ADF7021_REG10 = ADF7021_REG10_DMR;
+/** Support for 14.7456 MHz TCXO (modified RF7021SE boards) */
+#if defined(ADF7021_14_7456)
+            ADF7021_REG3 = (uint32_t)ADF7021_REG3_ADDR;                 // Register Address 3
+            ADF7021_REG3 |= (uint32_t)ADF7021_REG3_BBOS_DIV_8 << 4;     // Base Band Clock Divider
+            ADF7021_REG3 |= (uint32_t)(3 & 0xFU) << 6;                  // Demodulator Clock Divider
+            ADF7021_REG3 |= (uint32_t)(32 & 0xFFU) << 10;               // Data/Clock Recovery Divider (CDR)
+            ADF7021_REG3 |= (uint32_t)(147 & 0xFFU) << 18;              // Sequencer Clock Divider
+            ADF7021_REG3 |= (uint32_t)(10 & 0x3FU) << 26;               // AGC Clock Divider
+
+/** Support for 12.2880 MHz TCXO */
+#elif defined(ADF7021_12_2880)
+            ADF7021_REG3 = (uint32_t)ADF7021_REG3_ADDR;                 // Register Address 3
+            ADF7021_REG3 |= (uint32_t)ADF7021_REG3_BBOS_DIV_8 << 4;     // Base Band Clock Divider
+            ADF7021_REG3 |= (uint32_t)(2 & 0xFU) << 6;                  // Demodulator Clock Divider
+            ADF7021_REG3 |= (uint32_t)(40 & 0xFFU) << 10;               // Data/Clock Recovery Divider (CDR)
+            ADF7021_REG3 |= (uint32_t)(123 & 0xFFU) << 18;              // Sequencer Clock Divider
+            ADF7021_REG3 |= (uint32_t)(10 & 0x3FU) << 26;               // AGC Clock Divider
+#endif
+
+            /*
+            ** AFC (Register 10)
+            */
+/** Support for 14.7456 MHz TCXO (modified RF7021SE boards) */
+#if defined(ADF7021_14_7456)
+            ADF7021_REG10 = (uint32_t)ADF7021_REG10_ADDR;               // Register Address 10
+#if defined(ADF7021_ENABLE_4FSK_AFC)
+            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_ENABLE << 4;   // AFC Enable/Disable
+#else
+            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_DISABLE << 4;  // AFC Enable/Disable
+#endif
+            ADF7021_REG10 |= (uint32_t)(569 & 0xFFFU) << 5;             // AFC Scaling Factor
+            ADF7021_REG10 |= (uint32_t)(15 & 0xFU) << 17;               // KI
+            ADF7021_REG10 |= (uint32_t)(4 & 0x7U) << 21;                // KP
+            ADF7021_REG10 |= (uint32_t)(4 & 0xFFU) << 24;               // Maximum AFC Range
+
+/** Support for 12.2880 MHz TCXO */
+#elif defined(ADF7021_12_2880)
+            ADF7021_REG10 = (uint32_t)ADF7021_REG10_ADDR;               // Register Address 10
+#if defined(ADF7021_ENABLE_4FSK_AFC)
+            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_ENABLE << 4;   // AFC Enable/Disable
+#else
+            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_DISABLE << 4;  // AFC Enable/Disable
+#endif
+            ADF7021_REG10 |= (uint32_t)(683 & 0xFFFU) << 5;             // AFC Scaling Factor
+            ADF7021_REG10 |= (uint32_t)(15 & 0xFU) << 17;               // KI
+            ADF7021_REG10 |= (uint32_t)(4 & 0x7U) << 21;                // KP
+            ADF7021_REG10 |= (uint32_t)(4 & 0xFFU) << 24;               // Maximum AFC Range
+
+#endif
 
             /*
             ** Demodulator Setup (Register 4)
             */
             // K=32
-            ADF7021_REG4 = (uint32_t)0b0100 << 0;           // register 4
-            ADF7021_REG4 |= (uint32_t)0b011 << 4;           // mode, 4FSK
-            ADF7021_REG4 |= (uint32_t)0b0 << 7;             // cross product
-            ADF7021_REG4 |= (uint32_t)0b11 << 8;            // invert clk/data
-            ADF7021_REG4 |= (uint32_t)(dmrDiscBW & 0x3FFU) << 10; // discriminator BW
-            ADF7021_REG4 |= (uint32_t)(dmrPostBW & 0xFFFU) << 20; // post demod BW
-            ADF7021_REG4 |= (uint32_t)0b10 << 30;           // IF filter (25 kHz)
+            ADF7021_REG4 = (uint32_t)ADF7021_REG4_ADDR;                 // Register Address 4
+            ADF7021_REG4 |= (uint32_t)ADF7021_REG4_MODE_4FSK << 4;      // Demodulation Scheme
+            ADF7021_REG4 |= (uint32_t)ADF7021_REG4_CROSS_PROD << 7;     // Dot Product
+            ADF7021_REG4 |= (uint32_t)ADF7021_REG4_INV_CLKDAT << 8;     // Clock/Data Inversion
+            ADF7021_REG4 |= (uint32_t)(dmrDiscBW & 0x3FFU) << 10;       // Discriminator BW
+            ADF7021_REG4 |= (uint32_t)(dmrPostBW & 0xFFFU) << 20;       // Post Demod BW
+            ADF7021_REG4 |= (uint32_t)ADF7021_REG4_IF_25K << 30;        // IF Filter
 
             /*
             ** 3FSK/4FSK Demod (Register 13)
             */
-            ADF7021_REG13 = (uint32_t)0b1101 << 0;          // register 13
-            ADF7021_REG13 |= (uint32_t)ADF7021_SLICER_TH_DMR << 4; // slicer threshold
+            ADF7021_REG13 = (uint32_t)0b1101 << 0;                      // Register Address 13
+            ADF7021_REG13 |= (uint32_t)ADF7021_SLICER_TH_DMR << 4;      // Slicer Threshold
 
             /*
             ** Transmit Modulation (Register 2)
             */
-            ADF7021_REG2 = (uint32_t)0b0010;                // register 2
-            ADF7021_REG2 |= (uint32_t)m_rfPower << 13;      // power level
-            ADF7021_REG2 |= (uint32_t)0b110001 << 7;        // PA
-            ADF7021_REG2 |= (uint32_t)0b10 << 28;           // invert data (and RC alpha = 0.5)
-            ADF7021_REG2 |= (uint32_t)(m_cwIdTXLevel / div2) << 19; // deviation
-            ADF7021_REG2 |= (uint32_t)0b111 << 4;           // modulation (RC 4FSK)
+            ADF7021_REG2 = (uint32_t)ADF7021_REG2_ADDR;                 // Register Address 2
+            ADF7021_REG2 |= (uint32_t)ADF7021_REG2_MOD_4FSKRC << 4;     // Modulation Scheme
+            ADF7021_REG2 |= (uint32_t)ADF7021_REG2_PA_DEF << 7;         // PA Enable & PA Bias
+            ADF7021_REG2 |= (uint32_t)(m_rfPower & 0x3FU) << 13;        // PA Level (0 - Off, 63 - 13 dBm)
+            ADF7021_REG2 |= (uint32_t)(m_cwIdTXLevel / div2) << 19;     // Freq. Deviation
+            ADF7021_REG2 |= (uint32_t)ADF7021_REG2_INV_DATA << 28;      // Clock/Data Inversion
+            ADF7021_REG2 |= (uint32_t)ADF7021_REG2_RC_5 << 30;          // R-Cosine Alpha
         }
         break;
 
@@ -951,38 +999,86 @@ void IO::configureTxRx(DVM_STATE modemState)
             // Dev: +1 symb 648 Hz, symb rate = 4800
 
             /*
-            ** Tx/Rx Clock (Register 3) & AFC (Register 10)
+            ** Tx/Rx Clock (Register 3)
             */
-            ADF7021_REG3 = ADF7021_REG3_DMR;
-            ADF7021_REG10 = ADF7021_REG10_DMR;
+/** Support for 14.7456 MHz TCXO (modified RF7021SE boards) */
+#if defined(ADF7021_14_7456)
+            ADF7021_REG3 = (uint32_t)ADF7021_REG3_ADDR;                 // Register Address 3
+            ADF7021_REG3 |= (uint32_t)ADF7021_REG3_BBOS_DIV_8 << 4;     // Base Band Clock Divider
+            ADF7021_REG3 |= (uint32_t)(3 & 0xFU) << 6;                  // Demodulator Clock Divider
+            ADF7021_REG3 |= (uint32_t)(32 & 0xFFU) << 10;               // Data/Clock Recovery Divider (CDR)
+            ADF7021_REG3 |= (uint32_t)(147 & 0xFFU) << 18;              // Sequencer Clock Divider
+            ADF7021_REG3 |= (uint32_t)(10 & 0x3FU) << 26;               // AGC Clock Divider
+
+/** Support for 12.2880 MHz TCXO */
+#elif defined(ADF7021_12_2880)
+            ADF7021_REG3 = (uint32_t)ADF7021_REG3_ADDR;                 // Register Address 3
+            ADF7021_REG3 |= (uint32_t)ADF7021_REG3_BBOS_DIV_8 << 4;     // Base Band Clock Divider
+            ADF7021_REG3 |= (uint32_t)(2 & 0xFU) << 6;                  // Demodulator Clock Divider
+            ADF7021_REG3 |= (uint32_t)(40 & 0xFFU) << 10;               // Data/Clock Recovery Divider (CDR)
+            ADF7021_REG3 |= (uint32_t)(123 & 0xFFU) << 18;              // Sequencer Clock Divider
+            ADF7021_REG3 |= (uint32_t)(10 & 0x3FU) << 26;               // AGC Clock Divider
+#endif
+
+            /*
+            ** AFC (Register 10)
+            */
+/** Support for 14.7456 MHz TCXO (modified RF7021SE boards) */
+#if defined(ADF7021_14_7456)
+            ADF7021_REG10 = (uint32_t)ADF7021_REG10_ADDR;               // Register Address 10
+#if defined(ADF7021_ENABLE_4FSK_AFC)
+            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_ENABLE << 4;   // AFC Enable/Disable
+#else
+            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_DISABLE << 4;  // AFC Enable/Disable
+#endif
+            ADF7021_REG10 |= (uint32_t)(569 & 0xFFFU) << 5;             // AFC Scaling Factor
+            ADF7021_REG10 |= (uint32_t)(15 & 0xFU) << 17;               // KI
+            ADF7021_REG10 |= (uint32_t)(4 & 0x7U) << 21;                // KP
+            ADF7021_REG10 |= (uint32_t)(4 & 0xFFU) << 24;               // Maximum AFC Range
+
+/** Support for 12.2880 MHz TCXO */
+#elif defined(ADF7021_12_2880)
+            ADF7021_REG10 = (uint32_t)ADF7021_REG10_ADDR;               // Register Address 10
+#if defined(ADF7021_ENABLE_4FSK_AFC)
+            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_ENABLE << 4;   // AFC Enable/Disable
+#else
+            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_DISABLE << 4;  // AFC Enable/Disable
+#endif
+            ADF7021_REG10 |= (uint32_t)(683 & 0xFFFU) << 5;             // AFC Scaling Factor
+            ADF7021_REG10 |= (uint32_t)(15 & 0xFU) << 17;               // KI
+            ADF7021_REG10 |= (uint32_t)(4 & 0x7U) << 21;                // KP
+            ADF7021_REG10 |= (uint32_t)(4 & 0xFFU) << 24;               // Maximum AFC Range
+
+#endif
 
             /*
             ** Demodulator Setup (Register 4)
             */
             // K=32
-            ADF7021_REG4 = (uint32_t)0b0100 << 0;           // register 4
-            ADF7021_REG4 |= (uint32_t)0b011 << 4;           // mode, 4FSK
-            ADF7021_REG4 |= (uint32_t)0b0 << 7;             // cross product
-            ADF7021_REG4 |= (uint32_t)0b11 << 8;            // invert clk/data
-            ADF7021_REG4 |= (uint32_t)(dmrDiscBW & 0x3FFU) << 10; // discriminator BW
-            ADF7021_REG4 |= (uint32_t)(dmrPostBW & 0xFFFU) << 20; // post demod BW
-            ADF7021_REG4 |= (uint32_t)0b00 << 30;           // IF filter (12.5 kHz)
+            ADF7021_REG4 = (uint32_t)ADF7021_REG4_ADDR;                 // Register Address 4
+            ADF7021_REG4 |= (uint32_t)ADF7021_REG4_MODE_4FSK << 4;      // Demodulation Scheme
+            ADF7021_REG4 |= (uint32_t)ADF7021_REG4_CROSS_PROD << 7;     // Dot Product
+            ADF7021_REG4 |= (uint32_t)ADF7021_REG4_INV_CLKDAT << 8;     // Clock/Data Inversion
+            ADF7021_REG4 |= (uint32_t)(dmrDiscBW & 0x3FFU) << 10;       // Discriminator BW
+            ADF7021_REG4 |= (uint32_t)(dmrPostBW & 0xFFFU) << 20;       // Post Demod BW
+            ADF7021_REG4 |= (uint32_t)ADF7021_REG4_IF_125K << 30;       // IF Filter
 
             /*
             ** 3FSK/4FSK Demod (Register 13)
             */
-            ADF7021_REG13 = (uint32_t)0b1101 << 0;          // register 13
-            ADF7021_REG13 |= (uint32_t)ADF7021_SLICER_TH_DMR << 4; // slicer threshold
+            ADF7021_REG13 = (uint32_t)0b1101 << 0;                      // Register Address 13
+            ADF7021_REG13 |= (uint32_t)ADF7021_SLICER_TH_DMR << 4;      // Slicer Threshold
 
             /*
             ** Transmit Modulation (Register 2)
             */
-            ADF7021_REG2 = (uint32_t)0b0010;                // register 2
-            ADF7021_REG2 |= (uint32_t)m_rfPower << 13;      // power level
-            ADF7021_REG2 |= (uint32_t)0b110001 << 7;        // PA
-            ADF7021_REG2 |= (uint32_t)0b10 << 28;           // invert data (and RC alpha = 0.5)
-            ADF7021_REG2 |= (uint32_t)(dmrDev / div2) << 19; // deviation
-            ADF7021_REG2 |= (uint32_t)0b111 << 4;           // modulation (RC 4FSK)
+            ADF7021_REG2 = (uint32_t)ADF7021_REG2_ADDR;                 // Register Address 2
+            ADF7021_REG2 |= (uint32_t)ADF7021_REG2_MOD_4FSKRC << 4;     // Modulation Scheme
+            ADF7021_REG2 |= (uint32_t)ADF7021_REG2_PA_DEF << 7;         // PA Enable & PA Bias
+            ADF7021_REG2 |= (uint32_t)(m_rfPower & 0x3FU) << 13;        // PA Level (0 - Off, 63 - 13 dBm)
+            ADF7021_REG2 |= (uint32_t)(dmrDev / div2) << 19;            // Freq. Deviation
+            ADF7021_REG2 |= (uint32_t)ADF7021_REG2_INV_DATA << 28;      // Clock/Data Inversion
+            ADF7021_REG2 |= (uint32_t)ADF7021_REG2_RC_5 << 30;          // R-Cosine Alpha
         }
         break;
 
@@ -991,38 +1087,86 @@ void IO::configureTxRx(DVM_STATE modemState)
             // Dev: +1 symb 600 Hz, symb rate = 4800
 
             /*
-            ** Tx/Rx Clock (Register 3) & AFC (Register 10)
+            ** Tx/Rx Clock (Register 3)
             */
-            ADF7021_REG3 = ADF7021_REG3_P25;
-            ADF7021_REG10 = ADF7021_REG10_P25;
+/** Support for 14.7456 MHz TCXO (modified RF7021SE boards) */
+#if defined(ADF7021_14_7456)
+            ADF7021_REG3 = (uint32_t)ADF7021_REG3_ADDR;                 // Register Address 3
+            ADF7021_REG3 |= (uint32_t)ADF7021_REG3_BBOS_DIV_8 << 4;     // Base Band Clock Divider
+            ADF7021_REG3 |= (uint32_t)(3 & 0xFU) << 6;                  // Demodulator Clock Divider
+            ADF7021_REG3 |= (uint32_t)(32 & 0xFFU) << 10;               // Data/Clock Recovery Divider (CDR)
+            ADF7021_REG3 |= (uint32_t)(147 & 0xFFU) << 18;              // Sequencer Clock Divider
+            ADF7021_REG3 |= (uint32_t)(10 & 0x3FU) << 26;               // AGC Clock Divider
+
+/** Support for 12.2880 MHz TCXO */
+#elif defined(ADF7021_12_2880)
+            ADF7021_REG3 = (uint32_t)ADF7021_REG3_ADDR;                 // Register Address 3
+            ADF7021_REG3 |= (uint32_t)ADF7021_REG3_BBOS_DIV_8 << 4;     // Base Band Clock Divider
+            ADF7021_REG3 |= (uint32_t)(2 & 0xFU) << 6;                  // Demodulator Clock Divider
+            ADF7021_REG3 |= (uint32_t)(40 & 0xFFU) << 10;               // Data/Clock Recovery Divider (CDR)
+            ADF7021_REG3 |= (uint32_t)(123 & 0xFFU) << 18;              // Sequencer Clock Divider
+            ADF7021_REG3 |= (uint32_t)(10 & 0x3FU) << 26;               // AGC Clock Divider
+#endif
+
+            /*
+            ** AFC (Register 10)
+            */
+/** Support for 14.7456 MHz TCXO (modified RF7021SE boards) */
+#if defined(ADF7021_14_7456)
+            ADF7021_REG10 = (uint32_t)ADF7021_REG10_ADDR;               // Register Address 10
+#if defined(ADF7021_ENABLE_4FSK_AFC)
+            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_ENABLE << 4;   // AFC Enable/Disable
+#else
+            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_DISABLE << 4;  // AFC Enable/Disable
+#endif
+            ADF7021_REG10 |= (uint32_t)(569 & 0xFFFU) << 5;             // AFC Scaling Factor
+            ADF7021_REG10 |= (uint32_t)(15 & 0xFU) << 17;               // KI
+            ADF7021_REG10 |= (uint32_t)(4 & 0x7U) << 21;                // KP
+            ADF7021_REG10 |= (uint32_t)(4 & 0xFFU) << 24;               // Maximum AFC Range
+
+/** Support for 12.2880 MHz TCXO */
+#elif defined(ADF7021_12_2880)
+            ADF7021_REG10 = (uint32_t)ADF7021_REG10_ADDR;               // Register Address 10
+#if defined(ADF7021_ENABLE_4FSK_AFC)
+            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_ENABLE << 4;   // AFC Enable/Disable
+#else
+            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_DISABLE << 4;  // AFC Enable/Disable
+#endif
+            ADF7021_REG10 |= (uint32_t)(683 & 0xFFFU) << 5;             // AFC Scaling Factor
+            ADF7021_REG10 |= (uint32_t)(15 & 0xFU) << 17;               // KI
+            ADF7021_REG10 |= (uint32_t)(4 & 0x7U) << 21;                // KP
+            ADF7021_REG10 |= (uint32_t)(4 & 0xFFU) << 24;               // Maximum AFC Range
+
+#endif
 
             /*
             ** Demodulator Setup (Register 4)
             */
             // K=32
-            ADF7021_REG4 = (uint32_t)0b0100 << 0;           // register 4
-            ADF7021_REG4 |= (uint32_t)0b011 << 4;           // mode, 4FSK
-            ADF7021_REG4 |= (uint32_t)0b0 << 7;             // cross product
-            ADF7021_REG4 |= (uint32_t)0b11 << 8;            // invert clk/data
-            ADF7021_REG4 |= (uint32_t)(p25DiscBW & 0x3FFU) << 10; // discriminator BW
-            ADF7021_REG4 |= (uint32_t)(p25PostBW & 0xFFFU) << 20; // post demod BW
-            ADF7021_REG4 |= (uint32_t)0b00 << 30;           // IF filter (12.5 kHz)
+            ADF7021_REG4 = (uint32_t)ADF7021_REG4_ADDR;                 // Register Address 4
+            ADF7021_REG4 |= (uint32_t)ADF7021_REG4_MODE_4FSK << 4;      // Demodulation Scheme
+            ADF7021_REG4 |= (uint32_t)ADF7021_REG4_CROSS_PROD << 7;     // Dot Product
+            ADF7021_REG4 |= (uint32_t)ADF7021_REG4_INV_CLKDAT << 8;     // Clock/Data Inversion
+            ADF7021_REG4 |= (uint32_t)(p25DiscBW & 0x3FFU) << 10;       // Discriminator BW
+            ADF7021_REG4 |= (uint32_t)(p25PostBW & 0xFFFU) << 20;       // Post Demod BW
+            ADF7021_REG4 |= (uint32_t)ADF7021_REG4_IF_125K << 30;       // IF Filter
 
             /*
             ** 3FSK/4FSK Demod (Register 13)
             */
-            ADF7021_REG13 = (uint32_t)0b1101 << 0;          // register 13
-            ADF7021_REG13 |= (uint32_t)ADF7021_SLICER_TH_P25 << 4; // slicer threshold
+            ADF7021_REG13 = (uint32_t)ADF70210_REG13_ADDR;              // Register Address 13
+            ADF7021_REG13 |= (uint32_t)ADF7021_SLICER_TH_P25 << 4;      // Slicer Threshold
 
             /*
             ** Transmit Modulation (Register 2)
             */
-            ADF7021_REG2 = (uint32_t)0b0010;                // register 2
-            ADF7021_REG2 |= (uint32_t)m_rfPower << 13;      // power level
-            ADF7021_REG2 |= (uint32_t)0b110001 << 7;        // PA
-            ADF7021_REG2 |= (uint32_t)0b10 << 28;           // invert data (and RC alpha = 0.5)
-            ADF7021_REG2 |= (uint32_t)(p25Dev / div2) << 19; // deviation
-            ADF7021_REG2 |= (uint32_t)0b111 << 4;           // modulation (RC 4FSK)
+            ADF7021_REG2 = (uint32_t)ADF7021_REG2_ADDR;                 // Register Address 2
+            ADF7021_REG2 |= (uint32_t)ADF7021_REG2_MOD_4FSKRC << 4;     // Modulation Scheme
+            ADF7021_REG2 |= (uint32_t)ADF7021_REG2_PA_DEF << 7;         // PA Enable & PA Bias
+            ADF7021_REG2 |= (uint32_t)(m_rfPower & 0x3FU) << 13;        // PA Level (0 - Off, 63 - 13 dBm)
+            ADF7021_REG2 |= (uint32_t)(p25Dev / div2) << 19;            // Freq. Deviation
+            ADF7021_REG2 |= (uint32_t)ADF7021_REG2_INV_DATA << 28;      // Clock/Data Inversion
+            ADF7021_REG2 |= (uint32_t)ADF7021_REG2_RC_5 << 30;          // R-Cosine Alpha
         }
         break;
     default: // GMSK
@@ -1030,38 +1174,78 @@ void IO::configureTxRx(DVM_STATE modemState)
             // Dev: 1200 Hz, symb rate = 4800
 
             /*
-            ** Tx/Rx Clock (Register 3) & AFC (Register 10)
+            ** Tx/Rx Clock (Register 3)
             */
-            ADF7021_REG3 = ADF7021_REG3_DEFAULT;
-            ADF7021_REG10 = ADF7021_REG10_DEFAULT;
+/** Support for 14.7456 MHz TCXO (modified RF7021SE boards) */
+#if defined(ADF7021_14_7456)
+            ADF7021_REG3 = (uint32_t)ADF7021_REG3_ADDR;                 // Register Address 3
+            ADF7021_REG3 |= (uint32_t)ADF7021_REG3_BBOS_DIV_8 << 4;     // Base Band Clock Divider
+            ADF7021_REG3 |= (uint32_t)(6 & 0xFU) << 6;                  // Demodulator Clock Divider
+            ADF7021_REG3 |= (uint32_t)(8 & 0xFFU) << 10;                // Data/Clock Recovery Divider (CDR)
+            ADF7021_REG3 |= (uint32_t)(147 & 0xFFU) << 18;              // Sequencer Clock Divider
+            ADF7021_REG3 |= (uint32_t)(10 & 0x3FU) << 26;               // AGC Clock Divider
+
+/** Support for 12.2880 MHz TCXO */
+#elif defined(ADF7021_12_2880)
+            ADF7021_REG3 = (uint32_t)ADF7021_REG3_ADDR;                 // Register Address 3
+            ADF7021_REG3 |= (uint32_t)ADF7021_REG3_BBOS_DIV_8 << 4;     // Base Band Clock Divider
+            ADF7021_REG3 |= (uint32_t)(5 & 0xFU) << 6;                  // Demodulator Clock Divider
+            ADF7021_REG3 |= (uint32_t)(16 & 0xFFU) << 10;               // Data/Clock Recovery Divider (CDR)
+            ADF7021_REG3 |= (uint32_t)(123 & 0xFFU) << 18;              // Sequencer Clock Divider
+            ADF7021_REG3 |= (uint32_t)(10 & 0x3FU) << 26;               // AGC Clock Divider
+#endif
+
+            /*
+            ** AFC (Register 10)
+            */
+/** Support for 14.7456 MHz TCXO (modified RF7021SE boards) */
+#if defined(ADF7021_14_7456)
+            ADF7021_REG10 = (uint32_t)ADF7021_REG10_ADDR;               // Register Address 10
+            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_ENABLE << 4;   // AFC Enable/Disable
+            ADF7021_REG10 |= (uint32_t)(569 & 0xFFFU) << 5;             // AFC Scaling Factor
+            ADF7021_REG10 |= (uint32_t)(11 & 0xFU) << 17;               // KI
+            ADF7021_REG10 |= (uint32_t)(4 & 0x7U) << 21;                // KP
+            ADF7021_REG10 |= (uint32_t)(12 & 0xFFU) << 24;              // Maximum AFC Range
+
+/** Support for 12.2880 MHz TCXO */
+#elif defined(ADF7021_12_2880)
+            ADF7021_REG10 = (uint32_t)ADF7021_REG10_ADDR;               // Register Address 10
+            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_ENABLE << 4;   // AFC Enable/Disable
+            ADF7021_REG10 |= (uint32_t)(683 & 0xFFFU) << 5;             // AFC Scaling Factor
+            ADF7021_REG10 |= (uint32_t)(11 & 0xFU) << 17;               // KI
+            ADF7021_REG10 |= (uint32_t)(4 & 0x7U) << 21;                // KP
+            ADF7021_REG10 |= (uint32_t)(12 & 0xFFU) << 24;              // Maximum AFC Range
+
+#endif
 
             /*
             ** Demodulator Setup (Register 4)
             */
             // K=32
-            ADF7021_REG4 = (uint32_t)0b0100 << 0;           // register 4
-            ADF7021_REG4 |= (uint32_t)0b001 << 4;           // mode, GMSK
-            ADF7021_REG4 |= (uint32_t)0b1 << 7;             // dot product
-            ADF7021_REG4 |= (uint32_t)0b10 << 8;            // invert data
-            ADF7021_REG4 |= (uint32_t)ADF7021_DISC_BW_DEFAULT << 10; // discriminator BW
-            ADF7021_REG4 |= (uint32_t)ADF7021_POST_BW_DEFAULT << 20; // post demod BW
-            ADF7021_REG4 |= (uint32_t)0b00 << 30;           // IF filter (12.5 kHz)
+            ADF7021_REG4 = (uint32_t)ADF7021_REG4_ADDR;                 // Register Address 4
+            ADF7021_REG4 |= (uint32_t)ADF7021_REG4_MODE_GMSK << 4;      // Demodulation Scheme
+            ADF7021_REG4 |= (uint32_t)ADF7021_REG4_DOT_PROD << 7;       // Dot Product
+            ADF7021_REG4 |= (uint32_t)ADF7021_REG4_INV_DATA << 8;       // Clock/Data Inversion
+            ADF7021_REG4 |= (uint32_t)ADF7021_DISC_BW_DEFAULT << 10;    // Discriminator BW
+            ADF7021_REG4 |= (uint32_t)ADF7021_POST_BW_DEFAULT << 20;    // Post Demod BW
+            ADF7021_REG4 |= (uint32_t)ADF7021_REG4_IF_125K << 30;       // IF Filter
 
             /*
             ** 3FSK/4FSK Demod (Register 13)
             */
-            ADF7021_REG13 = (uint32_t)0b1101 << 0;          // register 13
-            ADF7021_REG13 |= (uint32_t)ADF7021_SLICER_TH_DEFAULT << 4; // slicer threshold
+            ADF7021_REG13 = (uint32_t)ADF70210_REG13_ADDR;              // Register Address 13
+            ADF7021_REG13 |= (uint32_t)ADF7021_SLICER_TH_DEFAULT << 4;  // Slicer Threshold
 
             /*
             ** Transmit Modulation (Register 2)
             */
-            ADF7021_REG2 = (uint32_t)0b0010;                // register 2
-            ADF7021_REG2 |= (uint32_t)m_rfPower << 13;      // power level
-            ADF7021_REG2 |= (uint32_t)0b110001 << 7;        // PA
-            ADF7021_REG2 |= (uint32_t)0b00 << 28;           // normal
-            ADF7021_REG2 |= (uint32_t)(ADF7021_DEV_DEFAULT / div2) << 19; // deviation
-            ADF7021_REG2 |= (uint32_t)0b001 << 4;           // modulation (GMSK)
+            ADF7021_REG2 = (uint32_t)ADF7021_REG2_ADDR;                 // Register Address 2
+            ADF7021_REG2 |= (uint32_t)ADF7021_REG2_MOD_GMSK << 4;       // Modulation Scheme
+            ADF7021_REG2 |= (uint32_t)ADF7021_REG2_PA_DEF << 7;         // PA Enable & PA Bias
+            ADF7021_REG2 |= (uint32_t)(m_rfPower & 0x3FU) << 13;        // PA Level (0 - Off, 63 - 13 dBm)
+            ADF7021_REG2 |= (uint32_t)(ADF7021_DEV_DEFAULT / div2) << 19; // Freq. Deviation
+            ADF7021_REG2 |= (uint32_t)ADF7021_REG2_INV_NORM << 28;      // Clock/Data Inversion
+            ADF7021_REG2 |= (uint32_t)ADF7021_REG2_RC_5 << 30;          // R-Cosine Alpha
         }
         break;
     }

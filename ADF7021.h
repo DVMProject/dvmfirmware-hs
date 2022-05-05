@@ -130,9 +130,9 @@
 /** Support for 14.7456 MHz TCXO (modified RF7021SE boards) */
 #if defined(ADF7021_14_7456)
 
-// R = 4
-// DEMOD_CLK = 2.4576 MHz (DEFAULT)
-// DEMOD_CLK = 4.9152 MHz (DMR, P25)
+// R = 2, DEMOD_CLK = 7.3728 MHz
+// R = 3, DEMOD_CLK = 4.9152 MHz
+// R = 4, DEMOD_CLK = 3.6864 MHz
 #define ADF7021_PFD             3686400.0
 
 /*
@@ -196,9 +196,9 @@
 /** Support for 12.2880 MHz TCXO */
 #elif defined(ADF7021_12_2880)
 
-// R = 2
-// DEMOD_CLK = 2.4576 MHz (DEFAULT)
-// DEMOD_CLK = 6.1440 MHz (DMR, P25)
+// R = 2, DEMOD_CLK = 6.1440 MHz
+// R = 3, DEMOD_CLK = 4.0960 MHz
+// R = 4, DEMOD_CLK = 3.0720 MHz
 #define ADF7021_PFD             6144000.0
 
 /*

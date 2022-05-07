@@ -41,9 +41,8 @@ namespace p25
     //  Constants
     // ---------------------------------------------------------------------------
 
-    #define P25_FIXED_DELAY 300     // 300 = 62.49ms
-                                    // Delay Value * 0.2083 = Preamble Length (ms)
-    #define P25_FIXED_TAIL 600      // 600 = 500ms
+    #define P25_FIXED_DELAY 90      // 90 = 20ms
+    #define P25_FIXED_TX_HANG 750   // 750 = 625ms
 
     enum P25TXSTATE {
         P25TXSTATE_NORMAL,
@@ -71,6 +70,8 @@ namespace p25
 
         /// <summary>Sets the FDMA preamble count.</summary>
         void setPreambleCount(uint8_t preambleCnt);
+        /// <summary>Sets the transmit hang time.</summary>
+        void setTxHang(uint8_t txHang);
         /// <summary>Helper to set the calibration state for Tx.</summary>
         void setCal(bool start);
 
@@ -87,7 +88,8 @@ namespace p25
         uint16_t m_poPtr;
 
         uint16_t m_preambleCnt;
-        uint16_t m_tailCnt;
+        uint32_t m_txHang;
+        uint32_t m_tailCnt;
 
         /// <summary></summary>
         void createData();

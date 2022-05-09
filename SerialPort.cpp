@@ -96,6 +96,7 @@ const uint8_t PROTOCOL_VERSION   = 2U;
 // ---------------------------------------------------------------------------
 //  Public Class Members
 // ---------------------------------------------------------------------------
+
 /// <summary>
 /// Initializes a new instance of the SerialPort class.
 /// </summary>
@@ -759,6 +760,7 @@ void SerialPort::writeDump(const uint8_t* data, uint16_t length)
 // ---------------------------------------------------------------------------
 //  Private Class Members
 // ---------------------------------------------------------------------------
+
 /// <summary>
 /// Write acknowlegement.
 /// </summary>

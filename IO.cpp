@@ -37,6 +37,7 @@
 // ---------------------------------------------------------------------------
 //  Public Class Members
 // ---------------------------------------------------------------------------
+
 /// <summary>
 /// Initializes a new instance of the IO class.
 /// </summary>
@@ -378,6 +379,7 @@ void IO::getIntCounter(uint16_t& int1, uint16_t& int2)
 // ---------------------------------------------------------------------------
 //  Private Class Members
 // ---------------------------------------------------------------------------
+
 #if defined(ZUMSPOT_ADF7021) || defined(LONESTAR_USB) || defined(SKYBRIDGE_HS)
 /// <summary>
 /// 

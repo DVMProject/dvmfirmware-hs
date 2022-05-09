@@ -51,6 +51,7 @@ const uint8_t CONTROL_DATA = 0x40U;
 // ---------------------------------------------------------------------------
 //  Public Class Members
 // ---------------------------------------------------------------------------
+
 /// <summary>
 /// Initializes a new instance of the DMRIdleRX class.
 /// </summary>
@@ -131,6 +132,7 @@ void DMRIdleRX::setColorCode(uint8_t colorCode)
 // ---------------------------------------------------------------------------
 //  Private Class Members
 // ---------------------------------------------------------------------------
+
 /// <summary>
 /// 
 /// </summary>

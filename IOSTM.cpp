@@ -335,6 +335,7 @@ static inline void delay_ns()
 // ---------------------------------------------------------------------------
 //  Public Class Members
 // ---------------------------------------------------------------------------
+
 /// <summary>
 /// Gets the CPU type the firmware is running on.
 /// </summary>
@@ -462,6 +463,7 @@ bool IO::CLK()
 // ---------------------------------------------------------------------------
 //  Private Class Members
 // ---------------------------------------------------------------------------
+
 #if defined(ZUMSPOT_ADF7021) || defined(LONESTAR_USB) || defined(SKYBRIDGE_HS)
 /// <summary>
 /// 

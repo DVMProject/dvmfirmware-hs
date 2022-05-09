@@ -100,6 +100,7 @@ const struct {
 // ---------------------------------------------------------------------------
 //  Public Class Members
 // ---------------------------------------------------------------------------
+
 /// <summary>
 /// Initializes a new instance of the CWIdTX class.
 /// </summary>

@@ -53,6 +53,7 @@ const uint8_t CONTROL_DATA  = 0x40U;
 // ---------------------------------------------------------------------------
 //  Public Class Members
 // ---------------------------------------------------------------------------
+
 /// <summary>
 /// Initializes a new instance of the DMRDMORX class.
 /// </summary>
@@ -242,6 +243,7 @@ void DMRDMORX::setColorCode(uint8_t colorCode)
 // ---------------------------------------------------------------------------
 //  Private Class Members
 // ---------------------------------------------------------------------------
+
 /// <summary>
 /// Frame synchronization correlator.
 /// </summary>

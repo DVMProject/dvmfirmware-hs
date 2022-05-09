@@ -35,6 +35,7 @@
 // ---------------------------------------------------------------------------
 //  Public Class Members
 // ---------------------------------------------------------------------------
+
 /// <summary>
 /// Initializes a new instance of the BitBuffer class.
 /// </summary>
@@ -138,8 +139,8 @@ bool BitBuffer::get(uint8_t& bit, uint8_t& control)
 /// <returns></returns>
 bool BitBuffer::hasOverflowed()
 {
-  bool overflow = m_overflow;
-  m_overflow = false;
+    bool overflow = m_overflow;
+    m_overflow = false;
 
-  return overflow;
+    return overflow;
 }

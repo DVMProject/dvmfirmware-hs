@@ -48,6 +48,11 @@
 #else
 #define DESCR_P25        ""
 #endif
+#if defined(ENABLE_NXDN)
+#define DESCR_NXDN       "NXDN, "
+#else
+#define DESCR_NXDN       ""
+#endif
 
 #if defined(SEND_RSSI_DATA)
 #define DESCR_RSSI        "RSSI, "
@@ -86,7 +91,7 @@
 #define RF_CHIP         "ADF7021, "
 #endif
 
-#define DESCRIPTION        "Digital Voice Modem DSP Hotspot [" BOARD_INFO "] (" RF_CHIP DESCR_DMR DESCR_P25 DESCR_OSC DESCR_RSSI "CW Id)"
+#define DESCRIPTION        "Digital Voice Modem DSP Hotspot [" BOARD_INFO "] (" RF_CHIP DESCR_DMR DESCR_P25 DESCR_NXDN DESCR_OSC DESCR_RSSI "CW Id)"
 
 #define concat(a, b, c) a " (build " b " " c ")"
 const char HARDWARE[] = concat(DESCRIPTION, __TIME__, __DATE__);
@@ -358,6 +363,22 @@ void SerialPort::process()
                     }
                     break;
 
+                /* Next Generation Digital Narrowband */
+                case CMD_NXDN_DATA:
+                    if (m_nxdnEnable) {
+                        if (m_modemState == STATE_IDLE || m_modemState == STATE_NXDN)
+                            err = p25TX.writeData(m_buffer + 3U, m_len - 3U);
+                    }
+                    if (err == RSN_OK) {
+                        if (m_modemState == STATE_IDLE)
+                            setMode(STATE_NXDN);
+                    }
+                    else {
+                        DEBUG2("SerialPort: process(): Received invalid NXDN data", err);
+                        sendNAK(err);
+                    }
+                    break;
+
                 default:
                     // Handle this, send a NAK back
                     sendNAK(RSN_NAK);
@@ -388,7 +409,7 @@ bool SerialPort::isCalState(DVM_STATE state)
         state == STATE_DMR_DMO_CAL_1K || state == STATE_DMR_CAL_1K ||
         state == STATE_DMR_LF_CAL || state == STATE_P25_LF_CAL ||
         state == STATE_RSSI_CAL ||
-        state == STATE_P25_CAL || state == STATE_DMR_CAL ||
+        state == STATE_P25_CAL || state == STATE_DMR_CAL || state == STATE_NXDN_CAL ||
         state == STATE_INT_CAL) {
         return true;
     }
@@ -405,12 +426,14 @@ DVM_STATE SerialPort::calRelativeState(DVM_STATE state)
 {
     if (isCalState(state)) {
         if (state == STATE_DMR_DMO_CAL_1K || state == STATE_DMR_CAL_1K ||
-            state == STATE_DMR_LF_CAL || state == STATE_DMR_CAL ||
+            state == STATE_DMR_LF_CAL || state == STATE_DMR_CAL || state == STATE_NXDN_CAL ||
             state == STATE_RSSI_CAL || state == STATE_INT_CAL) {
             return STATE_DMR;
-        } else if(state == STATE_P25_CAL_1K || state == STATE_P25_LF_CAL ||
+        } else if (state == STATE_P25_CAL_1K || state == STATE_P25_LF_CAL ||
             state == STATE_P25_CAL) {
             return STATE_P25;
+        } else if (state == STATE_NXDN_CAL) {
+            return STATE_NXDN;
         }
     }
     
@@ -511,6 +534,54 @@ void SerialPort::writeP25Lost()
     reply[0U] = DVM_FRAME_START;
     reply[1U] = 3U;
     reply[2U] = CMD_P25_LOST;
+
+    writeInt(1U, reply, 3);
+}
+
+/// <summary>
+/// Write NXDN frame data to serial port.
+/// </summary>
+/// <param name="data"></param>
+/// <param name="length"></param>
+void SerialPort::writeNXDNData(const uint8_t* data, uint8_t length)
+{
+    if (m_modemState != STATE_NXDN && m_modemState != STATE_IDLE)
+        return;
+
+    if (!m_nxdnEnable)
+        return;
+
+    uint8_t reply[130U];
+
+    reply[0U] = DVM_FRAME_START;
+    reply[1U] = 0U;
+    reply[2U] = CMD_NXDN_DATA;
+
+    uint8_t count = 3U;
+    for (uint8_t i = 0U; i < length; i++, count++)
+        reply[count] = data[i];
+
+    reply[1U] = count;
+
+    writeInt(1U, reply, count);
+}
+
+/// <summary>
+/// Write lost NXDN frame data to serial port.
+/// </summary>
+void SerialPort::writeNXDNLost()
+{
+    if (m_modemState != STATE_NXDN && m_modemState != STATE_IDLE)
+        return;
+
+    if (!m_nxdnEnable)
+        return;
+
+    uint8_t reply[3U];
+
+    reply[0U] = DVM_FRAME_START;
+    reply[1U] = 3U;
+    reply[2U] = CMD_NXDN_LOST;
 
     writeInt(1U, reply, 3);
 }
@@ -812,6 +883,8 @@ void SerialPort::getStatus()
         reply[3U] |= 0x02U;
     if (m_p25Enable)
         reply[3U] |= 0x08U;
+    if (m_nxdnEnable)
+        reply[3U] |= 0x10U;
 
     reply[4U] = uint8_t(m_modemState);
 
@@ -852,7 +925,12 @@ void SerialPort::getStatus()
     else
         reply[10U] = 0U;
 
-    writeInt(1U, reply, 11);
+    if (m_nxdnEnable)
+        reply[11U] = nxdnTX.getSpace();
+    else
+        reply[11U] = 0U;
+
+    writeInt(1U, reply, 12);
 }
 
 /// <summary>
@@ -891,13 +969,13 @@ void SerialPort::getVersion()
 uint8_t SerialPort::modemStateCheck(DVM_STATE state)
 {
     // invalid mode check
-    if (state != STATE_IDLE && state != STATE_DMR && state != STATE_P25 &&
+    if (state != STATE_IDLE && state != STATE_DMR && state != STATE_P25 && state != STATE_NXDN && 
         state != STATE_P25_CAL_1K &&
         state != STATE_DMR_DMO_CAL_1K && state != STATE_DMR_CAL_1K &&
         state != STATE_DMR_LF_CAL && state != STATE_P25_LF_CAL &&
         state != STATE_RSSI_CAL &&
         state != STATE_P25_CAL && state != STATE_DMR_CAL &&
-        state != STATE_INT_CAL)
+        state != STATE_NXDN_CAL)
         return RSN_INVALID_MODE;
 /*
     // DMR without DMR being enabled
@@ -906,6 +984,9 @@ uint8_t SerialPort::modemStateCheck(DVM_STATE state)
     // P25 without P25 being enabled
     if (state == STATE_P25 && !m_p25Enable)
         return RSN_P25_DISABLED;
+    // NXDN without NXDN being enabled
+    if (state == STATE_NXDN && !m_nxdnEnable)
+        return RSN_NXDN_DISABLED;
 */
     return RSN_OK;
 }
@@ -918,7 +999,7 @@ uint8_t SerialPort::modemStateCheck(DVM_STATE state)
 /// <returns></returns>
 uint8_t SerialPort::setConfig(const uint8_t* data, uint8_t length)
 {
-    if (length < 14U)
+    if (length < 15U)
         return RSN_ILLEGAL_LENGTH;
 
     bool simplex = (data[0U] & 0x80U) == 0x80U;
@@ -927,6 +1008,7 @@ uint8_t SerialPort::setConfig(const uint8_t* data, uint8_t length)
 
     bool dmrEnable = (data[1U] & 0x02U) == 0x02U;
     bool p25Enable = (data[1U] & 0x08U) == 0x08U;
+    bool nxdnEnable = (data[1U] & 0x10U) == 0x10U;
 
     uint8_t fdmaPreamble = data[2U];
     if (fdmaPreamble > 255U)
@@ -954,13 +1036,19 @@ uint8_t SerialPort::setConfig(const uint8_t* data, uint8_t length)
 
     uint8_t dmrTXLevel = data[10U];
     uint8_t p25TXLevel = data[12U];
+    uint8_t nxdnTXLevel = data[15U];
 
     m_modemState = modemState;
 
     m_dmrEnable = dmrEnable;
     m_p25Enable = p25Enable;
+    m_nxdnEnable = nxdnEnable;
 
     if (m_dmrEnable && m_p25Enable)
+        return RSN_HS_NO_DUAL_MODE;
+    if (m_dmrEnable && m_nxdnEnable)
+        return RSN_HS_NO_DUAL_MODE;
+    if (m_p25Enable && m_nxdnEnable)
         return RSN_HS_NO_DUAL_MODE;
 
     m_duplex = !simplex;
@@ -977,10 +1065,11 @@ uint8_t SerialPort::setConfig(const uint8_t* data, uint8_t length)
     }
 #endif
 
-    io.setDeviations(dmrTXLevel, p25TXLevel);
+    io.setDeviations(dmrTXLevel, p25TXLevel, nxdnTXLevel);
 
     p25TX.setPreambleCount(fdmaPreamble);
     dmrDMOTX.setPreambleCount(fdmaPreamble);
+    //nxdnTX.setPreambleCount(fdmaPreamble);
 
     p25RX.setNAC(nac);
 
@@ -1039,6 +1128,7 @@ void SerialPort::setMode(DVM_STATE modemState)
     case STATE_DMR:
         DEBUG1("SerialPort: setMode(): mode set to DMR");
         p25RX.reset();
+        nxdnRX.reset();
         cwIdTX.reset();
         break;
     case STATE_P25:
@@ -1048,6 +1138,17 @@ void SerialPort::setMode(DVM_STATE modemState)
         dmrRX.reset();
 #endif
         dmrDMORX.reset();
+        nxdnRX.reset();
+        cwIdTX.reset();
+        break;
+    case STATE_NXDN:
+        DEBUG1("SerialPort: setMode(): mode set to NXDN");
+#if defined(DUPLEX)
+        dmrIdleRX.reset();
+        dmrRX.reset();
+#endif
+        dmrDMORX.reset();
+        p25RX.reset();
         cwIdTX.reset();
         break;
     case STATE_DMR_CAL:
@@ -1058,6 +1159,7 @@ void SerialPort::setMode(DVM_STATE modemState)
 #endif
         dmrDMORX.reset();
         p25RX.reset();
+        nxdnRX.reset();
         cwIdTX.reset();
         break;
     case STATE_P25_CAL:
@@ -1068,6 +1170,18 @@ void SerialPort::setMode(DVM_STATE modemState)
 #endif
         dmrDMORX.reset();
         p25RX.reset();
+        nxdnRX.reset();
+        cwIdTX.reset();
+        break;
+    case STATE_NXDN_CAL:
+        DEBUG1("SerialPort: setMode(): mode set to NXDN Calibrate");
+#if defined(DUPLEX)
+        dmrIdleRX.reset();
+        dmrRX.reset();
+#endif
+        dmrDMORX.reset();
+        p25RX.reset();
+        nxdnRX.reset();
         cwIdTX.reset();
         break;
     case STATE_P25_LF_CAL:
@@ -1078,6 +1192,7 @@ void SerialPort::setMode(DVM_STATE modemState)
 #endif
         dmrDMORX.reset();
         p25RX.reset();
+        nxdnRX.reset();
         cwIdTX.reset();
         break;
     case STATE_RSSI_CAL:
@@ -1088,6 +1203,7 @@ void SerialPort::setMode(DVM_STATE modemState)
 #endif
         dmrDMORX.reset();
         p25RX.reset();
+        nxdnRX.reset();
         cwIdTX.reset();
         break;
     case STATE_DMR_LF_CAL:
@@ -1098,6 +1214,7 @@ void SerialPort::setMode(DVM_STATE modemState)
 #endif
         dmrDMORX.reset();
         p25RX.reset();
+        nxdnRX.reset();
         cwIdTX.reset();
         break;
     case STATE_DMR_CAL_1K:
@@ -1108,6 +1225,7 @@ void SerialPort::setMode(DVM_STATE modemState)
 #endif
         dmrDMORX.reset();
         p25RX.reset();
+        nxdnRX.reset();
         cwIdTX.reset();
         break;
     case STATE_DMR_DMO_CAL_1K:
@@ -1118,6 +1236,7 @@ void SerialPort::setMode(DVM_STATE modemState)
 #endif
         dmrDMORX.reset();
         p25RX.reset();
+        nxdnRX.reset();
         cwIdTX.reset();
         break;
     case STATE_P25_CAL_1K:
@@ -1128,6 +1247,7 @@ void SerialPort::setMode(DVM_STATE modemState)
 #endif
         dmrDMORX.reset();
         p25RX.reset();
+        nxdnRX.reset();
         cwIdTX.reset();
         break;
     default:
@@ -1149,7 +1269,7 @@ void SerialPort::setMode(DVM_STATE modemState)
 /// <returns></returns>
 uint8_t SerialPort::setRFParams(const uint8_t* data, uint8_t length)
 {
-    if (length < 15U)
+    if (length < 17U)
         return RSN_ILLEGAL_LENGTH;
 
     uint32_t rxFreq, txFreq;
@@ -1180,6 +1300,12 @@ uint8_t SerialPort::setRFParams(const uint8_t* data, uint8_t length)
     if (p25DiscBWAdj < -128)
         return RSN_INVALID_REQUEST;
 
+    int8_t nxdnDiscBWAdj = int8_t(data[15U]) - 128;
+    if (nxdnDiscBWAdj > 128)
+        return RSN_INVALID_REQUEST;
+    if (nxdnDiscBWAdj < -128)
+        return RSN_INVALID_REQUEST;
+
     int8_t dmrPostBWAdj = int8_t(data[12U]) - 128;
     if (dmrPostBWAdj > 128)
         return RSN_INVALID_REQUEST;
@@ -1192,9 +1318,15 @@ uint8_t SerialPort::setRFParams(const uint8_t* data, uint8_t length)
     if (p25PostBWAdj < -128)
         return RSN_INVALID_REQUEST;
 
+    int8_t nxdnPostBWAdj = int8_t(data[16U]) - 128;
+    if (nxdnPostBWAdj > 128)
+        return RSN_INVALID_REQUEST;
+    if (nxdnPostBWAdj < -128)
+        return RSN_INVALID_REQUEST;
+
     gainMode = (ADF_GAIN_MODE)data[14U];
 
-    io.setRFAdjust(dmrDiscBWAdj, p25DiscBWAdj, dmrPostBWAdj, p25PostBWAdj);
+    io.setRFAdjust(dmrDiscBWAdj, p25DiscBWAdj, nxdnDiscBWAdj, dmrPostBWAdj, p25PostBWAdj, nxdnPostBWAdj);
 
     return io.setRFParams(rxFreq, txFreq, rfPower, gainMode);
 }

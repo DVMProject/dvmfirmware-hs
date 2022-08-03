@@ -52,6 +52,11 @@ bool m_p25Enable = true;
 #else
 bool m_p25Enable = false;
 #endif
+#ifdef ENABLE_NXDN
+bool m_nxdnEnable = true;
+#else
+bool m_nxdnEnable = false;
+#endif
 
 bool m_duplex = false;
 
@@ -75,9 +80,14 @@ dmr::DMRDMOTX dmrDMOTX;
 p25::P25RX p25RX;
 p25::P25TX p25TX;
 
+/** NXDN */
+nxdn::NXDNRX nxdnRX;
+nxdn::NXDNTX nxdnTX;
+
 /** Calibration */
 dmr::CalDMR calDMR;
 p25::CalP25 calP25;
+nxdn::CalNXDN calNXDN;
 CalRSSI calRSSI;
 
 /** CW */
@@ -117,6 +127,9 @@ void loop()
     if (m_p25Enable && m_modemState == STATE_P25)
         p25TX.process();
 
+    if (m_nxdnEnable && m_modemState == STATE_NXDN)
+        nxdnTX.process();
+
     if (m_modemState == STATE_DMR_DMO_CAL_1K || m_modemState == STATE_DMR_CAL_1K ||
         m_modemState == STATE_DMR_LF_CAL || m_modemState == STATE_DMR_CAL ||
         m_modemState == STATE_INT_CAL)
@@ -124,6 +137,9 @@ void loop()
 
     if (m_modemState == STATE_P25_CAL_1K || m_modemState == STATE_P25_LF_CAL || m_modemState == STATE_P25_CAL)
         calP25.process();
+
+    if (m_modemState == STATE_NXDN_CAL)
+        calNXDN.process();
 
     if (m_modemState == STATE_RSSI_CAL)
         calRSSI.process();

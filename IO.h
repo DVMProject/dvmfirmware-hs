@@ -109,11 +109,11 @@ public:
 #endif
 
     /// <summary></summary>
-    void setDeviations(uint8_t dmrTXLevel, uint8_t p25TXLevel);
+    void setDeviations(uint8_t dmrTXLevel, uint8_t p25TXLevel, uint8_t nxdnTXLevel);
     /// <summary>Sets the RF parameters.</summary>
     uint8_t setRFParams(uint32_t rxFreq, uint32_t txFreq, uint8_t rfPower, ADF_GAIN_MODE gainMode);
     /// <summary>Sets the RF adjustment parameters.</summary>
-    void setRFAdjust(int8_t dmrDiscBWAdj, int8_t p25DiscBWAdj, int8_t dmrPostBWAdj, int8_t p25PostBWAdj);
+    void setRFAdjust(int8_t dmrDiscBWAdj, int8_t p25DiscBWAdj, int8_t nxdnDiscBWAdj, int8_t dmrPostBWAdj, int8_t p25PostBWAdj, int8_t nxdnPostBWAdj);
 
     /// <summary>Flag indicating the TX ring buffer has overflowed.</summary>
     bool hasTXOverflow(void);
@@ -242,6 +242,8 @@ private:
     void setDMRInt(bool on);
     /// <summary></summary>
     void setP25Int(bool on);
+    /// <summary></summary>
+    void setNXDNInt(bool on);
 };
 
 #endif

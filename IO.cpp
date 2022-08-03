@@ -63,6 +63,7 @@ IO::IO():
     setPTTInt(LOW);
     setDMRInt(LOW);
     setP25Int(LOW);
+    setNXDNInt(LOW);
     setCOSInt(LOW);
 
 #if !defined(BIDIR_DATA_PIN)
@@ -162,6 +163,10 @@ void IO::process()
             /** Project 25 */
             p25RX.databit(bit);
         }
+        else if (m_modemState == STATE_NXDN) {
+            /* Next Generation Digital Narrowband */
+            nxdnRX.databit(bit);
+        }
     }
 }
 
@@ -229,6 +234,7 @@ void IO::setMode(DVM_STATE modemState)
 
     setDMRInt(relativeState == STATE_DMR);
     setP25Int(relativeState == STATE_P25);
+    setNXDNInt(relativeState == STATE_NXDN);
 }
 
 /// <summary>
@@ -353,6 +359,7 @@ void IO::selfTest()
             setPTTInt(ledValue);
             setDMRInt(ledValue);
             setP25Int(ledValue);
+            setNXDNInt(ledValue);
             setCOSInt(ledValue);
 
             blinks++;

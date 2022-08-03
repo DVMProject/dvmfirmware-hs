@@ -70,11 +70,14 @@ uint16_t TX_F_Divider;  // Tx - 15-bit Frational_N
 
 uint16_t dmrDev;
 uint16_t p25Dev;
+uint16_t nxdnDev;
 
 int8_t m_dmrDiscBWAdj;
 int8_t m_p25DiscBWAdj;
+int8_t m_nxdnDiscBWAdj;
 int8_t m_dmrPostBWAdj;
 int8_t m_p25PostBWAdj;
+int8_t m_nxdnPostBWAdj;
 
 // ---------------------------------------------------------------------------
 //  Global Functions
@@ -314,6 +317,9 @@ void IO::rf1Conf(DVM_STATE modemState, bool reset)
         break;
     case STATE_P25:
         AFC_OFFSET = AFC_OFFSET_P25;
+        break;
+    case STATE_NXDN:
+        AFC_OFFSET = AFC_OFFSET_NXDN;
         break;
     default:
         break;
@@ -614,10 +620,12 @@ void IO::rf2Conf(DVM_STATE modemState)
 /// </summary>
 /// <param name="dmrTXLevel"></param>
 /// <param name="p25TXLevel"></param>
-void IO::setDeviations(uint8_t dmrTXLevel, uint8_t p25TXLevel)
+/// <param name="nxdnTXLevel"></param>
+void IO::setDeviations(uint8_t dmrTXLevel, uint8_t p25TXLevel, uint8_t nxdnTXLevel)
 {
     dmrDev = uint16_t((ADF7021_DEV_DMR * uint16_t(dmrTXLevel)) / 128U);
     p25Dev = uint16_t((ADF7021_DEV_P25 * uint16_t(p25TXLevel)) / 128U);
+    nxdnDev = uint16_t((ADF7021_DEV_NXDN  * uint16_t(nxdnTXLevel)) / 128U);
 }
 
 /// <summary>
@@ -627,14 +635,18 @@ void IO::setDeviations(uint8_t dmrTXLevel, uint8_t p25TXLevel)
 /// <param name="p25DevAdj"></param>
 /// <param name="dmrDiscBWAdj"></param>
 /// <param name="p25DiscBWAdj"></param>
+/// <param name="nxdnDiscBWAdj"></param>
 /// <param name="dmrPostBWAdj"></param>
 /// <param name="p25PostBWAdj"></param>
-void IO::setRFAdjust(int8_t dmrDiscBWAdj, int8_t p25DiscBWAdj, int8_t dmrPostBWAdj, int8_t p25PostBWAdj)
+/// <param name="nxdnPostBWAdj"></param>
+void IO::setRFAdjust(int8_t dmrDiscBWAdj, int8_t p25DiscBWAdj, int8_t nxdnDiscBWAdj, int8_t dmrPostBWAdj, int8_t p25PostBWAdj, int8_t nxdnPostBWADJ)
 {
     m_dmrDiscBWAdj = dmrDiscBWAdj;
     m_p25DiscBWAdj = p25DiscBWAdj;
+    m_nxdnDiscBWAdj = nxdnDiscBWAdj;
     m_dmrPostBWAdj = dmrPostBWAdj;
     m_p25PostBWAdj = p25PostBWAdj;
+    m_nxdnPostBWAdj = nxdnPostBWADJ;
 }
 
 /// <summary>
@@ -872,6 +884,7 @@ void IO::configureTxRx(DVM_STATE modemState)
 {
     uint16_t dmrDiscBW = ADF7021_DISC_BW_DMR, dmrPostBW = ADF7021_POST_BW_DMR;
     uint16_t p25DiscBW = ADF7021_DISC_BW_P25, p25PostBW = ADF7021_POST_BW_P25;
+    uint16_t nxdnDiscBW = ADF7021_DISC_BW_NXDN, nxdnPostBW = ADF7021_POST_BW_NXDN;
 
     // configure DMR discriminator and post demodulator BW
     if (dmrDiscBW + m_dmrDiscBWAdj < 0U)
@@ -902,6 +915,21 @@ void IO::configureTxRx(DVM_STATE modemState)
         p25PostBW = ADF7021_POST_BW_P25 + m_p25PostBWAdj;
     if (p25PostBW > ADF7021_POST_BW_MAX)
         p25PostBW = ADF7021_POST_BW_MAX;
+
+    // configure NXDN discriminator and post demodulator BW
+    if (nxdnDiscBW + m_nxdnDiscBWAdj < 0U)
+        nxdnDiscBW = 0U;
+    else
+        nxdnDiscBW = ADF7021_DISC_BW_NXDN + m_nxdnDiscBWAdj;
+    if (nxdnDiscBW > ADF7021_DISC_BW_MAX)
+        nxdnDiscBW = ADF7021_DISC_BW_MAX;
+
+    if (nxdnPostBW + m_nxdnPostBWAdj < 0)
+        nxdnPostBW = 0U;
+    else
+        nxdnPostBW = ADF7021_POST_BW_NXDN + m_nxdnPostBWAdj;
+    if (nxdnPostBW > ADF7021_POST_BW_MAX)
+        nxdnPostBW = ADF7021_POST_BW_MAX;
 
     /*
     ** Configure the remaining registers based on modem state.
@@ -1171,6 +1199,93 @@ void IO::configureTxRx(DVM_STATE modemState)
             ADF7021_REG2 |= (uint32_t)ADF7021_REG2_RC_5 << 30;          // R-Cosine Alpha
         }
         break;
+    case STATE_NXDN: // 4FSK
+        {
+            // Dev: +1 symb 350 Hz, symb rate = 2400
+
+            /*
+            ** Tx/Rx Clock (Register 3)
+            */
+/** Support for 14.7456 MHz TCXO (modified RF7021SE boards) */
+#if defined(ADF7021_14_7456)
+            ADF7021_REG3 = (uint32_t)ADF7021_REG3_ADDR;                 // Register Address 3
+            ADF7021_REG3 |= (uint32_t)ADF7021_REG3_BBOS_DIV_8 << 4;     // Base Band Clock Divider
+            ADF7021_REG3 |= (uint32_t)(3 & 0xFU) << 6;                  // Demodulator Clock Divider
+            ADF7021_REG3 |= (uint32_t)(32 & 0xFFU) << 10;               // Data/Clock Recovery Divider (CDR)
+            ADF7021_REG3 |= (uint32_t)(147 & 0xFFU) << 18;              // Sequencer Clock Divider
+            ADF7021_REG3 |= (uint32_t)(10 & 0x3FU) << 26;               // AGC Clock Divider
+
+/** Support for 12.2880 MHz TCXO */
+#elif defined(ADF7021_12_2880)
+            ADF7021_REG3 = (uint32_t)ADF7021_REG3_ADDR;                 // Register Address 3
+            ADF7021_REG3 |= (uint32_t)ADF7021_REG3_BBOS_DIV_8 << 4;     // Base Band Clock Divider
+            ADF7021_REG3 |= (uint32_t)(2 & 0xFU) << 6;                  // Demodulator Clock Divider
+            ADF7021_REG3 |= (uint32_t)(40 & 0xFFU) << 10;               // Data/Clock Recovery Divider (CDR)
+            ADF7021_REG3 |= (uint32_t)(123 & 0xFFU) << 18;              // Sequencer Clock Divider
+            ADF7021_REG3 |= (uint32_t)(10 & 0x3FU) << 26;               // AGC Clock Divider
+#endif
+
+            /*
+            ** AFC (Register 10)
+            */
+/** Support for 14.7456 MHz TCXO (modified RF7021SE boards) */
+#if defined(ADF7021_14_7456)
+            ADF7021_REG10 = (uint32_t)ADF7021_REG10_ADDR;               // Register Address 10
+#if defined(ADF7021_ENABLE_4FSK_AFC)
+            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_ENABLE << 4;   // AFC Enable/Disable
+#else
+            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_DISABLE << 4;  // AFC Enable/Disable
+#endif
+            ADF7021_REG10 |= (uint32_t)(569 & 0xFFFU) << 5;             // AFC Scaling Factor
+            ADF7021_REG10 |= (uint32_t)(15 & 0xFU) << 17;               // KI
+            ADF7021_REG10 |= (uint32_t)(4 & 0x7U) << 21;                // KP
+            ADF7021_REG10 |= (uint32_t)(4 & 0xFFU) << 24;               // Maximum AFC Range
+
+/** Support for 12.2880 MHz TCXO */
+#elif defined(ADF7021_12_2880)
+            ADF7021_REG10 = (uint32_t)ADF7021_REG10_ADDR;               // Register Address 10
+#if defined(ADF7021_ENABLE_4FSK_AFC)
+            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_ENABLE << 4;   // AFC Enable/Disable
+#else
+            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_DISABLE << 4;  // AFC Enable/Disable
+#endif
+            ADF7021_REG10 |= (uint32_t)(683 & 0xFFFU) << 5;             // AFC Scaling Factor
+            ADF7021_REG10 |= (uint32_t)(15 & 0xFU) << 17;               // KI
+            ADF7021_REG10 |= (uint32_t)(4 & 0x7U) << 21;                // KP
+            ADF7021_REG10 |= (uint32_t)(4 & 0xFFU) << 24;               // Maximum AFC Range
+
+#endif
+
+            /*
+            ** Demodulator Setup (Register 4)
+            */
+            // K=32
+            ADF7021_REG4 = (uint32_t)ADF7021_REG4_ADDR;                 // Register Address 4
+            ADF7021_REG4 |= (uint32_t)ADF7021_REG4_MODE_4FSK << 4;      // Demodulation Scheme
+            ADF7021_REG4 |= (uint32_t)ADF7021_REG4_CROSS_PROD << 7;     // Dot Product
+            ADF7021_REG4 |= (uint32_t)ADF7021_REG4_INV_CLKDAT << 8;     // Clock/Data Inversion
+            ADF7021_REG4 |= (uint32_t)(nxdnDiscBW & 0x3FFU) << 10;      // Discriminator BW
+            ADF7021_REG4 |= (uint32_t)(nxdnPostBW & 0xFFFU) << 20;      // Post Demod BW
+            ADF7021_REG4 |= (uint32_t)ADF7021_REG4_IF_125K << 30;       // IF Filter
+
+            /*
+            ** 3FSK/4FSK Demod (Register 13)
+            */
+            ADF7021_REG13 = (uint32_t)ADF70210_REG13_ADDR;              // Register Address 13
+            ADF7021_REG13 |= (uint32_t)ADF7021_SLICER_TH_NXDN << 4;     // Slicer Threshold
+
+            /*
+            ** Transmit Modulation (Register 2)
+            */
+            ADF7021_REG2 = (uint32_t)ADF7021_REG2_ADDR;                 // Register Address 2
+            ADF7021_REG2 |= (uint32_t)ADF7021_REG2_MOD_4FSKRC << 4;     // Modulation Scheme
+            ADF7021_REG2 |= (uint32_t)ADF7021_REG2_PA_DEF << 7;         // PA Enable & PA Bias
+            ADF7021_REG2 |= (uint32_t)(m_rfPower & 0x3FU) << 13;        // PA Level (0 - Off, 63 - 13 dBm)
+            ADF7021_REG2 |= (uint32_t)(nxdnDev / div2) << 19;           // Freq. Deviation
+            ADF7021_REG2 |= (uint32_t)ADF7021_REG2_INV_DATA << 28;      // Clock/Data Inversion
+            ADF7021_REG2 |= (uint32_t)ADF7021_REG2_RC_5 << 30;          // R-Cosine Alpha
+        }
+        break;
     default: // GMSK
         {
             // Dev: 1200 Hz, symb rate = 4800
@@ -1253,8 +1368,9 @@ void IO::configureTxRx(DVM_STATE modemState)
     }
 
     DEBUG5("IO::configureTxRx(): configuring ADF Tx/Rx values; dmrDiscBW/dmrPostBW/p25DiscBW/p25PostBW", dmrDiscBW, dmrPostBW, p25DiscBW, p25PostBW);
-    DEBUG4("IO::configureTxRx(): configuring ADF Tx/Rx values; dmrSymDev/p25SymDev/rfPower", (uint16_t)((ADF7021_PFD * dmrDev) / (f_div * 65536)),
-        (uint16_t)((ADF7021_PFD * p25Dev) / (f_div * 65536)), m_rfPower);
+    DEBUG3("IO::configureTxRx(): configuring ADF Tx/Rx values; nxdnDiscBW/nxdnPostBW", nxdnDiscBW, nxdnPostBW);
+    DEBUG5("IO::configureTxRx(): configuring ADF Tx/Rx values; dmrSymDev/p25SymDev/nxdnSymDev/rfPower", (uint16_t)((ADF7021_PFD * dmrDev) / (f_div * 65536)),
+        (uint16_t)((ADF7021_PFD * p25Dev) / (f_div * 65536)), (uint16_t)((ADF7021_PFD * nxdnDev) / (f_div * 65536)), m_rfPower);
 }
 
 /// <summary>

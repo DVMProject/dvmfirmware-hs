@@ -96,11 +96,13 @@
 
 #define AFC_OFFSET_DMR          -125
 #define AFC_OFFSET_P25          -125
+#define AFC_OFFSET_NXDN         -125
 
 #else
 
 #define AFC_OFFSET_DMR          125
 #define AFC_OFFSET_P25          125
+#define AFC_OFFSET_NXDN         125
 
 #endif // ADF7021_AFC_POS
 
@@ -108,6 +110,7 @@
 
 #define AFC_OFFSET_DMR          0
 #define AFC_OFFSET_P25          0
+#define AFC_OFFSET_NXDN         0
 
 #endif // ADF7021_ENABLE_4FSK_AFC
 
@@ -169,6 +172,8 @@
 #define ADF7021_DEV_P25         22U
 #endif // ENABLE_P25_WIDE
 
+#define ADF7021_DEV_NXDN        13U
+
 /*
 ** Demodulator Setup (Register 4)
 */
@@ -177,11 +182,13 @@
 #define ADF7021_DISC_BW_DEFAULT 522U // K=85
 #define ADF7021_DISC_BW_DMR     393U // K=32
 #define ADF7021_DISC_BW_P25     393U // K=32
+#define ADF7021_DISC_BW_NXDN    295U // K=32
 
 // Post demodulator bandwith
 #define ADF7021_POST_BW_DEFAULT 10U
 #define ADF7021_POST_BW_DMR     80U
 #define ADF7021_POST_BW_P25     6U
+#define ADF7021_POST_BW_NXDN    7U
 
 /*
 ** IF Coarse Cal Setup (Register 5)
@@ -235,6 +242,8 @@
 #define ADF7021_DEV_P25         13U
 #endif // ENABLE_P25_WIDE
 
+#define ADF7021_DEV_NXDN        8U
+
 /*
 ** Demodulator Setup (Register 4)
 */
@@ -243,11 +252,13 @@
 #define ADF7021_DISC_BW_DEFAULT 522U // K=85
 #define ADF7021_DISC_BW_DMR     491U // K=32
 #define ADF7021_DISC_BW_P25     491U // K=32
+#define ADF7021_DISC_BW_NXDN    246U // K=32
 
 // Post demodulator bandwith
 #define ADF7021_POST_BW_DEFAULT 10U
 #define ADF7021_POST_BW_DMR     80U
 #define ADF7021_POST_BW_P25     6U
+#define ADF7021_POST_BW_NXDN    8U
 
 /*
 ** IF Coarse Cal Setup (Register 5)
@@ -336,11 +347,14 @@
 
 #define ADF7021_SLICER_TH_DMR   51U
 #define ADF7021_SLICER_TH_P25   43U
+#define ADF7021_SLICER_TH_NXDN  26U
 
 #else
 
 #define ADF7021_SLICER_TH_DMR   57U
 #define ADF7021_SLICER_TH_P25   47U
+#define ADF7021_SLICER_TH_NXDN  26U
+
 
 #endif // ADF7021_N_VER
 

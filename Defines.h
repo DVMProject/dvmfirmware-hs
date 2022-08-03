@@ -98,6 +98,9 @@ typedef unsigned long long  ulong64_t;
 // Allow the P25 protocol
 #define ENABLE_P25
 
+// Allow the NXDN protocol
+#define ENABLE_NXDN
+
 // Enable ADF7021 support
 #define ENABLE_ADF7021
 

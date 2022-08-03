@@ -85,6 +85,9 @@
 #define PIN_DEB              GPIO_Pin_11
 #define PORT_DEB             GPIOA
 
+#define PIN_NXDN_LED         GPIO_Pin_8
+#define PORT_NXDN_LED        GPIOA
+
 #define PIN_DMR_LED          GPIO_Pin_15
 #define PORT_DMR_LED         GPIOB
 
@@ -159,6 +162,13 @@
 #define PIN_DEB              GPIO_Pin_9
 #define PORT_DEB             GPIOB
 
+#if defined(STM32_USB_HOST)
+#define PIN_NXDN_LED         GPIO_Pin_1
+#else
+#define PIN_NXDN_LED         GPIO_Pin_7
+#endif
+#define PORT_NXDN_LED        GPIOA
+
 #define PIN_DMR_LED          GPIO_Pin_13
 #define PORT_DMR_LED         GPIOB
 
@@ -221,6 +231,9 @@
 
 #define PIN_DEB              GPIO_Pin_9
 #define PORT_DEB             GPIOB
+
+#define PIN_NXDN_LED         GPIO_Pin_8
+#define PORT_NXDN_LED        GPIOA
 
 #define PIN_DMR_LED          GPIO_Pin_13
 #define PORT_DMR_LED         GPIOB
@@ -667,6 +680,12 @@ void IO::initInt()
     GPIO_InitStruct.GPIO_Mode = GPIO_Mode_Out_PP;
     GPIO_Init(PORT_DEB, &GPIO_InitStruct);
 
+    // NXDN LED
+    GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_InitStruct.GPIO_Pin = PIN_NXDN_LED;
+    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_Init(PORT_NXDN_LED, &GPIO_InitStruct);
+
     // DMR LED
     GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_InitStruct.GPIO_Pin = PIN_DMR_LED;
@@ -875,6 +894,15 @@ void IO::setDMRInt(bool on)
 void IO::setP25Int(bool on)
 {
     GPIO_WriteBit(PORT_P25_LED, PIN_P25_LED, on ? Bit_SET : Bit_RESET);
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="on"></param>
+void IO::setNXDNInt(bool on)
+{
+    GPIO_WriteBit(PORT_NXDN_LED, PIN_NXDN_LED, on ? Bit_SET : Bit_RESET);
 }
 
 #endif // STM32F10X_MD

@@ -74,7 +74,7 @@ ifndef $(OSC)
 endif
 
 # Build object lists
-CXXSRC=$(wildcard ./*.cpp) $(wildcard ./dmr/*.cpp) $(wildcard ./p25/*.cpp)
+CXXSRC=$(wildcard ./*.cpp) $(wildcard ./dmr/*.cpp) $(wildcard ./p25/*.cpp) $(wildcard ./nxdn/*.cpp)
 CSRC_STD_F1=$(wildcard $(STD_LIB_F1)/*.c)
 SYS_F1=$(wildcard $(SYS_DIR_F1)/*.c)
 STARTUP_F1=$(wildcard $(STARTUP_DIR_F1)/*.c)
@@ -195,10 +195,12 @@ $(OBJDIR_F1):
 	mkdir $@
 	mkdir $@/dmr
 	mkdir $@/p25
+	mkdir $@/nxdn
 $(OBJDIR_F4):
 	mkdir $@
 	mkdir $@/dmr
 	mkdir $@/p25
+	mkdir $@/nxdn
 
 $(BINDIR)/$(BINBIN_F1BL): $(BINDIR)/$(BINELF_F1BL)
 	$(CP) -O binary $< $@

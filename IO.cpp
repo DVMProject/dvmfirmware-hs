@@ -164,7 +164,7 @@ void IO::process()
             p25RX.databit(bit);
         }
         else if (m_modemState == STATE_NXDN) {
-            /* Next Generation Digital Narrowband */
+            /** Next Generation Digital Narrowband */
             nxdnRX.databit(bit);
         }
     }

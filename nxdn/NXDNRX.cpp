@@ -103,7 +103,7 @@ void NXDNRX::databit(bool bit)
     else {
         bool ret = correlateSync();
         if (ret) {
-            DEBUG3("P25RX: databit(): dataPtr/endPtr", m_dataPtr, m_endPtr);
+            DEBUG3("NXDNRX: databit(): dataPtr/endPtr", m_dataPtr, m_endPtr);
             m_state = NXDNRXS_DATA;
         }
 

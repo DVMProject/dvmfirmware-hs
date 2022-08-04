@@ -1,9 +1,9 @@
 /**
-* Digital Voice Modem - DSP Firmware
+* Digital Voice Modem - DSP Firmware (Hotspot)
 * GPLv2 Open Source. Use is subject to license terms.
 * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 *
-* @package DVM / DSP Firmware
+* @package DVM / DSP Firmware (Hotspot)
 *
 */
 //

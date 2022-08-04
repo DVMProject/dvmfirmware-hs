@@ -1,6 +1,6 @@
 # Digital Voice Modem Firmware (Hotspot)
 
-The DVM firmware provides the embedded microcontroller implementation of a mixed-mode DMR/P25 or dedicated-mode DMR or P25 repeater system. The firmware; is the portion of a complete Over-The-Air modem implementation that uses an ADF7021 to provide a raw RF interface.
+The DVM hotspot firmware provides the embedded microcontroller implementation of a dedicated-mode DMR, P25 or NXDN hotspot system. The firmware; is the portion of a complete Over-The-Air modem implementation that uses an ADF7021 to provide a raw RF interface.
 
 This project is a direct fork of the MMDVM_HS (https://github.com/juribeparada/MMDVM_HS) project.
 
@@ -48,7 +48,6 @@ Resetting device...
 Reset done.
 ```
 
-
 ### Install the firmware with bootloader support for USB connection
 
 If you want to use the device via USB port you have to install a bootloader and build the firmware with bootloader support. As the raw device cannot be used with USB you have to use a USB-serial adapter or STlink device.
@@ -87,6 +86,10 @@ Flash page at addr: 0x0800f400 erased
 2018-03-02T10:01:13 INFO src/common.c: Flash written and verified! jolly good!
 ```
 The device should now be usable as /dev/ttyACMx.
+
+## Notes
+
+**NXDN Support Note**: NXDN support is currently experimental.
 
 ## License
 

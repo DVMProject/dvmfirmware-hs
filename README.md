@@ -12,7 +12,7 @@ Please see the various Makefile's included in the project for more information. 
 
 * Makefile.STM32FX - This makefile is used for targeting a generic STM32F103 with an ADF7021 RF SoC device.
 
-* For STM32F103 using Ubuntu OS install the standard ARM embedded toolchain (typically arm-gcc-none-eabi).
+* For STM32F103 using Ubuntu OS install the standard ARM embedded toolchain (gcc-arm-none-eabi).
   - Make sure to clone this repository with the ```--recurse-submodules``` option, otherwise the STM32 platform files will be missing! ```git clone --recurse-submodules https://github.com/DVMProject/dvmfirmware-hs.git```
 
 To build the firmware, use the ```make``` command, followed by -f and the correct makefile, followed by the type of board you are using. 

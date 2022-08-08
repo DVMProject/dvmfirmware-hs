@@ -429,7 +429,7 @@ DVM_STATE SerialPort::calRelativeState(DVM_STATE state)
 {
     if (isCalState(state)) {
         if (state == STATE_DMR_DMO_CAL_1K || state == STATE_DMR_CAL_1K ||
-            state == STATE_DMR_LF_CAL || state == STATE_DMR_CAL || state == STATE_NXDN_CAL ||
+            state == STATE_DMR_LF_CAL || state == STATE_DMR_CAL ||
             state == STATE_RSSI_CAL || state == STATE_INT_CAL) {
             return STATE_DMR;
         } else if (state == STATE_P25_CAL_1K || state == STATE_P25_LF_CAL ||

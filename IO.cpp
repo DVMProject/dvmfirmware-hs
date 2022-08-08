@@ -220,6 +220,7 @@ void IO::setDecode(bool dcd)
 /// <summary>
 /// Helper to set the modem air interface state.
 /// </summary>
+/// <param name="modemState"></param>
 void IO::setMode(DVM_STATE modemState)
 {
     DVM_STATE relativeState = modemState;

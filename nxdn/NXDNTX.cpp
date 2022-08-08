@@ -44,6 +44,7 @@ using namespace nxdn;
 /// </summary>
 NXDNTX::NXDNTX() :
     m_fifo(NXDN_TX_BUFFER_LEN),
+    m_state(NXDNTXSTATE_NORMAL),
     m_poBuffer(),
     m_poLen(0U),
     m_poPtr(0U),
@@ -59,7 +60,8 @@ NXDNTX::NXDNTX() :
 /// </summary>
 void NXDNTX::process()
 {
-    if (m_fifo.getData() == 0U && m_poLen == 0U && m_tailCnt > 0U) {
+    if (m_fifo.getData() == 0U && m_poLen == 0U && m_tailCnt > 0U &&
+        m_state != NXDNTXSTATE_CAL) {
         // transmit silence until the hang timer has expired
         uint16_t space = io.getSpace();
 
@@ -82,10 +84,14 @@ void NXDNTX::process()
     }
 
     if (m_poLen == 0U) {
+        if (m_state == NXDNTXSTATE_CAL)
+            m_tailCnt = 0U;
+
         if (m_fifo.getData() == 0U)
             return;
 
         createData();
+
         DEBUG2("NXDNTX: process(): poLen", m_poLen);
     }
 
@@ -163,6 +169,15 @@ void NXDNTX::setPreambleCount(uint8_t preambleCnt)
 void NXDNTX::setTxHang(uint8_t txHang)
 {
     m_txHang = txHang * 600U;
+}
+
+/// <summary>
+/// Helper to set the calibration state for Tx.
+/// </summary>
+/// <param name="start"></param>
+void NXDNTX::setCal(bool start)
+{
+    m_state = start ? NXDNTXSTATE_CAL : NXDNTXSTATE_NORMAL;
 }
 
 /// <summary>

@@ -38,6 +38,17 @@
 namespace nxdn
 {
     // ---------------------------------------------------------------------------
+    //  Constants
+    // ---------------------------------------------------------------------------
+
+    #define NXDN_FIXED_TX_HANG 600
+
+    enum NXDNTXSTATE {
+        NXDNTXSTATE_NORMAL,
+        NXDNTXSTATE_CAL
+    };
+
+    // ---------------------------------------------------------------------------
     //  Class Declaration
     //      Implements transmitter logic for NXDN mode operation.
     // ---------------------------------------------------------------------------
@@ -60,12 +71,16 @@ namespace nxdn
         void setPreambleCount(uint8_t preambleCnt);
         /// <summary>Sets the transmit hang time.</summary>
         void setTxHang(uint8_t txHang);
+        /// <summary>Helper to set the calibration state for Tx.</summary>
+        void setCal(bool start);
 
         /// <summary>Helper to get how much space the ring buffer has for samples.</summary>
         uint8_t getSpace() const;
 
     private:
         SerialBuffer m_fifo;
+
+        NXDNTXSTATE m_state;
 
         uint8_t m_poBuffer[60U];
         uint16_t m_poLen;

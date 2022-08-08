@@ -168,7 +168,7 @@ void NXDNTX::setPreambleCount(uint8_t preambleCnt)
 /// <param name="txHang">Transmit hang time in seconds.</param>
 void NXDNTX::setTxHang(uint8_t txHang)
 {
-    m_txHang = txHang * 600U;
+    m_txHang = txHang * NXDN_FIXED_TX_HANG;
 }
 
 /// <summary>
@@ -207,9 +207,8 @@ void NXDNTX::createData()
         m_poBuffer[m_poLen++] = NXDN_PREAMBLE[2U];
     }
     else {
-        uint8_t length = m_fifo.get();
-        DEBUG3("P25TX: createData(): dataLength/fifoSpace", length, m_fifo.getSpace());
-        for (uint8_t i = 0U; i < length; i++) {
+        DEBUG2("NXDNTX: createData(): fifoSpace", m_fifo.getSpace());
+        for (uint8_t i = 0U; i < NXDN_FRAME_LENGTH_BYTES; i++) {
             m_poBuffer[m_poLen++] = m_fifo.get();
         }
     }

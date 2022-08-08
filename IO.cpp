@@ -357,7 +357,7 @@ void IO::selfTest()
         setP25Int(ledValue);
         setNXDNInt(ledValue);
 
-        delayUS(250);
+        delayUS(1000);
     }
 
     // blinkin lights
@@ -366,73 +366,73 @@ void IO::selfTest()
     setDMRInt(false);
     setP25Int(false);
     setNXDNInt(false);
-    delayUS(250);
+    delayUS(1000);
 
     setLEDInt(true);
     setCOSInt(false);
     setDMRInt(false);
     setP25Int(false);
-    delayUS(250);
+    delayUS(1000);
 
     setLEDInt(false);
     setCOSInt(true);
     setDMRInt(false);
     setP25Int(false);
-    delayUS(250);
+    delayUS(1000);
 
     setLEDInt(false);
     setCOSInt(false);
     setDMRInt(true);
     setP25Int(false);
-    delayUS(250);
+    delayUS(1000);
 
     setLEDInt(false);
     setCOSInt(false);
     setDMRInt(false);
     setP25Int(true);
-    delayUS(250);
+    delayUS(1000);
 
     setLEDInt(false);
     setCOSInt(false);
     setDMRInt(false);
     setP25Int(false);
     setNXDNInt(true);
-    delayUS(250);
+    delayUS(1000);
 
     setLEDInt(false);
     setCOSInt(false);
     setDMRInt(false);
     setP25Int(true);
     setNXDNInt(false);
-    delayUS(250);
+    delayUS(1000);
 
     setLEDInt(false);
     setCOSInt(false);
     setDMRInt(true);
     setP25Int(false);
     setNXDNInt(false);
-    delayUS(250);
+    delayUS(1000);
 
     setLEDInt(false);
     setCOSInt(true);
     setDMRInt(false);
     setP25Int(false);
     setNXDNInt(false);
-    delayUS(250);
+    delayUS(1000);
 
     setLEDInt(true);
     setCOSInt(false);
     setDMRInt(false);
     setP25Int(false);
     setNXDNInt(false);
-    delayUS(250);
+    delayUS(1000);
 
     setLEDInt(false);
     setCOSInt(false);
     setDMRInt(false);
     setP25Int(false);
     setNXDNInt(false);
-    delayUS(250);
+    delayUS(1000);
 }
 
 /// <summary>

@@ -203,7 +203,10 @@ void SerialPort::process()
                         err = calDMR.write(m_buffer + 3U, m_len - 3U);
                     if (m_modemState == STATE_P25_CAL_1K || m_modemState == STATE_P25_LF_CAL || m_modemState == STATE_P25_CAL)
                         err = calP25.write(m_buffer + 3U, m_len - 3U);
-                    if (err == RSN_OK) {
+                    if (m_modemState == STATE_NXDN_CAL)
+                        err = calNXDN.write(m_buffer + 3U, m_len - 3U);
+                    if (err == RSN_OK)
+                    {
                         sendACK();
                     }
                     else {

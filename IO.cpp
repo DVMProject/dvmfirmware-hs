@@ -344,30 +344,94 @@ uint32_t IO::getWatchdog()
 void IO::selfTest()
 {
     bool ledValue = false;
-    uint32_t ledCount = 0U;
-    uint32_t blinks = 0U;
 
-    while (true) {
-        ledCount++;
-        delayUS(1000U);
+    for (uint8_t i = 0; i < 6; i++) {
+        ledValue = !ledValue;
 
-        if (ledCount >= 125U) {
-            ledCount = 0U;
-            ledValue = !ledValue;
+        // We exclude PTT to avoid trigger the transmitter
+        setLEDInt(ledValue);
+        setCOSInt(ledValue);
 
-            setLEDInt(!ledValue);
-            setPTTInt(ledValue);
-            setDMRInt(ledValue);
-            setP25Int(ledValue);
-            setNXDNInt(ledValue);
-            setCOSInt(ledValue);
+        setDMRInt(ledValue);
+        setP25Int(ledValue);
+        setNXDNInt(ledValue);
 
-            blinks++;
-
-            if (blinks > 5U)
-                break;
-        }
+        delayUS(250);
     }
+
+    // blinkin lights
+    setLEDInt(false);
+    setCOSInt(false);
+    setDMRInt(false);
+    setP25Int(false);
+    setNXDNInt(false);
+    delayUS(250);
+
+    setLEDInt(true);
+    setCOSInt(false);
+    setDMRInt(false);
+    setP25Int(false);
+    delayUS(250);
+
+    setLEDInt(false);
+    setCOSInt(true);
+    setDMRInt(false);
+    setP25Int(false);
+    delayUS(250);
+
+    setLEDInt(false);
+    setCOSInt(false);
+    setDMRInt(true);
+    setP25Int(false);
+    delayUS(250);
+
+    setLEDInt(false);
+    setCOSInt(false);
+    setDMRInt(false);
+    setP25Int(true);
+    delayUS(250);
+
+    setLEDInt(false);
+    setCOSInt(false);
+    setDMRInt(false);
+    setP25Int(false);
+    setNXDNInt(true);
+    delayUS(250);
+
+    setLEDInt(false);
+    setCOSInt(false);
+    setDMRInt(false);
+    setP25Int(true);
+    setNXDNInt(false);
+    delayUS(250);
+
+    setLEDInt(false);
+    setCOSInt(false);
+    setDMRInt(true);
+    setP25Int(false);
+    setNXDNInt(false);
+    delayUS(250);
+
+    setLEDInt(false);
+    setCOSInt(true);
+    setDMRInt(false);
+    setP25Int(false);
+    setNXDNInt(false);
+    delayUS(250);
+
+    setLEDInt(true);
+    setCOSInt(false);
+    setDMRInt(false);
+    setP25Int(false);
+    setNXDNInt(false);
+    delayUS(250);
+
+    setLEDInt(false);
+    setCOSInt(false);
+    setDMRInt(false);
+    setP25Int(false);
+    setNXDNInt(false);
+    delayUS(250);
 }
 
 /// <summary>

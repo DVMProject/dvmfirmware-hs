@@ -1202,6 +1202,7 @@ void IO::configureTxRx(DVM_STATE modemState)
     case STATE_NXDN: // 4FSK
         {
             // Dev: +1 symb 350 Hz, symb rate = 2400
+            // Dev: +1 symb 800 Hz, symb rate = 4800
 
             /*
             ** Tx/Rx Clock (Register 3)
@@ -1210,8 +1211,13 @@ void IO::configureTxRx(DVM_STATE modemState)
 #if defined(ADF7021_14_7456)
             ADF7021_REG3 = (uint32_t)ADF7021_REG3_ADDR;                 // Register Address 3
             ADF7021_REG3 |= (uint32_t)ADF7021_REG3_BBOS_DIV_8 << 4;     // Base Band Clock Divider
+#if defined(NXDN_9600_BAUD)
             ADF7021_REG3 |= (uint32_t)(3 & 0xFU) << 6;                  // Demodulator Clock Divider
             ADF7021_REG3 |= (uint32_t)(32 & 0xFFU) << 10;               // Data/Clock Recovery Divider (CDR)
+ else
+            ADF7021_REG3 |= (uint32_t)(4 & 0xFU) << 6;                  // Demodulator Clock Divider
+            ADF7021_REG3 |= (uint32_t)(48 & 0xFFU) << 10;               // Data/Clock Recovery Divider (CDR)
+#endif
             ADF7021_REG3 |= (uint32_t)(147 & 0xFFU) << 18;              // Sequencer Clock Divider
             ADF7021_REG3 |= (uint32_t)(10 & 0x3FU) << 26;               // AGC Clock Divider
 
@@ -1219,8 +1225,13 @@ void IO::configureTxRx(DVM_STATE modemState)
 #elif defined(ADF7021_12_2880)
             ADF7021_REG3 = (uint32_t)ADF7021_REG3_ADDR;                 // Register Address 3
             ADF7021_REG3 |= (uint32_t)ADF7021_REG3_BBOS_DIV_8 << 4;     // Base Band Clock Divider
+#if defined(NXDN_9600_BAUD)
             ADF7021_REG3 |= (uint32_t)(2 & 0xFU) << 6;                  // Demodulator Clock Divider
             ADF7021_REG3 |= (uint32_t)(40 & 0xFFU) << 10;               // Data/Clock Recovery Divider (CDR)
+#else
+            ADF7021_REG3 |= (uint32_t)(4 & 0xFU) << 6;                  // Demodulator Clock Divider
+            ADF7021_REG3 |= (uint32_t)(40 & 0xFFU) << 10;               // Data/Clock Recovery Divider (CDR)
+#endif
             ADF7021_REG3 |= (uint32_t)(123 & 0xFFU) << 18;              // Sequencer Clock Divider
             ADF7021_REG3 |= (uint32_t)(10 & 0x3FU) << 26;               // AGC Clock Divider
 #endif

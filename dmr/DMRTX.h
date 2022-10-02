@@ -14,7 +14,7 @@
 *   Copyright (C) 2015,2016,2017 by Jonathan Naylor G4KLX
 *   Copyright (C) 2016 by Colin Durbridge G4EML
 *   Copyright (C) 2017 by Andy Uribe CA6JAU
-*   Copyright (C) 2021 by Bryan Biedenkapp N2PLL
+*   Copyright (C) 2021-2022 by Bryan Biedenkapp N2PLL
 *
 *   This program is free software; you can redistribute it and/or modify
 *   it under the terms of the GNU General Public License as published by
@@ -85,6 +85,8 @@ namespace dmr
         /// <summary>Helper to get how much space the slot 2 ring buffer has for samples.</summary>
         uint8_t getSpace2() const;
 
+        /// <summary>Sets the ignore flags for setting the CACH Access Type bit.</summary>
+        void setIgnoreCACH_AT(uint8_t slot);
         /// <summary>Sets the DMR color code.</summary>
         void setColorCode(uint8_t colorCode);
 
@@ -116,6 +118,8 @@ namespace dmr
 
         uint32_t m_abortCount[2U];
         bool m_abort[2U];
+
+        uint8_t m_cachATControl;
 
         uint8_t m_controlPrev;
 

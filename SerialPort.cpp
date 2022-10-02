@@ -236,6 +236,7 @@ void SerialPort::process()
                     if (m_modemState == STATE_IDLE) {
                         m_cwIdState = true;
                         
+                        DEBUG2("SerialPort: process(): setting modem state", STATE_CW);
                         io.rf1Conf(STATE_CW, true);
                         
                         err = cwIdTX.write(m_buffer + 3U, m_len - 3U);

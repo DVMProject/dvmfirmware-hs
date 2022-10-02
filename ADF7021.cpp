@@ -1214,7 +1214,7 @@ void IO::configureTxRx(DVM_STATE modemState)
 #if defined(NXDN_9600_BAUD)
             ADF7021_REG3 |= (uint32_t)(3 & 0xFU) << 6;                  // Demodulator Clock Divider
             ADF7021_REG3 |= (uint32_t)(32 & 0xFFU) << 10;               // Data/Clock Recovery Divider (CDR)
- else
+#else
             ADF7021_REG3 |= (uint32_t)(4 & 0xFU) << 6;                  // Demodulator Clock Divider
             ADF7021_REG3 |= (uint32_t)(48 & 0xFFU) << 10;               // Data/Clock Recovery Divider (CDR)
 #endif
@@ -1264,7 +1264,6 @@ void IO::configureTxRx(DVM_STATE modemState)
             ADF7021_REG10 |= (uint32_t)(15 & 0xFU) << 17;               // KI
             ADF7021_REG10 |= (uint32_t)(4 & 0x7U) << 21;                // KP
             ADF7021_REG10 |= (uint32_t)(4 & 0xFFU) << 24;               // Maximum AFC Range
-
 #endif
 
             /*

@@ -99,7 +99,6 @@ void IO::start()
 void IO::process()
 {
     uint8_t bit;
-    uint32_t scanTime;
     uint8_t control;
 
     m_ledCount++;

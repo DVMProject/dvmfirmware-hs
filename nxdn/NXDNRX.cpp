@@ -132,21 +132,21 @@ void NXDNRX::processData(bool bit)
         
         // we've not seen a data sync for too long, signal sync lost and change to NXDNRXS_NONE
         if (m_lostCount == 0U) {
-            DEBUG1("NXDNRX: processData(): sync timeout in PDU, lost lock");
+            DEBUG1("NXDNRX: processData(): sync timed out, lost lock");
 
             io.setDecode(false);
 
-            serial.writeP25Lost();
+            serial.writeNXDNLost();
             reset();
         }
         else {
-            DEBUG2("NXDNRX: processData(): sync found in PDU pos", m_dataPtr);
+            DEBUG2("NXDNRX: processData(): sync found pos", m_dataPtr);
 
             uint8_t frame[NXDN_FRAME_LENGTH_BYTES + 1U];
             ::memcpy(frame + 1U, m_buffer, m_endPtr / 8U);
 
             frame[0U] = m_lostCount == (MAX_FSW_FRAMES - 1U) ? 0x01U : 0x00U; // set sync flag
-            serial.writeP25Data(frame, NXDN_FRAME_LENGTH_BYTES + 1U);
+            serial.writeNXDNData(frame, NXDN_FRAME_LENGTH_BYTES + 1U);
         }
     }
 }
@@ -184,7 +184,7 @@ bool NXDNRX::correlateSync()
             m_buffer[i] = sync[i];
 
         // DEBUG1("NXDNRX: m_buffer dump");
-        // DEBUG_DUMP(m_buffer, P25_LDU_FRAME_LENGTH_BYTES);
+        // DEBUG_DUMP(m_buffer, NXDN_FRAME_LENGTH_BYTES);
 
         m_endPtr = m_dataPtr + NXDN_FRAME_LENGTH_BITS - NXDN_FSW_LENGTH_BITS;
         if (m_endPtr >= NXDN_FRAME_LENGTH_BITS)

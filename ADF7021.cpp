@@ -625,7 +625,7 @@ void IO::setDeviations(uint8_t dmrTXLevel, uint8_t p25TXLevel, uint8_t nxdnTXLev
 {
     dmrDev = uint16_t((ADF7021_DEV_DMR * uint16_t(dmrTXLevel)) / 128U);
     p25Dev = uint16_t((ADF7021_DEV_P25 * uint16_t(p25TXLevel)) / 128U);
-    nxdnDev = uint16_t((ADF7021_DEV_NXDN  * uint16_t(nxdnTXLevel)) / 128U);
+    nxdnDev = uint16_t((ADF7021_DEV_NXDN * uint16_t(nxdnTXLevel)) / 128U);
 }
 
 /// <summary>

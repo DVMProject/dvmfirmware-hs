@@ -63,7 +63,8 @@ namespace nxdn
 
     private:
         uint64_t m_bitBuffer;
-        uint8_t m_buffer[NXDN_FRAME_LENGTH_BYTES + 3U];
+        uint8_t m_outBuffer[NXDN_FRAME_LENGTH_BYTES + 3U];
+        uint8_t* m_buffer;
 
         uint16_t m_dataPtr;
 
@@ -77,7 +78,7 @@ namespace nxdn
         void processData(bool bit);
 
         /// <summary>Frame synchronization correlator.</summary>
-        bool correlateSync();
+        bool correlateSync(bool first = false);
     };
 } // namespace nxdn
 

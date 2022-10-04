@@ -54,13 +54,15 @@ const uint16_t NOENDPTR = 9999U;
 /// </summary>
 NXDNRX::NXDNRX() :
     m_bitBuffer(0x00U),
-    m_buffer(),
+    m_outBuffer(),
+    m_buffer(NULL),
     m_dataPtr(0U),
     m_endPtr(NOENDPTR),
     m_lostCount(0U),
     m_state(NXDNRXS_NONE)
 {
-    ::memset(m_buffer, 0x00U, NXDN_FRAME_LENGTH_BYTES + 3U);
+    ::memset(m_outBuffer, 0x00U, NXDN_FRAME_LENGTH_BYTES + 3U);
+    m_buffer = m_outBuffer + 1U;
 }
 
 /// <summary>
@@ -93,7 +95,7 @@ void NXDNRX::databit(bool bit)
 
         m_dataPtr++;
         if (m_dataPtr > NXDN_FRAME_LENGTH_BITS) {
-            m_dataPtr = 0U;
+            reset();
         }
     }
 
@@ -101,7 +103,8 @@ void NXDNRX::databit(bool bit)
         processData(bit);
     }
     else {
-        bool ret = correlateSync();
+
+        bool ret = correlateSync(true);
         if (ret) {
             DEBUG3("NXDNRX: databit(): dataPtr/endPtr", m_dataPtr, m_endPtr);
             m_state = NXDNRXS_DATA;
@@ -126,7 +129,7 @@ void NXDNRX::processData(bool bit)
         correlateSync();
     }
 
-    // process voice frame
+    // process frame
     if (m_dataPtr == m_endPtr) {
         m_lostCount--;
         
@@ -142,11 +145,11 @@ void NXDNRX::processData(bool bit)
         else {
             DEBUG2("NXDNRX: processData(): sync found pos", m_dataPtr);
 
-            uint8_t frame[NXDN_FRAME_LENGTH_BYTES + 1U];
-            ::memcpy(frame + 1U, m_buffer, m_endPtr / 8U);
+            m_outBuffer[0U] = m_lostCount == (MAX_FSW_FRAMES - 1U) ? 0x01U : 0x00U; // set sync flag
+            serial.writeNXDNData(m_outBuffer, NXDN_FRAME_LENGTH_BYTES + 1U);
 
-            frame[0U] = m_lostCount == (MAX_FSW_FRAMES - 1U) ? 0x01U : 0x00U; // set sync flag
-            serial.writeNXDNData(frame, NXDN_FRAME_LENGTH_BYTES + 1U);
+            ::memset(m_outBuffer, 0x00U, NXDN_FRAME_LENGTH_BYTES + 3U);
+            m_dataPtr = 0U;
         }
     }
 }
@@ -154,8 +157,9 @@ void NXDNRX::processData(bool bit)
 /// <summary>
 /// Frame synchronization correlator.
 /// </summary>
+/// <param name="first"></param>
 /// <returns></returns>
-bool NXDNRX::correlateSync()
+bool NXDNRX::correlateSync(bool first)
 {
     uint8_t maxErrs;
     if (m_state == NXDNRXS_NONE)
@@ -163,35 +167,27 @@ bool NXDNRX::correlateSync()
     else
         maxErrs = MAX_FSW_BIT_RUN_ERRS;
 
-    // unpack sync bytes
-    uint8_t sync[NXDN_FSW_BYTES_LENGTH];
-    sync[0U] = (uint8_t)((m_bitBuffer >> 16) & 0xFFU);
-    sync[1U] = (uint8_t)((m_bitBuffer >> 8) & 0xFFU);
-    sync[2U] = (uint8_t)((m_bitBuffer >> 0) & 0xF0U);
-
-    uint8_t errs = 0U;
-    for (uint8_t i = 0U; i < NXDN_FSW_BYTES_LENGTH; i++)
-        errs += countBits8(sync[i] ^ NXDN_FSW_BYTES[i]);
-
+    // fuzzy matching of the data sync bit sequence
+    uint8_t errs = countBits64((m_bitBuffer & NXDN_FSW_BITS_MASK) ^ NXDN_FSW_BITS);
     if (errs <= maxErrs) {
-        ::memset(m_buffer, 0x00U, NXDN_FRAME_LENGTH_BYTES + 3U);
-
         DEBUG2("NXDNRX: correlateSync(): correlateSync errs", errs);
 
-        DEBUG4("NXDNRX: correlateSync(): sync [b0 - b2]", sync[0], sync[1], sync[2]);
+        if (first) {
+            // unpack sync bytes
+            uint8_t sync[NXDN_FSW_BYTES_LENGTH];
+            sync[0U] = (uint8_t)((m_bitBuffer >> 16) & NXDN_FSW_BYTES_MASK[0U]);
+            sync[1U] = (uint8_t)((m_bitBuffer >> 8) & NXDN_FSW_BYTES_MASK[1U]);
+            sync[2U] = (uint8_t)((m_bitBuffer >> 0) & NXDN_FSW_BYTES_MASK[2U]);
 
-        for (uint8_t i = 0U; i < NXDN_FSW_BYTES_LENGTH; i++)
-            m_buffer[i] = sync[i];
+            DEBUG4("NXDNRX: correlateSync(): sync [b0 - b2]", sync[0], sync[1], sync[2]);
 
-        // DEBUG1("NXDNRX: m_buffer dump");
-        // DEBUG_DUMP(m_buffer, NXDN_FRAME_LENGTH_BYTES);
-
-        m_endPtr = m_dataPtr + NXDN_FRAME_LENGTH_BITS - NXDN_FSW_LENGTH_BITS;
-        if (m_endPtr >= NXDN_FRAME_LENGTH_BITS)
-            m_endPtr -= NXDN_FRAME_LENGTH_BITS;
+            for (uint8_t i = 0U; i < NXDN_FSW_BYTES_LENGTH; i++)
+                m_buffer[i] = sync[i];
+        }
 
         m_lostCount = MAX_FSW_FRAMES;
         m_dataPtr = NXDN_FSW_LENGTH_BITS;
+        m_endPtr = NXDN_FRAME_LENGTH_BITS;
 
         DEBUG3("NXDNRX: correlateSync(): dataPtr/endPtr", m_dataPtr, m_endPtr);
 

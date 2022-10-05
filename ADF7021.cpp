@@ -79,6 +79,11 @@ int8_t m_dmrPostBWAdj;
 int8_t m_p25PostBWAdj;
 int8_t m_nxdnPostBWAdj;
 
+bool m_afcEnable;
+uint8_t m_afcKI;
+uint8_t m_afcKP;
+uint8_t m_afcRange;
+
 // ---------------------------------------------------------------------------
 //  Global Functions
 // ---------------------------------------------------------------------------
@@ -292,8 +297,6 @@ void IO::interrupt2()
 /// <param name="reset"></param>
 void IO::rf1Conf(DVM_STATE modemState, bool reset)
 {
-    int32_t AFC_OFFSET = 0;
-
     uint32_t txFrequencyTmp, rxFrequencyTmp;
 
     DEBUG4("IO::rf1Conf(): configuring ADF for Tx/Rx; modemState/reset/rxGain", modemState, reset, m_gainMode);
@@ -310,21 +313,6 @@ void IO::rf1Conf(DVM_STATE modemState, bool reset)
         delayReset();
     }
 
-    switch (modemState) {
-    case STATE_DMR:
-    case STATE_CW:
-        AFC_OFFSET = AFC_OFFSET_DMR;
-        break;
-    case STATE_P25:
-        AFC_OFFSET = AFC_OFFSET_P25;
-        break;
-    case STATE_NXDN:
-        AFC_OFFSET = AFC_OFFSET_NXDN;
-        break;
-    default:
-        break;
-    }
-
     /*
     ** VCO/Oscillator (Register 1)
     */
@@ -335,9 +323,9 @@ void IO::rf1Conf(DVM_STATE modemState, bool reset)
     */
     float divider = 0.0f;
     if (div2 == 1U)
-        divider = (m_rxFrequency - 100000 + AFC_OFFSET) / (ADF7021_PFD / 2U);
+        divider = (m_rxFrequency - 100000) / (ADF7021_PFD / 2U);
     else
-        divider = (m_rxFrequency - 100000 + (2 * AFC_OFFSET)) / ADF7021_PFD;
+        divider = (m_rxFrequency - 100000) / ADF7021_PFD;
 
     // calculate Integer_N and Fractional_N divider values for Rx
     RX_N_Divider = floor(divider);
@@ -647,6 +635,21 @@ void IO::setRFAdjust(int8_t dmrDiscBWAdj, int8_t p25DiscBWAdj, int8_t nxdnDiscBW
     m_dmrPostBWAdj = dmrPostBWAdj;
     m_p25PostBWAdj = p25PostBWAdj;
     m_nxdnPostBWAdj = nxdnPostBWADJ;
+}
+
+/// <summary>
+/// Sets the RF AFC parameters.
+/// </summary>
+/// <param name="afcEnable"></param>
+/// <param name="afcKI"></param>
+/// <param name="afcKP"></param>
+/// <param name="afcRange"></param>
+void IO::setAFCParams(bool afcEnable, uint8_t afcKI, uint8_t afcKP, uint8_t afcRange)
+{
+    m_afcEnable = afcEnable;
+    m_afcKI = afcKI;
+    m_afcKP = afcKP;
+    m_afcRange = afcRange;
 }
 
 /// <summary>
@@ -965,33 +968,24 @@ void IO::configureTxRx(DVM_STATE modemState)
             /*
             ** AFC (Register 10)
             */
+            ADF7021_REG10 = (uint32_t)ADF7021_REG10_ADDR;               // Register Address 10
+
+            if (m_afcEnable) {
+                ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_ENABLE << 4; // AFC Enable/Disable
+            } else {
+                ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_DISABLE << 4; // AFC Enable/Disable
+            }
+
 /** Support for 14.7456 MHz TCXO (modified RF7021SE boards) */
 #if defined(ADF7021_14_7456)
-            ADF7021_REG10 = (uint32_t)ADF7021_REG10_ADDR;               // Register Address 10
-#if defined(ADF7021_ENABLE_4FSK_AFC)
-            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_ENABLE << 4;   // AFC Enable/Disable
-#else
-            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_DISABLE << 4;  // AFC Enable/Disable
-#endif
             ADF7021_REG10 |= (uint32_t)(569 & 0xFFFU) << 5;             // AFC Scaling Factor
-            ADF7021_REG10 |= (uint32_t)(15 & 0xFU) << 17;               // KI
-            ADF7021_REG10 |= (uint32_t)(4 & 0x7U) << 21;                // KP
-            ADF7021_REG10 |= (uint32_t)(4 & 0xFFU) << 24;               // Maximum AFC Range
-
 /** Support for 12.2880 MHz TCXO */
 #elif defined(ADF7021_12_2880)
-            ADF7021_REG10 = (uint32_t)ADF7021_REG10_ADDR;               // Register Address 10
-#if defined(ADF7021_ENABLE_4FSK_AFC)
-            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_ENABLE << 4;   // AFC Enable/Disable
-#else
-            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_DISABLE << 4;  // AFC Enable/Disable
-#endif
             ADF7021_REG10 |= (uint32_t)(683 & 0xFFFU) << 5;             // AFC Scaling Factor
-            ADF7021_REG10 |= (uint32_t)(15 & 0xFU) << 17;               // KI
-            ADF7021_REG10 |= (uint32_t)(4 & 0x7U) << 21;                // KP
-            ADF7021_REG10 |= (uint32_t)(4 & 0xFFU) << 24;               // Maximum AFC Range
-
 #endif
+            ADF7021_REG10 |= (uint32_t)(m_afcKI & 0xFU) << 17;          // KI
+            ADF7021_REG10 |= (uint32_t)(m_afcKP & 0x7U) << 21;          // KP
+            ADF7021_REG10 |= (uint32_t)(m_afcRange & 0xFFU) << 24;      // Maximum AFC Range
 
             /*
             ** Demodulator Setup (Register 4)
@@ -1053,33 +1047,24 @@ void IO::configureTxRx(DVM_STATE modemState)
             /*
             ** AFC (Register 10)
             */
+            ADF7021_REG10 = (uint32_t)ADF7021_REG10_ADDR;               // Register Address 10
+
+            if (m_afcEnable) {
+                ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_ENABLE << 4; // AFC Enable/Disable
+            } else {
+                ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_DISABLE << 4; // AFC Enable/Disable
+            }
+
 /** Support for 14.7456 MHz TCXO (modified RF7021SE boards) */
 #if defined(ADF7021_14_7456)
-            ADF7021_REG10 = (uint32_t)ADF7021_REG10_ADDR;               // Register Address 10
-#if defined(ADF7021_ENABLE_4FSK_AFC)
-            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_ENABLE << 4;   // AFC Enable/Disable
-#else
-            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_DISABLE << 4;  // AFC Enable/Disable
-#endif
             ADF7021_REG10 |= (uint32_t)(569 & 0xFFFU) << 5;             // AFC Scaling Factor
-            ADF7021_REG10 |= (uint32_t)(15 & 0xFU) << 17;               // KI
-            ADF7021_REG10 |= (uint32_t)(4 & 0x7U) << 21;                // KP
-            ADF7021_REG10 |= (uint32_t)(4 & 0xFFU) << 24;               // Maximum AFC Range
-
 /** Support for 12.2880 MHz TCXO */
 #elif defined(ADF7021_12_2880)
-            ADF7021_REG10 = (uint32_t)ADF7021_REG10_ADDR;               // Register Address 10
-#if defined(ADF7021_ENABLE_4FSK_AFC)
-            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_ENABLE << 4;   // AFC Enable/Disable
-#else
-            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_DISABLE << 4;  // AFC Enable/Disable
-#endif
             ADF7021_REG10 |= (uint32_t)(683 & 0xFFFU) << 5;             // AFC Scaling Factor
-            ADF7021_REG10 |= (uint32_t)(15 & 0xFU) << 17;               // KI
-            ADF7021_REG10 |= (uint32_t)(4 & 0x7U) << 21;                // KP
-            ADF7021_REG10 |= (uint32_t)(4 & 0xFFU) << 24;               // Maximum AFC Range
-
 #endif
+            ADF7021_REG10 |= (uint32_t)(m_afcKI & 0xFU) << 17;          // KI
+            ADF7021_REG10 |= (uint32_t)(m_afcKP & 0x7U) << 21;          // KP
+            ADF7021_REG10 |= (uint32_t)(m_afcRange & 0xFFU) << 24;      // Maximum AFC Range
 
             /*
             ** Demodulator Setup (Register 4)
@@ -1141,33 +1126,24 @@ void IO::configureTxRx(DVM_STATE modemState)
             /*
             ** AFC (Register 10)
             */
+            ADF7021_REG10 = (uint32_t)ADF7021_REG10_ADDR;               // Register Address 10
+
+            if (m_afcEnable) {
+                ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_ENABLE << 4; // AFC Enable/Disable
+            } else {
+                ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_DISABLE << 4; // AFC Enable/Disable
+            }
+
 /** Support for 14.7456 MHz TCXO (modified RF7021SE boards) */
 #if defined(ADF7021_14_7456)
-            ADF7021_REG10 = (uint32_t)ADF7021_REG10_ADDR;               // Register Address 10
-#if defined(ADF7021_ENABLE_4FSK_AFC)
-            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_ENABLE << 4;   // AFC Enable/Disable
-#else
-            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_DISABLE << 4;  // AFC Enable/Disable
-#endif
             ADF7021_REG10 |= (uint32_t)(569 & 0xFFFU) << 5;             // AFC Scaling Factor
-            ADF7021_REG10 |= (uint32_t)(15 & 0xFU) << 17;               // KI
-            ADF7021_REG10 |= (uint32_t)(4 & 0x7U) << 21;                // KP
-            ADF7021_REG10 |= (uint32_t)(4 & 0xFFU) << 24;               // Maximum AFC Range
-
 /** Support for 12.2880 MHz TCXO */
 #elif defined(ADF7021_12_2880)
-            ADF7021_REG10 = (uint32_t)ADF7021_REG10_ADDR;               // Register Address 10
-#if defined(ADF7021_ENABLE_4FSK_AFC)
-            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_ENABLE << 4;   // AFC Enable/Disable
-#else
-            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_DISABLE << 4;  // AFC Enable/Disable
-#endif
             ADF7021_REG10 |= (uint32_t)(683 & 0xFFFU) << 5;             // AFC Scaling Factor
-            ADF7021_REG10 |= (uint32_t)(15 & 0xFU) << 17;               // KI
-            ADF7021_REG10 |= (uint32_t)(4 & 0x7U) << 21;                // KP
-            ADF7021_REG10 |= (uint32_t)(4 & 0xFFU) << 24;               // Maximum AFC Range
-
 #endif
+            ADF7021_REG10 |= (uint32_t)(m_afcKI & 0xFU) << 17;          // KI
+            ADF7021_REG10 |= (uint32_t)(m_afcKP & 0x7U) << 21;          // KP
+            ADF7021_REG10 |= (uint32_t)(m_afcRange & 0xFFU) << 24;      // Maximum AFC Range
 
             /*
             ** Demodulator Setup (Register 4)
@@ -1239,32 +1215,24 @@ void IO::configureTxRx(DVM_STATE modemState)
             /*
             ** AFC (Register 10)
             */
+            ADF7021_REG10 = (uint32_t)ADF7021_REG10_ADDR;               // Register Address 10
+
+            if (m_afcEnable) {
+                ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_ENABLE << 4; // AFC Enable/Disable
+            } else {
+                ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_DISABLE << 4; // AFC Enable/Disable
+            }
+
 /** Support for 14.7456 MHz TCXO (modified RF7021SE boards) */
 #if defined(ADF7021_14_7456)
-            ADF7021_REG10 = (uint32_t)ADF7021_REG10_ADDR;               // Register Address 10
-#if defined(ADF7021_ENABLE_4FSK_AFC)
-            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_ENABLE << 4;   // AFC Enable/Disable
-#else
-            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_DISABLE << 4;  // AFC Enable/Disable
-#endif
             ADF7021_REG10 |= (uint32_t)(569 & 0xFFFU) << 5;             // AFC Scaling Factor
-            ADF7021_REG10 |= (uint32_t)(15 & 0xFU) << 17;               // KI
-            ADF7021_REG10 |= (uint32_t)(4 & 0x7U) << 21;                // KP
-            ADF7021_REG10 |= (uint32_t)(4 & 0xFFU) << 24;               // Maximum AFC Range
-
 /** Support for 12.2880 MHz TCXO */
 #elif defined(ADF7021_12_2880)
-            ADF7021_REG10 = (uint32_t)ADF7021_REG10_ADDR;               // Register Address 10
-#if defined(ADF7021_ENABLE_4FSK_AFC)
-            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_ENABLE << 4;   // AFC Enable/Disable
-#else
-            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_DISABLE << 4;  // AFC Enable/Disable
-#endif
             ADF7021_REG10 |= (uint32_t)(683 & 0xFFFU) << 5;             // AFC Scaling Factor
-            ADF7021_REG10 |= (uint32_t)(15 & 0xFU) << 17;               // KI
-            ADF7021_REG10 |= (uint32_t)(4 & 0x7U) << 21;                // KP
-            ADF7021_REG10 |= (uint32_t)(4 & 0xFFU) << 24;               // Maximum AFC Range
 #endif
+            ADF7021_REG10 |= (uint32_t)(m_afcKI & 0xFU) << 17;          // KI
+            ADF7021_REG10 |= (uint32_t)(m_afcKP & 0x7U) << 21;          // KP
+            ADF7021_REG10 |= (uint32_t)(m_afcRange & 0xFFU) << 24;      // Maximum AFC Range
 
             /*
             ** Demodulator Setup (Register 4)
@@ -1325,25 +1293,24 @@ void IO::configureTxRx(DVM_STATE modemState)
             /*
             ** AFC (Register 10)
             */
+            ADF7021_REG10 = (uint32_t)ADF7021_REG10_ADDR;               // Register Address 10
+
+            if (m_afcEnable) {
+                ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_ENABLE << 4; // AFC Enable/Disable
+            } else {
+                ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_DISABLE << 4; // AFC Enable/Disable
+            }
+
 /** Support for 14.7456 MHz TCXO (modified RF7021SE boards) */
 #if defined(ADF7021_14_7456)
-            ADF7021_REG10 = (uint32_t)ADF7021_REG10_ADDR;               // Register Address 10
-            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_ENABLE << 4;   // AFC Enable/Disable
             ADF7021_REG10 |= (uint32_t)(569 & 0xFFFU) << 5;             // AFC Scaling Factor
-            ADF7021_REG10 |= (uint32_t)(11 & 0xFU) << 17;               // KI
-            ADF7021_REG10 |= (uint32_t)(4 & 0x7U) << 21;                // KP
-            ADF7021_REG10 |= (uint32_t)(12 & 0xFFU) << 24;              // Maximum AFC Range
-
 /** Support for 12.2880 MHz TCXO */
 #elif defined(ADF7021_12_2880)
-            ADF7021_REG10 = (uint32_t)ADF7021_REG10_ADDR;               // Register Address 10
-            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_ENABLE << 4;   // AFC Enable/Disable
             ADF7021_REG10 |= (uint32_t)(683 & 0xFFFU) << 5;             // AFC Scaling Factor
-            ADF7021_REG10 |= (uint32_t)(11 & 0xFU) << 17;               // KI
-            ADF7021_REG10 |= (uint32_t)(4 & 0x7U) << 21;                // KP
-            ADF7021_REG10 |= (uint32_t)(12 & 0xFFU) << 24;              // Maximum AFC Range
-
 #endif
+            ADF7021_REG10 |= (uint32_t)(m_afcKI & 0xFU) << 17;          // KI
+            ADF7021_REG10 |= (uint32_t)(m_afcKP & 0x7U) << 21;          // KP
+            ADF7021_REG10 |= (uint32_t)(m_afcRange & 0xFFU) << 24;      // Maximum AFC Range
 
             /*
             ** Demodulator Setup (Register 4)

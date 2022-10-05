@@ -114,6 +114,8 @@ public:
     uint8_t setRFParams(uint32_t rxFreq, uint32_t txFreq, uint8_t rfPower, ADF_GAIN_MODE gainMode);
     /// <summary>Sets the RF adjustment parameters.</summary>
     void setRFAdjust(int8_t dmrDiscBWAdj, int8_t p25DiscBWAdj, int8_t nxdnDiscBWAdj, int8_t dmrPostBWAdj, int8_t p25PostBWAdj, int8_t nxdnPostBWAdj);
+    /// <summary>Sets the RF AFC adjustment parameters.</summary>
+    void setAFCParams(bool afcEnable, uint8_t afcKI, uint8_t afcKP, uint8_t afcRange);
 
     /// <summary>Flag indicating the TX ring buffer has overflowed.</summary>
     bool hasTXOverflow(void);

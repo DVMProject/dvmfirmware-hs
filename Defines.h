@@ -119,12 +119,6 @@ typedef unsigned long long  ulong64_t;
 // Support for ADF7021-N version: 
 // #define ADF7021_N_VER
 
-// Enable AFC support for DMR and P25 (experimental)
-// #define ADF7021_ENABLE_4FSK_AFC
-
-// Configure AFC with positive initial frequency offset
-// #define ADF7021_AFC_POS
-
 // Force the internal L (internal VCO inductor) for UHF 380 and T-band
 #define FORCE_UHF_INTERAL_L
 

@@ -90,30 +90,6 @@
 #define ADF7021_DISC_BW_MAX     660
 #define ADF7021_POST_BW_MAX     1023
 
-#if defined(ADF7021_ENABLE_4FSK_AFC)
-
-#if defined(ADF7021_AFC_POS)
-
-#define AFC_OFFSET_DMR          -125
-#define AFC_OFFSET_P25          -125
-#define AFC_OFFSET_NXDN         -125
-
-#else
-
-#define AFC_OFFSET_DMR          125
-#define AFC_OFFSET_P25          125
-#define AFC_OFFSET_NXDN         125
-
-#endif // ADF7021_AFC_POS
-
-#else
-
-#define AFC_OFFSET_DMR          0
-#define AFC_OFFSET_P25          0
-#define AFC_OFFSET_NXDN         0
-
-#endif // ADF7021_ENABLE_4FSK_AFC
-
 /*
     - Most of the registers values are obteined from ADI eval software:
         http://www.analog.com/en/products/rf-microwave/integrated-transceivers-transmitters-receivers/low-power-rf-transceivers/adf7021.html

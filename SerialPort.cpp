@@ -1346,6 +1346,21 @@ uint8_t SerialPort::setRFParams(const uint8_t* data, uint8_t length)
     if (nxdnPostBWAdj < -128)
         return RSN_INVALID_REQUEST;
 
+    // support optional AFC parameters
+    if (length > 17U) {
+        if (length < 19U)
+            return RSN_ILLEGAL_LENGTH;
+
+        bool afcEnable = (data[17U] & 0x80U) == 0x80U;
+        uint8_t afcKI = data[17U] & 0x0FU;
+        uint8_t afcKP = (data[17U] >> 4) & 0x07U;
+        uint8_t afcRange = data[18U];
+
+        io.setAFCParams(afcEnable, afcKI, afcKP, afcRange);
+    } else {
+        io.setAFCParams(false, 11, 4, 2);
+    }
+
     gainMode = (ADF_GAIN_MODE)data[14U];
 
     io.setRFAdjust(dmrDiscBWAdj, p25DiscBWAdj, nxdnDiscBWAdj, dmrPostBWAdj, p25PostBWAdj, nxdnPostBWAdj);

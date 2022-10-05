@@ -1221,12 +1221,14 @@ void IO::configureTxRx(DVM_STATE modemState)
             ** AFC (Register 10)
             */
             ADF7021_REG10 = (uint32_t)ADF7021_REG10_ADDR;               // Register Address 10
-
+/*
             if (m_afcEnable) {
                 ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_ENABLE << 4; // AFC Enable/Disable
             } else {
                 ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_DISABLE << 4; // AFC Enable/Disable
             }
+*/
+            ADF7021_REG10 |= (uint32_t)ADF7021_REG10_AFC_DISABLE << 4;  // AFC Enable/Disable
 
 /** Support for 14.7456 MHz TCXO (modified RF7021SE boards) */
 #if defined(ADF7021_14_7456)

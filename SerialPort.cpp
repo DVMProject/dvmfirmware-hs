@@ -1358,7 +1358,7 @@ uint8_t SerialPort::setRFParams(const uint8_t* data, uint8_t length)
 
         io.setAFCParams(afcEnable, afcKI, afcKP, afcRange);
     } else {
-        io.setAFCParams(false, 11, 4, 2);
+        io.setAFCParams(false, 11, 4, 1);
     }
 
     gainMode = (ADF_GAIN_MODE)data[14U];

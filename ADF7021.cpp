@@ -635,6 +635,9 @@ void IO::setRFAdjust(int8_t dmrDiscBWAdj, int8_t p25DiscBWAdj, int8_t nxdnDiscBW
     m_dmrPostBWAdj = dmrPostBWAdj;
     m_p25PostBWAdj = p25PostBWAdj;
     m_nxdnPostBWAdj = nxdnPostBWADJ;
+
+    DEBUG4("IO::setRFAdjust(): setting RF adjustment, discBW", dmrDiscBWAdj, p25DiscBWAdj, nxdnDiscBWAdj);
+    DEBUG4("IO::setRFAdjust(): setting RF adjustment, postBW", dmrPostBWAdj, p25PostBWAdj, nxdnPostBWADJ);
 }
 
 /// <summary>
@@ -650,6 +653,8 @@ void IO::setAFCParams(bool afcEnable, uint8_t afcKI, uint8_t afcKP, uint8_t afcR
     m_afcKI = afcKI;
     m_afcKP = afcKP;
     m_afcRange = afcRange;
+
+    DEBUG5("IO::setAFCParams(): setting AFC params", afcEnable, afcKI, afcKP, afcRange);
 }
 
 /// <summary>

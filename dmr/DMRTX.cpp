@@ -84,6 +84,9 @@ DMRTX::DMRTX() :
     m_cachATControl(0U),
     m_controlPrev(MARK_NONE)
 {
+    m_fifo[0U].reinitialize(DMR_TX_BUFFER_LEN);
+    m_fifo[1U].reinitialize(DMR_TX_BUFFER_LEN);
+
     ::memcpy(m_newShortLC, EMPTY_SHORT_LC, 12U);
     ::memcpy(m_shortLC, EMPTY_SHORT_LC, 12U);
 

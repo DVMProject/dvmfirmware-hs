@@ -13,6 +13,7 @@
 /*
 *   Copyright (C) 2015,2016 by Jonathan Naylor G4KLX
 *   Serial FIFO Control Copyright (C) 2015 by James McLaughlin KI6ZUM
+*   Copyright (C) 2022 by Bryan Biedenkapp N2PLL
 *
 *   This library is free software; you can redistribute it and/or
 *   modify it under the terms of the GNU Library General Public
@@ -47,6 +48,14 @@ SerialBuffer::SerialBuffer(uint16_t length) :
     m_full(false)
 {
     m_buffer = new uint8_t[length];
+}
+
+/// <summary>
+/// Finalizes a instance of the SerialBuffer class.
+/// </summary>
+SerialBuffer::~SerialBuffer()
+{
+    delete[] m_buffer;
 }
 
 /// <summary>
@@ -92,6 +101,19 @@ void SerialBuffer::reset()
     m_head = 0U;
     m_tail = 0U;
     m_full = false;
+}
+
+/// <summary>
+/// Helper to reset and reinitialize data values to defaults.
+/// </summary>
+void SerialBuffer::reinitialize(uint16_t length)
+{
+    reset();
+
+    m_length = length;
+
+    delete[] m_buffer;
+    m_buffer = new uint8_t[length];
 }
 
 /// <summary>

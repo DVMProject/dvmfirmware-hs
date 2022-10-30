@@ -54,7 +54,7 @@ enum DVM_STATE {
 
     // Calibration States
     STATE_INT_CAL = 90U,
-    STATE_P25_LF_CAL = 91U,
+
     STATE_P25_CAL_1K = 92U,
 
     STATE_DMR_DMO_CAL_1K = 93U,

@@ -135,7 +135,7 @@ void loop()
         m_modemState == STATE_INT_CAL)
         calDMR.process();
 
-    if (m_modemState == STATE_P25_CAL_1K || m_modemState == STATE_P25_LF_CAL || m_modemState == STATE_P25_CAL)
+    if (m_modemState == STATE_P25_CAL_1K || m_modemState == STATE_P25_CAL)
         calP25.process();
 
     if (m_modemState == STATE_NXDN_CAL)

@@ -1018,7 +1018,7 @@ void IO::configureTxRx(DVM_STATE modemState)
             ADF7021_REG2 |= (uint32_t)ADF7021_REG2_PA_DEF << 7;         // PA Enable & PA Bias
             ADF7021_REG2 |= (uint32_t)(m_rfPower & 0x3FU) << 13;        // PA Level (0 - Off, 63 - 13 dBm)
             ADF7021_REG2 |= (uint32_t)(m_cwIdTXLevel / div2) << 19;     // Freq. Deviation
-            ADF7021_REG2 |= (uint32_t)ADF7021_REG2_INV_DATA << 28;      // Clock/Data Inversion
+            ADF7021_REG2 |= (uint32_t)ADF7021_REG2_INV_CLKDAT << 28;    // Clock/Data Inversion
             ADF7021_REG2 |= (uint32_t)ADF7021_REG2_RC_5 << 30;          // R-Cosine Alpha
         }
         break;
@@ -1097,7 +1097,7 @@ void IO::configureTxRx(DVM_STATE modemState)
             ADF7021_REG2 |= (uint32_t)ADF7021_REG2_PA_DEF << 7;         // PA Enable & PA Bias
             ADF7021_REG2 |= (uint32_t)(m_rfPower & 0x3FU) << 13;        // PA Level (0 - Off, 63 - 13 dBm)
             ADF7021_REG2 |= (uint32_t)(dmrDev / div2) << 19;            // Freq. Deviation
-            ADF7021_REG2 |= (uint32_t)ADF7021_REG2_INV_DATA << 28;      // Clock/Data Inversion
+            ADF7021_REG2 |= (uint32_t)ADF7021_REG2_INV_CLKDAT << 28;    // Clock/Data Inversion
             ADF7021_REG2 |= (uint32_t)ADF7021_REG2_RC_5 << 30;          // R-Cosine Alpha
         }
         break;
@@ -1176,7 +1176,7 @@ void IO::configureTxRx(DVM_STATE modemState)
             ADF7021_REG2 |= (uint32_t)ADF7021_REG2_PA_DEF << 7;         // PA Enable & PA Bias
             ADF7021_REG2 |= (uint32_t)(m_rfPower & 0x3FU) << 13;        // PA Level (0 - Off, 63 - 13 dBm)
             ADF7021_REG2 |= (uint32_t)(p25Dev / div2) << 19;            // Freq. Deviation
-            ADF7021_REG2 |= (uint32_t)ADF7021_REG2_INV_DATA << 28;      // Clock/Data Inversion
+            ADF7021_REG2 |= (uint32_t)ADF7021_REG2_INV_CLKDAT << 28;    // Clock/Data Inversion
             ADF7021_REG2 |= (uint32_t)ADF7021_REG2_RC_5 << 30;          // R-Cosine Alpha
         }
         break;
@@ -1267,7 +1267,7 @@ void IO::configureTxRx(DVM_STATE modemState)
             ADF7021_REG2 |= (uint32_t)ADF7021_REG2_PA_DEF << 7;         // PA Enable & PA Bias
             ADF7021_REG2 |= (uint32_t)(m_rfPower & 0x3FU) << 13;        // PA Level (0 - Off, 63 - 13 dBm)
             ADF7021_REG2 |= (uint32_t)(nxdnDev / div2) << 19;           // Freq. Deviation
-            ADF7021_REG2 |= (uint32_t)ADF7021_REG2_INV_DATA << 28;      // Clock/Data Inversion
+            ADF7021_REG2 |= (uint32_t)ADF7021_REG2_INV_CLKDAT << 28;    // Clock/Data Inversion
             ADF7021_REG2 |= (uint32_t)ADF7021_REG2_RC_5 << 30;          // R-Cosine Alpha
         }
         break;

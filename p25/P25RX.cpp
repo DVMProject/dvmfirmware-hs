@@ -74,6 +74,8 @@ void P25RX::reset()
     m_bitBuffer = 0x00U;
     m_dataPtr = 0U;
 
+    ::memset(m_buffer, 0x00U, P25_LDU_FRAME_LENGTH_BYTES + 3U);
+
     m_endPtr = NOENDPTR;
 
     m_lostCount = 0U;
@@ -393,23 +395,21 @@ bool P25RX::correlateSync()
     else
         maxErrs = MAX_SYNC_BITS_ERRS;
 
-    // unpack sync bytes
-    uint8_t sync[P25_SYNC_BYTES_LENGTH];
-    sync[0U] = (uint8_t)((m_bitBuffer >> 40) & 0xFFU);
-    sync[1U] = (uint8_t)((m_bitBuffer >> 32) & 0xFFU);
-    sync[2U] = (uint8_t)((m_bitBuffer >> 24) & 0xFFU);
-    sync[3U] = (uint8_t)((m_bitBuffer >> 16) & 0xFFU);
-    sync[4U] = (uint8_t)((m_bitBuffer >> 8) & 0xFFU);
-    sync[5U] = (uint8_t)((m_bitBuffer >> 0) & 0xFFU);
-
-    uint8_t errs = 0U;
-    for (uint8_t i = 0U; i < P25_SYNC_BYTES_LENGTH; i++)
-        errs += countBits8(sync[i] ^ P25_SYNC_BYTES[i]);
-
+    // fuzzy matching of the data sync bit sequence
+    uint8_t errs = countBits64((m_bitBuffer & P25_SYNC_BITS_MASK) ^ P25_SYNC_BITS);
     if (errs <= maxErrs) {
         ::memset(m_buffer, 0x00U, P25_LDU_FRAME_LENGTH_BYTES + 3U);
 
         DEBUG2("P25RX: correlateSync(): correlateSync errs", errs);
+
+        // unpack sync bytes
+        uint8_t sync[P25_SYNC_BYTES_LENGTH];
+        sync[0U] = (uint8_t)((m_bitBuffer >> 40) & 0xFFU);
+        sync[1U] = (uint8_t)((m_bitBuffer >> 32) & 0xFFU);
+        sync[2U] = (uint8_t)((m_bitBuffer >> 24) & 0xFFU);
+        sync[3U] = (uint8_t)((m_bitBuffer >> 16) & 0xFFU);
+        sync[4U] = (uint8_t)((m_bitBuffer >> 8) & 0xFFU);
+        sync[5U] = (uint8_t)((m_bitBuffer >> 0) & 0xFFU);
 
         DEBUG4("P25RX: correlateSync(): sync [b0 - b2]", sync[0], sync[1], sync[2]);
         DEBUG4("P25RX: correlateSync(): sync [b3 - b5]", sync[3], sync[4], sync[5]);

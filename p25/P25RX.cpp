@@ -100,8 +100,7 @@ void P25RX::databit(bool bit)
 
         m_dataPtr++;
         if (m_dataPtr > P25_LDU_FRAME_LENGTH_BITS) {
-            m_duid = 0xFFU;
-            m_dataPtr = 0U;
+            reset();
         }
     }
 

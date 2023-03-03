@@ -158,6 +158,19 @@ SECTIONS
     .debug_str      0 : { *(.debug_str) } > ROM
     .debug_loc      0 : { *(.debug_loc) } > ROM
     .debug_macinfo  0 : { *(.debug_macinfo) } > ROM
+    /* SGI/MIPS DWARF 2 extensions */
+    .debug_weaknames 0 : { *(.debug_weaknames) } > ROM
+    .debug_funcnames 0 : { *(.debug_funcnames) } > ROM
+    .debug_typenames 0 : { *(.debug_typenames) } > ROM
+    .debug_varnames  0 : { *(.debug_varnames) } > ROM
+    /* DWARF 3 */
+    .debug_pubtypes 0 : { *(.debug_pubtypes) } > ROM
+    .debug_ranges   0 : { *(.debug_ranges) } > ROM
+    /* DWARF Extension.  */
+    .debug_macro    0 : { *(.debug_macro) } > ROM
+    .debug_addr     0 : { *(.debug_addr) } > ROM
+    .ARM.attributes 0 : { KEEP (*(.ARM.attributes)) KEEP (*(.gnu.attributes)) } > ROM
+    .note.gnu.arm.ident 0 : { KEEP (*(.note.gnu.arm.ident)) } > ROM
 
 	/* Remove information from the standard libraries */
 	/DISCARD/ :

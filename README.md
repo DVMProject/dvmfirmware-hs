@@ -21,9 +21,7 @@ An example of this would be ```make -f Makefile.STM32FX mmdvm-hs-hat-dual``` for
 
 ## Firmware installation
 
-The device can be used on top on a RPi attached via the GPIO port or standalone and connected via USB. Both variants require different handling of compiling and uploading the firmware, examples on flashing devices are mostly not included here because the methods to flash vary from device to device.
-
-The USB connection requires firmware with bootloader support whereas the GPIO version does not. For USB connection a bootloader has to be installed initally. This requires STlink connection. After that is done the firmware upgrade can be done via the USB connection. The STlink connection can be used as fallback if wrongly configured firmware was installed for example.
+The device can be used on top on a RPi attached via the GPIO port or standalone and connected via USB (see usb-support branch). Both variants require different handling of compiling and uploading the firmware, examples on flashing devices are mostly not included here because the methods to flash vary from device to device.
 
 ### Install the firmware via GPIO on Raspberry Pi
 

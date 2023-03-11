@@ -162,11 +162,7 @@
 #define PIN_DEB              GPIO_Pin_9
 #define PORT_DEB             GPIOB
 
-#if defined(STM32_USB_HOST)
 #define PIN_NXDN_LED         GPIO_Pin_1
-#else
-#define PIN_NXDN_LED         GPIO_Pin_7
-#endif
 #define PORT_NXDN_LED        GPIOA
 
 #define PIN_DMR_LED          GPIO_Pin_13
@@ -566,8 +562,7 @@ void IO::initInt()
 
 #endif
 
-#if defined(STM32_USB_HOST)
-  // Pin PA11,PA12 = LOW, USB Reset
+    // Pin PA11,PA12 = LOW, USB Reset
     GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_InitStruct.GPIO_Pin = GPIO_Pin_11 | GPIO_Pin_12;
     GPIO_InitStruct.GPIO_Mode = GPIO_Mode_Out_PP;
@@ -575,20 +570,12 @@ void IO::initInt()
     GPIO_WriteBit(GPIOA, GPIO_Pin_11, Bit_RESET);
     GPIO_WriteBit(GPIOA, GPIO_Pin_12, Bit_RESET);
 
-#endif
-
 #if defined(LONG_USB_RESET)
     // 10 ms delay
     delayUS(10000U);
 #else
     volatile unsigned int delay;
     for (delay = 0; delay < 512; delay++);
-#endif
-
-#if !defined(STM32_USB_HOST)
-    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_11 | GPIO_Pin_12;
-    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-    GPIO_Init(GPIOA, &GPIO_InitStruct);
 #endif
 
     RCC_USBCLKConfig(RCC_USBCLKSource_PLLCLK_1Div5);

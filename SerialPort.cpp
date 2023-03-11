@@ -38,61 +38,6 @@
  //  Constants
  // ---------------------------------------------------------------------------
 
-#if defined(ENABLE_DMR)
-#define DESCR_DMR        "DMR, "
-#else
-#define DESCR_DMR        ""
-#endif
-#if defined(ENABLE_P25)
-#define DESCR_P25        "P25, "
-#else
-#define DESCR_P25        ""
-#endif
-#if defined(ENABLE_NXDN)
-#define DESCR_NXDN       "NXDN, "
-#else
-#define DESCR_NXDN       ""
-#endif
-
-#if defined(SEND_RSSI_DATA)
-#define DESCR_RSSI        "RSSI, "
-#else
-#define DESCR_RSSI        ""
-#endif
-
-#if defined(ZUMSPOT_ADF7021)
-#define BOARD_INFO      "ZUMspot"
-#elif defined(MMDVM_HS_HAT_REV12)
-#define BOARD_INFO      "MMDVM_HS_Hat"
-#elif defined(MMDVM_HS_DUAL_HAT_REV10)
-#define BOARD_INFO      "MMDVM_HS_Dual_Hat"
-#elif defined(NANO_HOTSPOT)
-#define BOARD_INFO      "Nano_hotSPOT"
-#elif defined(NANO_DV_REV11)
-#define BOARD_INFO      "Nano_DV"
-#elif defined(SKYBRIDGE_HS)
-#define BOARD_INFO      "SkyBridge"
-#elif defined(LONESTAR_USB)
-#define BOARD_INFO      "LS_USB_STICK"
-#else
-#define BOARD_INFO      "MMDVM_HS"
-#endif
-
-#if defined(ADF7021_14_7456)
-#define DESCR_OSC       "TCXO 14.7456, "
-#endif
-#if defined(ADF7021_12_2880)
-#define DESCR_OSC       "TCXO 12.2880, "
-#endif
-
-#if defined(ENABLE_ADF7021) && defined(ADF7021_N_VER)
-#define RF_CHIP         "ADF7021N, "
-#elif defined(ENABLE_ADF7021)
-#define RF_CHIP         "ADF7021, "
-#endif
-
-#define DESCRIPTION        "Digital Voice Modem DSP Hotspot [" BOARD_INFO "] (" RF_CHIP DESCR_DMR DESCR_P25 DESCR_NXDN DESCR_OSC DESCR_RSSI "CW Id)"
-
 #define concat(a, b, c) a " (build " b " " c ")"
 const char HARDWARE[] = concat(DESCRIPTION, __TIME__, __DATE__);
 

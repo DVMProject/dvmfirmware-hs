@@ -35,7 +35,7 @@
 
 using namespace dmr;
 
-#if defined(DUPLEX)
+#if defined(ENABLE_DMR) && defined(DUPLEX)
 
 // ---------------------------------------------------------------------------
 //  Constants
@@ -185,4 +185,4 @@ void DMRIdleRX::bitsToBytes(uint16_t start, uint8_t count, uint8_t* buffer)
   }
 }
 
-#endif // DUPLEX
+#endif // defined(ENABLE_DMR) && defined(DUPLEX)

@@ -34,6 +34,8 @@
 
 using namespace nxdn;
 
+#if defined(ENABLE_NXDN)
+
 // ---------------------------------------------------------------------------
 //  Constants
 // ---------------------------------------------------------------------------
@@ -196,3 +198,5 @@ bool NXDNRX::correlateSync(bool first)
 
     return false;
 }
+
+#endif // defined(ENABLE_NXDN)

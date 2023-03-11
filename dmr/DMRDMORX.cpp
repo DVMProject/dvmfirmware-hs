@@ -36,6 +36,8 @@
 
 using namespace dmr;
 
+#if defined(ENABLE_DMR)
+
 // ---------------------------------------------------------------------------
 //  Constants
 // ---------------------------------------------------------------------------
@@ -380,3 +382,4 @@ void DMRDMORX::writeRSSIData(uint8_t* frame)
 #endif
 }
 
+#endif // defined(ENABLE_DMR)

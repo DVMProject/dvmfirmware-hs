@@ -34,6 +34,7 @@
 #include "Defines.h"
 #include "nxdn/NXDNDefines.h"
 
+#if defined(ENABLE_NXDN)
 namespace nxdn
 {
     // ---------------------------------------------------------------------------
@@ -81,5 +82,6 @@ namespace nxdn
         bool correlateSync(bool first = false);
     };
 } // namespace nxdn
+#endif // defined(ENABLE_NXDN)
 
 #endif // __NXDN_RX_H__

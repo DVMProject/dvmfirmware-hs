@@ -144,4 +144,8 @@ const uint8_t BIT_MASK_TABLE[] = { 0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x0
 #define _WRITE_BIT(p, i, b) p[(i) >> 3] = (b) ? (p[(i) >> 3] | BIT_MASK_TABLE[(i) & 7]) : (p[(i)>>3] & ~BIT_MASK_TABLE[(i) & 7])
 #define _READ_BIT(p, i)     ((p[(i) >> 3] & BIT_MASK_TABLE[(i) & 7]) >> (7 - ((i) & 7)))
 
+#if !defined(ENABLE_DMR) && !defined(ENABLE_P25) && !defined(ENABLE_NXDN)
+#error "No protocol support compiled in? Must enable at least one: ENABLE_DMR, ENABLE_P25 and/or ENABLE_NXDN."
+#endif
+
 #endif // __DEFINES_H__

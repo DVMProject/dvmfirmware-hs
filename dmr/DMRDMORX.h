@@ -35,6 +35,8 @@
 #include "Defines.h"
 #include "dmr/DMRDefines.h"
 
+#if defined(ENABLE_DMR)
+
 namespace dmr
 {
     // ---------------------------------------------------------------------------
@@ -99,5 +101,7 @@ namespace dmr
         void writeRSSIData(uint8_t* frame);
     };
 } // namespace dmr
+
+#endif // defined(ENABLE_DMR)
 
 #endif // __DMR_DMO_RX_H__

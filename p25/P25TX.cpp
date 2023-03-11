@@ -35,6 +35,8 @@
 
 using namespace p25;
 
+#if defined(ENABLE_P25)
+
 // ---------------------------------------------------------------------------
 //  Public Class Members
 // ---------------------------------------------------------------------------
@@ -270,3 +272,5 @@ void P25TX::writeSilence()
         io.write(&bit, 1);
     }
 }
+
+#endif // defined(ENABLE_P25)

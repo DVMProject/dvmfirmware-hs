@@ -198,13 +198,20 @@ void SerialPort::process()
                     break;
 
                 case CMD_CAL_DATA:
+                    err = RSN_NAK;
+#if defined(ENABLE_DMR)
                     if (m_modemState == STATE_DMR_DMO_CAL_1K || m_modemState == STATE_DMR_CAL_1K ||
                         m_modemState == STATE_DMR_LF_CAL || m_modemState == STATE_DMR_CAL)
                         err = calDMR.write(m_buffer + 3U, m_len - 3U);
+#endif // defined(ENABLE_DMR)
+#if defined(ENABLE_P25)
                     if (m_modemState == STATE_P25_CAL_1K || m_modemState == STATE_P25_CAL)
                         err = calP25.write(m_buffer + 3U, m_len - 3U);
+#endif // defined(ENABLE_P25)
+#if defined(ENABLE_P25)
                     if (m_modemState == STATE_NXDN_CAL)
                         err = calNXDN.write(m_buffer + 3U, m_len - 3U);
+#endif // defined(ENABLE_P25)
                     if (err == RSN_OK)
                     {
                         sendACK();
@@ -249,6 +256,7 @@ void SerialPort::process()
 
                 /** Digital Mobile Radio */
                 case CMD_DMR_DATA1:
+#if defined(ENABLE_DMR)
 #if defined(DUPLEX)
                     if (m_dmrEnable) {
                         if (m_modemState == STATE_IDLE || m_modemState == STATE_DMR) {
@@ -266,10 +274,15 @@ void SerialPort::process()
                     }
 #else
                     sendNAK(RSN_INVALID_REQUEST);
-#endif
+#endif // defined(DUPLEX)
+#else
+                    DEBUG2("SerialPort: process() received invalid DMR data", err);
+                    sendNAK(err);
+#endif // defined(ENABLE_DMR)
                     break;
 
                 case CMD_DMR_DATA2:
+#if defined(ENABLE_DMR)
                     if (m_dmrEnable) {
                         if (m_modemState == STATE_IDLE || m_modemState == STATE_DMR) {
 #if defined(DUPLEX)
@@ -279,9 +292,12 @@ void SerialPort::process()
                                 err = dmrDMOTX.writeData(m_buffer + 3U, m_len - 3U);
 #else
                             err = dmrDMOTX.writeData(m_buffer + 3U, m_len - 3U);
-#endif
+#endif // defined(DUPLEX)
                         }
                     }
+#else
+                    err = RSN_NAK;
+#endif // defined(ENABLE_DMR)
                     if (err == RSN_OK) {
                         if (m_modemState == STATE_IDLE)
                             setMode(STATE_DMR);
@@ -293,6 +309,7 @@ void SerialPort::process()
                     break;
 
                 case CMD_DMR_START:
+#if defined(ENABLE_DMR)
 #if defined(DUPLEX)
                     if (m_dmrEnable) {
                         err = RSN_INVALID_DMR_START;
@@ -315,10 +332,14 @@ void SerialPort::process()
                     }
 #else
                     sendNAK(RSN_INVALID_REQUEST);
-#endif
+#endif // defined(DUPLEX)
+#else
+                    sendNAK(RSN_INVALID_REQUEST);
+#endif // defined(ENABLE_DMR)
                     break;
 
                 case CMD_DMR_SHORTLC:
+#if defined(ENABLE_DMR)
 #if defined(DUPLEX)
                     if (m_dmrEnable)
                         err = dmrTX.writeShortLC(m_buffer + 3U, m_len - 3U);
@@ -328,10 +349,14 @@ void SerialPort::process()
                     }
 #else
                     sendNAK(RSN_INVALID_REQUEST);
-#endif
+#endif // defined(DUPLEX)
+#else
+                    sendNAK(RSN_INVALID_REQUEST);
+#endif // defined(ENABLE_DMR)
                     break;
 
                 case CMD_DMR_ABORT:
+#if defined(ENABLE_DMR)
 #if defined(DUPLEX)
                     if (m_dmrEnable)
                         err = dmrTX.writeAbort(m_buffer + 3U, m_len - 3U);
@@ -341,10 +366,14 @@ void SerialPort::process()
                     }
 #else
                     sendNAK(RSN_INVALID_REQUEST);
-#endif
+#endif // defined(DUPLEX)
+#else
+                    sendNAK(RSN_INVALID_REQUEST);
+#endif // defined(ENABLE_DMR)
                     break;
 
                 case CMD_DMR_CACH_AT_CTRL:
+#if defined(ENABLE_DMR)
 #if defined(DUPLEX)
                     if (m_dmrEnable) {
                         err = RSN_INVALID_REQUEST;
@@ -359,11 +388,15 @@ void SerialPort::process()
                     }
 #else
                     sendNAK(RSN_INVALID_REQUEST);
-#endif
+#endif // defined(DUPLEX)
+#else
+                    sendNAK(RSN_INVALID_REQUEST);
+#endif // defined(ENABLE_DMR)
                     break;
 
                 /** Project 25 */
                 case CMD_P25_DATA:
+#if defined(ENABLE_P25)
                     if (m_p25Enable) {
                         if (m_modemState == STATE_IDLE || m_modemState == STATE_P25)
                             err = p25TX.writeData(m_buffer + 3U, m_len - 3U);
@@ -376,17 +409,25 @@ void SerialPort::process()
                         DEBUG2("SerialPort: process(): Received invalid P25 data", err);
                         sendNAK(err);
                     }
+#else
+                    sendNAK(RSN_INVALID_REQUEST);
+#endif // defined(ENABLE_P25)
                     break;
 
                 case CMD_P25_CLEAR:
+#if defined(ENABLE_P25)
                     if (m_p25Enable) {
                         if (m_modemState == STATE_IDLE || m_modemState == STATE_P25)
                             p25TX.clear();
                     }
+#else
+                    sendNAK(RSN_INVALID_REQUEST);
+#endif // defined(ENABLE_P25)
                     break;
 
                 /** Next Generation Digital Narrowband */
                 case CMD_NXDN_DATA:
+#if defined(ENABLE_NXDN)
                     if (m_nxdnEnable) {
                         if (m_modemState == STATE_IDLE || m_modemState == STATE_NXDN)
                             err = nxdnTX.writeData(m_buffer + 3U, m_len - 3U);
@@ -399,6 +440,9 @@ void SerialPort::process()
                         DEBUG2("SerialPort: process(): Received invalid NXDN data", err);
                         sendNAK(err);
                     }
+#else
+                    sendNAK(RSN_INVALID_REQUEST);
+#endif // defined(ENABLE_NXDN)
                     break;
 
                 default:
@@ -922,6 +966,7 @@ void SerialPort::getStatus()
 
     reply[6U] = 0U;
 
+#if defined(ENABLE_DMR)
     if (m_dmrEnable) {
 #if defined(DUPLEX)
         if (m_duplex) {
@@ -934,23 +979,35 @@ void SerialPort::getStatus()
 #else
         reply[7U] = 10U;
         reply[8U] = dmrDMOTX.getSpace();
-#endif
+#endif // defined(DUPLEX)
     } else {
         reply[7U] = 0U;
         reply[8U] = 0U;
     }
+#else
+    reply[7U] = 0U;
+    reply[8U] = 0U;
+#endif // defined(ENABLE_DMR)
 
     reply[9U] = 0U;
 
+#if defined(ENABLE_P25)
     if (m_p25Enable)
         reply[10U] = p25TX.getSpace();
     else
         reply[10U] = 0U;
+#else        
+    reply[10U] = 0U;
+#endif // defined(ENABLE_P25)
 
+#if defined(ENABLE_NXDN)
     if (m_nxdnEnable)
         reply[11U] = nxdnTX.getSpace();
     else
         reply[11U] = 0U;
+#else        
+    reply[11U] = 0U;
+#endif // defined(ENABLE_NXDN)
 
     writeInt(1U, reply, 12);
 }
@@ -1089,20 +1146,28 @@ uint8_t SerialPort::setConfig(const uint8_t* data, uint8_t length)
 
     io.setDeviations(dmrTXLevel, p25TXLevel, nxdnTXLevel);
 
+#if defined(ENABLE_P25)
     p25TX.setPreambleCount(fdmaPreamble);
+#endif // defined(ENABLE_P25)
+#if defined(ENABLE_DMR)
     dmrDMOTX.setPreambleCount(fdmaPreamble);
+#endif // defined(ENABLE_DMR)
     //nxdnTX.setPreambleCount(fdmaPreamble);
 
+#if defined(ENABLE_P25)
     p25RX.setNAC(nac);
+#endif // defined(ENABLE_P25)
 
+#if defined(ENABLE_DMR)
 #if defined(DUPLEX)
     dmrTX.setColorCode(colorCode);
     dmrRX.setColorCode(colorCode);
     dmrRX.setRxDelay(dmrRxDelay);
     dmrIdleRX.setColorCode(colorCode);
-#endif
+#endif // defined(DUPLEX)
 
     dmrDMORX.setColorCode(colorCode);
+#endif // defined(ENABLE_DMR)
 
     if (m_modemState != STATE_IDLE && isCalState(m_modemState)) {
         io.updateCal(calRelativeState(m_modemState));
@@ -1149,116 +1214,176 @@ void SerialPort::setMode(DVM_STATE modemState)
     switch (modemState) {
     case STATE_DMR:
         DEBUG1("SerialPort: setMode(): mode set to DMR");
+#if defined(ENABLE_P25)        
         p25RX.reset();
+#endif // defined(ENABLE_P25)
+#if defined(ENABLE_NXDN)
         nxdnRX.reset();
+#endif // defined(ENABLE_NXDN)
         cwIdTX.reset();
         break;
     case STATE_P25:
         DEBUG1("SerialPort: setMode(): mode set to P25");
+#if defined(ENABLE_DMR)
 #if defined(DUPLEX)
         dmrIdleRX.reset();
         dmrRX.reset();
-#endif
+#endif // defined(DUPLEX)
         dmrDMORX.reset();
+#endif // defined(ENABLE_DMR)
+#if defined(ENABLE_NXDN)
         nxdnRX.reset();
+#endif // defined(ENABLE_NXDN)
         cwIdTX.reset();
         break;
     case STATE_NXDN:
         DEBUG1("SerialPort: setMode(): mode set to NXDN");
+#if defined(ENABLE_DMR)
 #if defined(DUPLEX)
         dmrIdleRX.reset();
         dmrRX.reset();
-#endif
+#endif // defined(DUPLEX)
         dmrDMORX.reset();
+#endif // defined(ENABLE_DMR)
+#if defined(ENABLE_P25)        
         p25RX.reset();
+#endif // defined(ENABLE_P25)
         cwIdTX.reset();
         break;
     case STATE_DMR_CAL:
         DEBUG1("SerialPort: setMode(): mode set to DMR Calibrate");
+#if defined(ENABLE_DMR)
 #if defined(DUPLEX)
         dmrIdleRX.reset();
         dmrRX.reset();
-#endif
+#endif // defined(DUPLEX)
         dmrDMORX.reset();
+#endif // defined(ENABLE_DMR)
+#if defined(ENABLE_P25)        
         p25RX.reset();
+#endif // defined(ENABLE_P25)
+#if defined(ENABLE_NXDN)
         nxdnRX.reset();
+#endif // defined(ENABLE_NXDN)
         cwIdTX.reset();
         break;
     case STATE_P25_CAL:
         DEBUG1("SerialPort: setMode(): mode set to P25 Calibrate");
+#if defined(ENABLE_DMR)
 #if defined(DUPLEX)
         dmrIdleRX.reset();
         dmrRX.reset();
-#endif
+#endif // defined(DUPLEX)
         dmrDMORX.reset();
+#endif // defined(ENABLE_DMR)
+#if defined(ENABLE_P25)        
         p25RX.reset();
+#endif // defined(ENABLE_P25)
+#if defined(ENABLE_NXDN)
         nxdnRX.reset();
+#endif // defined(ENABLE_NXDN)
         cwIdTX.reset();
         break;
     case STATE_NXDN_CAL:
         DEBUG1("SerialPort: setMode(): mode set to NXDN Calibrate");
+#if defined(ENABLE_DMR)
 #if defined(DUPLEX)
         dmrIdleRX.reset();
         dmrRX.reset();
-#endif
+#endif // defined(DUPLEX)
         dmrDMORX.reset();
+#endif // defined(ENABLE_DMR)
+#if defined(ENABLE_P25)        
         p25RX.reset();
+#endif // defined(ENABLE_P25)
+#if defined(ENABLE_NXDN)
         nxdnRX.reset();
+#endif // defined(ENABLE_NXDN)
         cwIdTX.reset();
         break;
     case STATE_RSSI_CAL:
         DEBUG1("SerialPort: setMode(): mode set to RSSI Calibrate");
+#if defined(ENABLE_DMR)
 #if defined(DUPLEX)
         dmrIdleRX.reset();
         dmrRX.reset();
-#endif
+#endif // defined(DUPLEX)
         dmrDMORX.reset();
+#endif // defined(ENABLE_DMR)
+#if defined(ENABLE_P25)        
         p25RX.reset();
+#endif // defined(ENABLE_P25)
+#if defined(ENABLE_NXDN)
         nxdnRX.reset();
+#endif // defined(ENABLE_NXDN)
         cwIdTX.reset();
         break;
     case STATE_DMR_LF_CAL:
         DEBUG1("SerialPort: setMode(): mode set to DMR 80Hz Calibrate");
+#if defined(ENABLE_DMR)
 #if defined(DUPLEX)
         dmrIdleRX.reset();
         dmrRX.reset();
-#endif
+#endif // defined(DUPLEX)
         dmrDMORX.reset();
+#endif // defined(ENABLE_DMR)
+#if defined(ENABLE_P25)        
         p25RX.reset();
+#endif // defined(ENABLE_P25)
+#if defined(ENABLE_NXDN)
         nxdnRX.reset();
+#endif // defined(ENABLE_NXDN)
         cwIdTX.reset();
         break;
     case STATE_DMR_CAL_1K:
         DEBUG1("SerialPort: setMode(): mode set to DMR BS 1031Hz Calibrate");
+#if defined(ENABLE_DMR)
 #if defined(DUPLEX)
         dmrIdleRX.reset();
         dmrRX.reset();
-#endif
+#endif // defined(DUPLEX)
         dmrDMORX.reset();
+#endif // defined(ENABLE_DMR)
+#if defined(ENABLE_P25)        
         p25RX.reset();
+#endif // defined(ENABLE_P25)
+#if defined(ENABLE_NXDN)
         nxdnRX.reset();
+#endif // defined(ENABLE_NXDN)
         cwIdTX.reset();
         break;
     case STATE_DMR_DMO_CAL_1K:
         DEBUG1("SerialPort: setMode(): mode set to DMR MS 1031Hz Calibrate");
+#if defined(ENABLE_DMR)
 #if defined(DUPLEX)
         dmrIdleRX.reset();
         dmrRX.reset();
-#endif
+#endif // defined(DUPLEX)
         dmrDMORX.reset();
+#endif // defined(ENABLE_DMR)
+#if defined(ENABLE_P25)        
         p25RX.reset();
+#endif // defined(ENABLE_P25)
+#if defined(ENABLE_NXDN)
         nxdnRX.reset();
+#endif // defined(ENABLE_NXDN)
         cwIdTX.reset();
         break;
     case STATE_P25_CAL_1K:
         DEBUG1("SerialPort: setMode(): mode set to P25 1011Hz Calibrate");
+#if defined(ENABLE_DMR)
 #if defined(DUPLEX)
         dmrIdleRX.reset();
         dmrRX.reset();
-#endif
+#endif // defined(DUPLEX)
         dmrDMORX.reset();
+#endif // defined(ENABLE_DMR)
+#if defined(ENABLE_P25)        
         p25RX.reset();
+#endif // defined(ENABLE_P25)
+#if defined(ENABLE_NXDN)
         nxdnRX.reset();
+#endif // defined(ENABLE_NXDN)
         cwIdTX.reset();
         break;
     default:

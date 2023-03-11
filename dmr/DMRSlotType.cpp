@@ -32,6 +32,8 @@
 
 using namespace dmr;
 
+#if defined(ENABLE_DMR)
+
 // ---------------------------------------------------------------------------
 //  Constants
 // ---------------------------------------------------------------------------
@@ -334,3 +336,5 @@ uint32_t DMRSlotType::getSyndrome1987(uint32_t pattern) const
 
     return pattern;
 }
+
+#endif // defined(ENABLE_DMR)

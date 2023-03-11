@@ -35,6 +35,8 @@
 #include "Defines.h"
 #include "SerialBuffer.h"
 
+#if defined(ENABLE_P25)
+
 namespace p25
 {
     // ---------------------------------------------------------------------------
@@ -102,5 +104,7 @@ namespace p25
         void writeSilence();
     };
 } // namespace p25
+
+#endif // defined(ENABLE_P25)
 
 #endif // __P25_TX_H__

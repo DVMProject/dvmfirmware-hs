@@ -33,6 +33,8 @@
 
 using namespace nxdn;
 
+#if defined(ENABLE_NXDN)
+
 // ---------------------------------------------------------------------------
 //  Constants
 // ---------------------------------------------------------------------------
@@ -138,3 +140,5 @@ uint8_t CalNXDN::write(const uint8_t* data, uint16_t length)
 
     return RSN_OK;
 }
+
+#endif // defined(ENABLE_NXDN)

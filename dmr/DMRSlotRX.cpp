@@ -36,7 +36,7 @@
 
 using namespace dmr;
 
-#if defined(DUPLEX)
+#if defined(ENABLE_DMR) && defined(DUPLEX)
 
 // ---------------------------------------------------------------------------
 //  Constants
@@ -417,4 +417,4 @@ void DMRSlotRX::writeRSSIData(uint8_t* frame)
 #endif
 }
 
-#endif // DUPLEX
+#endif // defined(ENABLE_DMR) && defined(DUPLEX)

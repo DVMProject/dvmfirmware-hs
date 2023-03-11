@@ -145,6 +145,7 @@ void IO::process()
         m_rxBuffer.get(bit, control);
 
         if (m_modemState == STATE_DMR) {
+#if defined(ENABLE_DMR)            
             /** Digital Mobile Radio */
 #if defined(DUPLEX)
             if (m_duplex) {
@@ -157,15 +158,20 @@ void IO::process()
                 dmrDMORX.databit(bit);
 #else
             dmrDMORX.databit(bit);
-#endif
+#endif // defined(DUPLEX)
+#endif // defined(ENABLE_DMR)
         }
         else if (m_modemState == STATE_P25) {
+#if defined(ENABLE_P25)
             /** Project 25 */
             p25RX.databit(bit);
+#endif // defined(ENABLE_P25)
         }
         else if (m_modemState == STATE_NXDN) {
+#if defined(ENABLE_NXDN)
             /** Next Generation Digital Narrowband */
             nxdnRX.databit(bit);
+#endif // defined(ENABLE_NXDN)
         }
     }
 }

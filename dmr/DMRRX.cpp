@@ -34,7 +34,7 @@
 
 using namespace dmr;
 
-#if defined(DUPLEX)
+#if defined(ENABLE_DMR) && defined(DUPLEX)
 
 // ---------------------------------------------------------------------------
 //  Public Class Members
@@ -106,4 +106,4 @@ void DMRRX::setRxDelay(uint8_t delay)
     m_slot2RX.setRxDelay(delay);
 }
 
-#endif // DUPLEX
+#endif // defined(ENABLE_DMR) && defined(DUPLEX)

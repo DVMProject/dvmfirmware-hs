@@ -34,7 +34,7 @@
 #include "Defines.h"
 #include "dmr/DMRDefines.h"
 
-#if defined(DUPLEX)
+#if defined(ENABLE_DMR) && defined(DUPLEX)
 
 namespace dmr
 {
@@ -77,6 +77,6 @@ namespace dmr
     };
 } // namespace dmr
 
-#endif // DUPLEX
+#endif // defined(ENABLE_DMR) && defined(DUPLEX)
 
 #endif // __DMR_IDLE_RX_H__

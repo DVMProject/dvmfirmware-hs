@@ -32,6 +32,8 @@
 
 using namespace p25;
 
+#if defined(ENABLE_P25)
+
 // ---------------------------------------------------------------------------
 //  Constants
 // ---------------------------------------------------------------------------
@@ -143,3 +145,5 @@ uint8_t CalP25::write(const uint8_t* data, uint8_t length)
 
     return RSN_OK;
 }
+
+#endif // defined(ENABLE_P25)

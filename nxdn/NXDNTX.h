@@ -35,6 +35,8 @@
 #include "Defines.h"
 #include "SerialBuffer.h"
 
+#if defined(ENABLE_NXDN)
+
 namespace nxdn
 {
     // ---------------------------------------------------------------------------
@@ -99,5 +101,7 @@ namespace nxdn
         void writeSilence();
     };
 } // namespace nxdn
+
+#endif // defined(ENABLE_NXDN)
 
 #endif // __NXDN_TX_H__

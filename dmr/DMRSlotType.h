@@ -32,6 +32,8 @@
 
 #include "Defines.h"
 
+#if defined(ENABLE_DMR)
+
 namespace dmr
 {
     // ---------------------------------------------------------------------------
@@ -56,5 +58,7 @@ namespace dmr
         uint32_t getSyndrome1987(uint32_t pattern) const;
     };
 } // namespace dmr
+
+#endif // defined(ENABLE_DMR)
 
 #endif // __DMR_SLOT_TYPE_H__

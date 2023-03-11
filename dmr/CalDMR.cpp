@@ -34,6 +34,8 @@
 
 using namespace dmr;
 
+#if defined(ENABLE_DMR)
+
 // ---------------------------------------------------------------------------
 //  Constants
 // ---------------------------------------------------------------------------
@@ -289,3 +291,5 @@ uint8_t CalDMR::write(const uint8_t* data, uint8_t length)
 
     return RSN_OK;
 }
+
+#endif // defined(ENABLE_DMR)

@@ -35,6 +35,8 @@
 #include "Defines.h"
 #include "p25/P25Defines.h"
 
+#if defined(ENABLE_P25)
+
 namespace p25
 {
     // ---------------------------------------------------------------------------
@@ -97,5 +99,7 @@ namespace p25
         bool decodeNid();
     };
 } // namespace p25
+
+#endif // defined(ENABLE_P25)
 
 #endif // __P25_RX_H__

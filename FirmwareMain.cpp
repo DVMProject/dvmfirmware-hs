@@ -66,6 +66,7 @@ bool m_dcd = false;
 uint8_t m_control;
 
 /** DMR BS */
+#if defined(ENABLE_DMR)
 #if defined(DUPLEX)
 dmr::DMRIdleRX dmrIdleRX;
 dmr::DMRRX dmrRX;
@@ -75,19 +76,30 @@ dmr::DMRTX dmrTX;
 /** DMR MS-DMO */
 dmr::DMRDMORX dmrDMORX;
 dmr::DMRDMOTX dmrDMOTX;
+#endif
 
 /** P25 */
+#if defined(ENABLE_P25)
 p25::P25RX p25RX;
 p25::P25TX p25TX;
+#endif
 
 /** NXDN */
+#if defined(ENABLE_NXDN)
 nxdn::NXDNRX nxdnRX;
 nxdn::NXDNTX nxdnTX;
+#endif
 
 /** Calibration */
+#if defined(ENABLE_DMR)
 dmr::CalDMR calDMR;
+#endif
+#if defined(ENABLE_P25)
 p25::CalP25 calP25;
+#endif
+#if defined(ENABLE_NXDN)
 nxdn::CalNXDN calNXDN;
+#endif
 CalRSSI calRSSI;
 
 /** CW */
@@ -113,6 +125,7 @@ void loop()
     io.process();
 
     // The following is for transmitting
+#if defined(ENABLE_DMR)
     if (m_dmrEnable && m_modemState == STATE_DMR) {
 #if defined(DUPLEX)
         if (m_duplex)
@@ -121,25 +134,36 @@ void loop()
             dmrDMOTX.process();
 #else
         dmrDMOTX.process();
-#endif
+#endif // defined(DUPLEX)
     }
+#endif // defined(ENABLE_DMR)
 
+#if defined(ENABLE_P25)
     if (m_p25Enable && m_modemState == STATE_P25)
         p25TX.process();
+#endif // defined(ENABLE_P25)
 
+#if defined(ENABLE_NXDN)
     if (m_nxdnEnable && m_modemState == STATE_NXDN)
         nxdnTX.process();
+#endif // defined(ENABLE_NXDN)
 
+#if defined(ENABLE_DMR)
     if (m_modemState == STATE_DMR_DMO_CAL_1K || m_modemState == STATE_DMR_CAL_1K ||
         m_modemState == STATE_DMR_LF_CAL || m_modemState == STATE_DMR_CAL ||
         m_modemState == STATE_INT_CAL)
         calDMR.process();
+#endif // defined(ENABLE_DMR)
 
+#if defined(ENABLE_P25)
     if (m_modemState == STATE_P25_CAL_1K || m_modemState == STATE_P25_CAL)
         calP25.process();
+#endif // defined(ENABLE_P25)
 
+#if defined(ENABLE_NXDN)
     if (m_modemState == STATE_NXDN_CAL)
         calNXDN.process();
+#endif // defined(ENABLE_NXDN)
 
     if (m_modemState == STATE_RSSI_CAL)
         calRSSI.process();

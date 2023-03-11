@@ -35,6 +35,8 @@
 #include "Defines.h"
 #include "dmr/DMRDefines.h"
 
+#if defined(ENABLE_DMR)
+
 namespace dmr
 {
     // ---------------------------------------------------------------------------
@@ -86,5 +88,7 @@ namespace dmr
         uint32_t m_count;
     };
 } // namespace dmr
+
+#endif // defined(ENABLE_DMR)
 
 #endif // __CAL_DMR_H__

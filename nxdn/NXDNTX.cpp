@@ -35,6 +35,8 @@
 
 using namespace nxdn;
 
+#if defined(ENABLE_NXDN)
+
 // ---------------------------------------------------------------------------
 //  Public Class Members
 // ---------------------------------------------------------------------------
@@ -241,3 +243,5 @@ void NXDNTX::writeSilence()
         io.write(&bit, 1);
     }
 }
+
+#endif // defined(ENABLE_NXDN)

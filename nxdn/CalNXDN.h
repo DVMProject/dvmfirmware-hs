@@ -35,6 +35,8 @@
 #include "Defines.h"
 #include "nxdn/NXDNDefines.h"
 
+#if defined(ENABLE_NXDN)
+
 namespace nxdn
 {
     // ---------------------------------------------------------------------------
@@ -69,5 +71,7 @@ namespace nxdn
         uint8_t m_audioSeq;
     };
 } // namespace nxdn
+
+#endif // defined(ENABLE_NXDN)
 
 #endif // __CAL_NXDN_H__

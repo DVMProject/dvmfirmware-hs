@@ -33,6 +33,8 @@
 #include "Defines.h"
 #include "p25/P25Defines.h"
 
+#if defined(ENABLE_P25)
+
 namespace p25
 {
     // ---------------------------------------------------------------------------
@@ -66,5 +68,7 @@ namespace p25
         P25CAL1K m_state;
     };
 } // namespace p25
+
+#endif // defined(ENABLE_P25)
 
 #endif // __CAL_P25_H__

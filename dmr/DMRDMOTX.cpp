@@ -35,6 +35,8 @@
 
 using namespace dmr;
 
+#if defined(ENABLE_DMR)
+
 // ---------------------------------------------------------------------------
 //  Constants
 // ---------------------------------------------------------------------------
@@ -175,3 +177,5 @@ void DMRDMOTX::writeByte(uint8_t c)
         io.write(&bit, 1);
     }
 }
+
+#endif // defined(ENABLE_DMR)

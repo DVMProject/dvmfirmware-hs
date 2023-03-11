@@ -110,28 +110,40 @@ extern SerialPort serial;
 extern IO io;
 
 /** DMR BS */
+#if defined(ENABLE_DMR)
 #if defined(DUPLEX)
 extern dmr::DMRIdleRX dmrIdleRX;
 extern dmr::DMRRX dmrRX;
-#endif
+#endif // defined(DUPLEX)
 extern dmr::DMRTX dmrTX;
 
 /** DMR MS-DMO */
 extern dmr::DMRDMORX dmrDMORX;
 extern dmr::DMRDMOTX dmrDMOTX;
+#endif // defined(ENABLE_DMR)
 
 /** P25 BS */
+#if defined(ENABLE_P25)
 extern p25::P25RX p25RX;
 extern p25::P25TX p25TX;
+#endif // defined(ENABLE_P25)
 
 /** NXDN BS */
+#if defined(ENABLE_NXDN)
 extern nxdn::NXDNRX nxdnRX;
 extern nxdn::NXDNTX nxdnTX;
+#endif // defined(ENABLE_NXDN)
 
 /** Calibration */
+#if defined(ENABLE_DMR)
 extern dmr::CalDMR calDMR;
+#endif // defined(ENABLE_DMR)
+#if defined(ENABLE_P25)
 extern p25::CalP25 calP25;
+#endif // defined(ENABLE_P25)
+#if defined(ENABLE_NXDN)
 extern nxdn::CalNXDN calNXDN;
+#endif // defined(ENABLE_NXDN)
 extern CalRSSI calRSSI;
 
 /** CW */

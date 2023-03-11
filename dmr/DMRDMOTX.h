@@ -37,6 +37,8 @@
 #include "dmr/DMRDefines.h"
 #include "SerialBuffer.h"
 
+#if defined(ENABLE_DMR)
+
 namespace dmr
 {
     // ---------------------------------------------------------------------------
@@ -81,5 +83,7 @@ namespace dmr
         void writeByte(uint8_t c);
     };
 } // namespace dmr
+
+#endif // defined(ENABLE_DMR)
 
 #endif // __DMR_DMO_TX_H__

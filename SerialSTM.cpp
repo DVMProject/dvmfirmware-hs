@@ -36,14 +36,6 @@
 #if defined(STM32F10X_MD)
 #include <stm32f10x_flash.h>
 
-#if defined(STM32_USB_HOST)
-#include <usb_serial.h>
-#endif
-
-#if defined(STM32_USART1_HOST) && defined(STM32_USB_HOST)
-#error "You have to select STM32_USART1_HOST or STM32_USB_HOST, but not both"
-#endif
-
 // ---------------------------------------------------------------------------
 //  Constants
 // ---------------------------------------------------------------------------
@@ -279,11 +271,7 @@ void SerialPort::beginInt(uint8_t n, int speed)
 {
     switch (n) {
     case 1U:
-#if defined(STM32_USART1_HOST)
         InitUSART1(speed);
-#elif defined(STM32_USB_HOST)
-        usbserial.begin();
-#endif
         break;
     case 3U:
         InitUSART2(speed);
@@ -302,11 +290,7 @@ int SerialPort::availableInt(uint8_t n)
 {
     switch (n) {
     case 1U:
-#if defined(STM32_USART1_HOST)
         return m_USART1.available();
-#elif defined(STM32_USB_HOST)
-        return usbserial.available();
-#endif
     case 3U:
         m_USART2.available();
     default:
@@ -323,12 +307,7 @@ int SerialPort::availableForWriteInt(uint8_t n)
 {
     switch (n) {
     case 1U:
-#if defined(STM32_USART1_HOST)
         return m_USART1.availableForWrite();
-#elif defined(STM32_USB_HOST)
-        //return usbserial.availableForWrite();
-        return 1U; // we don't have this -- so fake it
-#endif
     case 3U:
         return m_USART2.availableForWrite();
     default:
@@ -345,11 +324,7 @@ uint8_t SerialPort::readInt(uint8_t n)
 {
     switch (n) {
     case 1U:
-#if defined(STM32_USART1_HOST)
         return m_USART1.read();
-#elif defined(STM32_USB_HOST)
-        return usbserial.read();
-#endif
     case 3U:
         return m_USART2.read();
     default:
@@ -369,15 +344,9 @@ void SerialPort::writeInt(uint8_t n, const uint8_t* data, uint16_t length, bool 
 {
     switch (n) {
     case 1U:
-#if defined(STM32_USART1_HOST)
         m_USART1.write(data, length);
         if (flush)
             m_USART1.flush();
-#elif defined(STM32_USB_HOST)
-        usbserial.write(data, length);
-        if (flush)
-            usbserial.flush();
-#endif
         break;
     case 3U:
         m_USART2.write(data, length);

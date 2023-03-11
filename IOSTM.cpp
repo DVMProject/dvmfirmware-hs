@@ -100,7 +100,7 @@
 #define PIN_COS_LED          GPIO_Pin_13
 #define PORT_COS_LED         GPIOB
 
-#elif defined(ZUMSPOT_ADF7021) || defined(SKYBRIDGE_HS) || defined(LONESTAR_USB)
+#elif defined(ZUMSPOT_ADF7021) || defined(SKYBRIDGE_HS)
 
 #define PIN_SCLK             GPIO_Pin_5
 #define PORT_SCLK            GPIOB
@@ -162,11 +162,7 @@
 #define PIN_DEB              GPIO_Pin_9
 #define PORT_DEB             GPIOB
 
-#if defined(STM32_USB_HOST)
-#define PIN_NXDN_LED         GPIO_Pin_1
-#else
 #define PIN_NXDN_LED         GPIO_Pin_7
-#endif
 #define PORT_NXDN_LED        GPIOA
 
 #define PIN_DMR_LED          GPIO_Pin_13
@@ -248,7 +244,7 @@
 #define PORT_COS_LED         GPIOB
 
 #else
-#error "Either PI_HAT_7021_REV_02, ZUMSPOT_ADF7021, LONESTAR_USB, MMDVM_HS_HAT_REV12, MMDVM_HS_DUAL_HAT_REV10, NANO_HOTSPOT, NANO_DV_REV11, or SKYBRIDGE_HS need to be defined"
+#error "Either PI_HAT_7021_REV_02, ZUMSPOT_ADF7021, MMDVM_HS_HAT_REV12, MMDVM_HS_DUAL_HAT_REV10, NANO_HOTSPOT, NANO_DV_REV11, or SKYBRIDGE_HS need to be defined"
 #endif
 
 // ---------------------------------------------------------------------------
@@ -276,7 +272,7 @@ extern "C" {
     }
 #endif // BIDIR_DATA_PIN
 
-#elif defined(ZUMSPOT_ADF7021) || defined(LONESTAR_USB) || defined(LIBRE_KIT_ADF7021) || defined(MMDVM_HS_HAT_REV12) || defined(MMDVM_HS_DUAL_HAT_REV10) || defined(NANO_HOTSPOT) || defined(NANO_DV_REV11) || defined(D2RG_MMDVM_HS) || defined(SKYBRIDGE_HS)
+#elif defined(ZUMSPOT_ADF7021) || defined(LIBRE_KIT_ADF7021) || defined(MMDVM_HS_HAT_REV12) || defined(MMDVM_HS_DUAL_HAT_REV10) || defined(NANO_HOTSPOT) || defined(NANO_DV_REV11) || defined(D2RG_MMDVM_HS) || defined(SKYBRIDGE_HS)
 
 #if defined(BIDIR_DATA_PIN)
     void EXTI3_IRQHandler(void) {
@@ -375,7 +371,7 @@ void IO::delayBit()
     delay_ns();
 }
 
-#if defined(ZUMSPOT_ADF7021) || defined(LONESTAR_USB) || defined(SKYBRIDGE_HS)
+#if defined(ZUMSPOT_ADF7021) || defined(SKYBRIDGE_HS)
 /// <summary>
 /// 
 /// </summary>
@@ -477,7 +473,7 @@ bool IO::CLK()
 //  Private Class Members
 // ---------------------------------------------------------------------------
 
-#if defined(ZUMSPOT_ADF7021) || defined(LONESTAR_USB) || defined(SKYBRIDGE_HS)
+#if defined(ZUMSPOT_ADF7021) || defined(SKYBRIDGE_HS)
 /// <summary>
 /// 
 /// </summary>
@@ -539,11 +535,11 @@ void IO::initInt()
 
 #if defined(PI_HAT_7021_REV_02)
     GPIO_PinRemapConfig(GPIO_Remap_SWJ_Disable, ENABLE);
-#elif defined(ZUMSPOT_ADF7021) || defined(LONESTAR_USB) || defined(LIBRE_KIT_ADF7021) || defined(MMDVM_HS_HAT_REV12) || defined(MMDVM_HS_DUAL_HAT_REV10) || defined(NANO_HOTSPOT) || defined(NANO_DV_REV11) || defined(D2RG_MMDVM_HS) || defined(SKYBRIDGE_HS)
+#elif defined(ZUMSPOT_ADF7021) || defined(LIBRE_KIT_ADF7021) || defined(MMDVM_HS_HAT_REV12) || defined(MMDVM_HS_DUAL_HAT_REV10) || defined(NANO_HOTSPOT) || defined(NANO_DV_REV11) || defined(D2RG_MMDVM_HS) || defined(SKYBRIDGE_HS)
     GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable, ENABLE);
 #endif
 
-#if defined(ZUMSPOT_ADF7021) || defined(LONESTAR_USB) || defined(SKYBRIDGE_HS)
+#if defined(ZUMSPOT_ADF7021) || defined(SKYBRIDGE_HS)
     // Pin defines if the board has a single ADF7021 or double
     GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_InitStruct.GPIO_Pin = PIN_SGL_DBL;
@@ -566,30 +562,12 @@ void IO::initInt()
 
 #endif
 
-#if defined(STM32_USB_HOST)
-  // Pin PA11,PA12 = LOW, USB Reset
-    GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_11 | GPIO_Pin_12;
-    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_Out_PP;
-    GPIO_Init(GPIOA, &GPIO_InitStruct);
-    GPIO_WriteBit(GPIOA, GPIO_Pin_11, Bit_RESET);
-    GPIO_WriteBit(GPIOA, GPIO_Pin_12, Bit_RESET);
-
-#endif
-
-#if defined(LONG_USB_RESET)
-    // 10 ms delay
-    delayUS(10000U);
-#else
     volatile unsigned int delay;
     for (delay = 0; delay < 512; delay++);
-#endif
 
-#if !defined(STM32_USB_HOST)
     GPIO_InitStruct.GPIO_Pin = GPIO_Pin_11 | GPIO_Pin_12;
     GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN_FLOATING;
     GPIO_Init(GPIOA, &GPIO_InitStruct);
-#endif
 
     RCC_USBCLKConfig(RCC_USBCLKSource_PLLCLK_1Div5);
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_USB, ENABLE);
@@ -724,7 +702,7 @@ void IO::initInt()
     EXTI_InitStructure.EXTI_Line = EXTI_Line14;
 #endif
 
-#elif defined(ZUMSPOT_ADF7021) || defined(LONESTAR_USB) || defined(LIBRE_KIT_ADF7021) || defined(MMDVM_HS_HAT_REV12) || defined(MMDVM_HS_DUAL_HAT_REV10) || defined(NANO_HOTSPOT) || defined(NANO_DV_REV11) || defined(D2RG_MMDVM_HS) || defined(SKYBRIDGE_HS)
+#elif defined(ZUMSPOT_ADF7021) || defined(LIBRE_KIT_ADF7021) || defined(MMDVM_HS_HAT_REV12) || defined(MMDVM_HS_DUAL_HAT_REV10) || defined(NANO_HOTSPOT) || defined(NANO_DV_REV11) || defined(D2RG_MMDVM_HS) || defined(SKYBRIDGE_HS)
 
 #if defined(BIDIR_DATA_PIN)
     // Connect EXTI3 Line
@@ -742,7 +720,7 @@ void IO::initInt()
     // Connect EXTI5 Line
     GPIO_EXTILineConfig(PORT_TXD2_INT, PIN_TXD2_INT);
     // Configure EXT5 line
-#if defined(ZUMSPOT_ADF7021) || defined(LONESTAR_USB) || defined(SKYBRIDGE_HS)
+#if defined(ZUMSPOT_ADF7021) || defined(SKYBRIDGE_HS)
     EXTI_InitStructure2.EXTI_Line = EXTI_Line8;
 #else
     EXTI_InitStructure2.EXTI_Line = EXTI_Line5;
@@ -779,7 +757,7 @@ void IO::startInt()
 
     NVIC_InitStructure.NVIC_IRQChannel = EXTI15_10_IRQn;
 
-#elif defined(ZUMSPOT_ADF7021) || defined(LONESTAR_USB) || defined(LIBRE_KIT_ADF7021) || defined(MMDVM_HS_HAT_REV12) || defined(MMDVM_HS_DUAL_HAT_REV10) || defined(NANO_HOTSPOT) || defined(NANO_DV_REV11) || defined(D2RG_MMDVM_HS) || defined(SKYBRIDGE_HS)
+#elif defined(ZUMSPOT_ADF7021) || defined(LIBRE_KIT_ADF7021) || defined(MMDVM_HS_HAT_REV12) || defined(MMDVM_HS_DUAL_HAT_REV10) || defined(NANO_HOTSPOT) || defined(NANO_DV_REV11) || defined(D2RG_MMDVM_HS) || defined(SKYBRIDGE_HS)
 
 #if defined(BIDIR_DATA_PIN)
     // Enable and set EXTI3 Interrupt

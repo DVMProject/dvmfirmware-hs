@@ -15,9 +15,6 @@ OBJDIR_F4=obj_f4
 BINELF_F1=dvm-firmware-hs_f1.elf
 BINHEX_F1=dvm-firmware-hs_f1.hex
 BINBIN_F1=dvm-firmware-hs_f1.bin
-BINELF_F1BL=dvm-firmware-hs_f1bl.elf
-BINHEX_F1BL=dvm-firmware-hs_f1bl.hex
-BINBIN_F1BL=dvm-firmware-hs_f1bl.bin
 BINELF_F4=dvm-firwmare-hs_f4.elf
 BINHEX_F4=dvm-firmware-hs_f4.hex
 BINBIN_F4=dvm-firmware-hs_f4.bin
@@ -81,7 +78,6 @@ CSRC_STD_F4=$(wildcard $(STD_LIB_F4)/*.c)
 SYS_F4=$(wildcard $(SYS_DIR_F4)/*.c)
 STARTUP_F4=$(wildcard $(STARTUP_DIR_F4)/*.c)
 OBJ_F1=$(CXXSRC:./%.cpp=$(OBJDIR_F1)/%.o) $(CSRC_STD_F1:$(STD_LIB_F1)/%.c=$(OBJDIR_F1)/%.o) $(SYS_F1:$(SYS_DIR_F1)/%.c=$(OBJDIR_F1)/%.o) $(STARTUP_F1:$(STARTUP_DIR_F1)/%.c=$(OBJDIR_F1)/%.o) 
-OBJ_F1BL=$(CXXSRC:./%.cpp=$(OBJDIR_F1)/%.o) $(CSRC_STD_F1:$(STD_LIB_F1)/%.c=$(OBJDIR_F1)/%.o) $(SYS_F1:$(SYS_DIR_F1)/%.c=$(OBJDIR_F1)/%.o) $(STARTUP_F1:$(STARTUP_DIR_F1)/%.c=$(OBJDIR_F1)/%.o) $(CXX_USB_F1:$(USB_F1)/%.cpp=$(OBJDIR_F1)/%.o) $(C_USB_F1:$(USB_F1)/%.c=$(OBJDIR_F1)/%.o)
 OBJ_F4=$(CXXSRC:./%.cpp=$(OBJDIR_F4)/%.o) $(CSRC_STD_F4:$(STD_LIB_F4)/%.c=$(OBJDIR_F4)/%.o) $(SYS_F4:$(SYS_DIR_F4)/%.c=$(OBJDIR_F4)/%.o) $(STARTUP_F4:$(STARTUP_DIR_F4)/%.c=$(OBJDIR_F4)/%.o)
 
 # MCU flags
@@ -90,7 +86,6 @@ MCFLAGS_F4=-mcpu=cortex-m4 -mthumb -mlittle-endian -mfpu=fpv4-sp-d16 -mfloat-abi
 
 # Compile flags
 DEFS_F1_HS=-DUSE_STDPERIPH_DRIVER -DSTM32F10X_MD -DHSE_VALUE=$(OSC) -DVECT_TAB_OFFSET=0x0 -DMADEBYMAKEFILE
-DEFS_F1_HS_BL=-DUSE_STDPERIPH_DRIVER -DSTM32F10X_MD -DHSE_VALUE=$(OSC) -DVECT_TAB_OFFSET=0x2000 -DMADEBYMAKEFILE
 # STM32F446 Pi-Hat board:
 DEFS_PI_F4=-DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DSTM32F446xx -DSTM32F4_PI -DHSE_VALUE=$(OSC) -DMADEBYMAKEFILE
 # STM32F4 Nucleo-64 F446RE board:
@@ -104,7 +99,6 @@ CXXFLAGS_F4=-c $(MCFLAGS_F4) $(INCLUDES_F4)
 # Linker flags
 LDFLAGS_F1_N =-T stm32f10x_normal.ld $(MCFLAGS_F1) $(INCLUDES_LIBS_F1)
 LDFLAGS_F1_D =-T stm32f10x_debug.ld $(MCFLAGS_F1) $(INCLUDES_LIBS_F1)
-LDFLAGS_F1_BL =-T stm32f10x_bootloader.ld $(MCFLAGS_F1) $(INCLUDES_LIBS_F1)
 LDFLAGS_F4 =-T stm32f4xx_link.ld $(MCFLAGS_F4) $(INCLUDES_LIBS_F4)
 LDFLAGS_F4_D =-T stm32f4xx_link_debug.ld $(MCFLAGS_F4) $(INCLUDES_LIBS_F4)
 
@@ -114,7 +108,7 @@ CXXFLAGS=-Os -g -fno-exceptions -ffunction-sections -fdata-sections -fno-builtin
 LDFLAGS=-Os -g --specs=nano.specs --specs=nosys.specs
 
 # Build Rules
-.PHONY: all release_f1 release_f4 hs bl pi-f4 f446 clean
+.PHONY: all release_f1 release_f4 hs pi-f4 f446 clean
 
 all: hs
 
@@ -126,12 +120,6 @@ zumspot-adf7021: hs
 zumspot-adf7021-duplex: CFLAGS+=-DDUPLEX
 zumspot-adf7021-duplex: CXXFLAGS+=-DDUPLEX
 zumspot-adf7021-duplex: zumspot-adf7021
-zumspot-adf7021-usb: CFLAGS+=-DZUMSPOT_ADF7021 -DSTM32_USB_HOST
-zumspot-adf7021-usb: CXXFLAGS+=-DZUMSPOT_ADF7021 -DSTM32_USB_HOST
-zumspot-adf7021-usb: bl
-zumspot-adf7021-usb-duplex: CFLAGS+=-DDUPLEX
-zumspot-adf7021-usb-duplex: CXXFLAGS+=-DDUPLEX
-zumspot-adf7021-usb-duplex: zumspot-adf7021-usb
 
 pihat-7021-r2: CFLAGS+=-DPI_HAT_7021_REV_02 -DSTM32_USART1_HOST
 pihat-7021-r2: CXXFLAGS+=-DZUMSPOT_ADF7021 -DSTM32_USART1_HOST
@@ -139,10 +127,6 @@ pihat-7021-r2: hs
 pihat-7021-r2-duplex: CFLAGS+=-DDUPLEX
 pihat-7021-r2-duplex: CXXFLAGS+=-DDUPLEX
 pihat-7021-r2-duplex: pihat-7021-r2
-
-lonestar-usb: CFLAGS+=-DLONESTAR_USB -DSTM32_USB_HOST
-lonestar-usb: CXXFLAGS+=-DLONESTAR_USB -DSTM32_USB_HOST
-lonestar-usb: bl
 
 mmdvm-hs-hat: CFLAGS+=-DMMDVM_HS_HAT_REV12 -DSTM32_USART1_HOST
 mmdvm-hs-hat: CXXFLAGS+=-DMMDVM_HS_HAT_REV12 -DSTM32_USART1_HOST
@@ -156,12 +140,6 @@ mmdvm-hs-hat-dual: mmdvm-hs-hat
 mmdvm-hs-hat-dual-debug: CFLAGS+=-DDUPLEX
 mmdvm-hs-hat-dual-debug: CXXFLAGS+=-DDUPLEX
 mmdvm-hs-hat-dual-debug: mmdvm-hs-hat-debug
-mmdvm-hs-hat-usb: CFLAGS+=-DMMDVM_HS_HAT_REV12 -DSTM32_USB_HOST
-mmdvm-hs-hat-usb: CXXFLAGS+=-DMMDVM_HS_HAT_REV12 -DSTM32_USB_HOST
-mmdvm-hs-hat-usb: bl
-mmdvm-hs-hat-usb-dual: CFLAGS+=-DDUPLEX
-mmdvm-hs-hat-usb-dual: CXXFLAGS+=-DDUPLEX
-mmdvm-hs-hat-usb-dual: mmdvm-hs-hat-usb
 
 hs: CFLAGS+=$(CFLAGS_F1) $(DEFS_F1_HS)
 hs: CXXFLAGS+=$(CXXFLAGS_F1) $(DEFS_F1_HS)
@@ -173,18 +151,9 @@ hs-debug: CXXFLAGS+=$(CXXFLAGS_F1) $(DEFS_F1_HS)
 hs-debug: LDFLAGS+=$(LDFLAGS_F1_D)
 hs-debug: release_f1
 
-bl: CFLAGS+=$(CFLAGS_F1) $(DEFS_F1_HS_BL)
-bl: CXXFLAGS+=$(CXXFLAGS_F1) $(DEFS_F1_HS_BL)
-bl: LDFLAGS+=$(LDFLAGS_F1_BL)
-bl: release_f1bl
-
 release_f1: $(BINDIR)
 release_f1: $(OBJDIR_F1)
 release_f1: $(BINDIR)/$(BINBIN_F1)
-
-release_f1bl: $(BINDIR)
-release_f1bl: $(OBJDIR_F1)
-release_f1bl: $(BINDIR)/$(BINBIN_F1BL)
 
 release_f4: $(BINDIR)
 release_f4: $(OBJDIR_F4)
@@ -202,12 +171,6 @@ $(OBJDIR_F4):
 	mkdir $@/dmr
 	mkdir $@/p25
 	mkdir $@/nxdn
-
-$(BINDIR)/$(BINBIN_F1BL): $(BINDIR)/$(BINELF_F1BL)
-	$(CP) -O binary $< $@
-$(BINDIR)/$(BINELF_F1BL): $(OBJ_F1BL)
-	$(CXX) $(OBJ_F1BL) $(LDFLAGS) -o $@
-	$(SIZE) $(BINDIR)/$(BINELF_F1BL)
 
 $(BINDIR)/$(BINBIN_F1): $(BINDIR)/$(BINELF_F1)
 	$(CP) -O binary $< $@
@@ -249,4 +212,3 @@ clean:
 	test ! -d $(OBJDIR_F1) || rm -rf $(OBJDIR_F1)
 	test ! -d $(OBJDIR_F4) || rm -rf $(OBJDIR_F4)
 	rm -f $(BINDIR)/*.bin $(BINDIR)/*.elf
-

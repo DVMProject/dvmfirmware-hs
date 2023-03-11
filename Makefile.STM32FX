@@ -114,18 +114,12 @@ CXXFLAGS=-Os -g -fno-exceptions -ffunction-sections -fdata-sections -fno-builtin
 LDFLAGS=-Os -g --specs=nano.specs --specs=nosys.specs
 
 # Build Rules
-.PHONY: all release_f1 release_f4 hs bl pi-f4 f446 clean
+.PHONY: all release_f1bl bl f446 clean
 
 all: hs
 
 #error "Either PI_HAT_7021_REV_02, ZUMSPOT_ADF7021, LONESTAR_USB, MMDVM_HS_HAT_REV12, MMDVM_HS_DUAL_HAT_REV10, NANO_HOTSPOT, NANO_DV_REV11, or SKYBRIDGE_HS
 
-zumspot-adf7021: CFLAGS+=-DZUMSPOT_ADF7021 -DSTM32_USART1_HOST
-zumspot-adf7021: CXXFLAGS+=-DZUMSPOT_ADF7021 -DSTM32_USART1_HOST
-zumspot-adf7021: hs
-zumspot-adf7021-duplex: CFLAGS+=-DDUPLEX
-zumspot-adf7021-duplex: CXXFLAGS+=-DDUPLEX
-zumspot-adf7021-duplex: zumspot-adf7021
 zumspot-adf7021-usb: CFLAGS+=-DZUMSPOT_ADF7021 -DSTM32_USB_HOST
 zumspot-adf7021-usb: CXXFLAGS+=-DZUMSPOT_ADF7021 -DSTM32_USB_HOST
 zumspot-adf7021-usb: bl
@@ -133,29 +127,10 @@ zumspot-adf7021-usb-duplex: CFLAGS+=-DDUPLEX
 zumspot-adf7021-usb-duplex: CXXFLAGS+=-DDUPLEX
 zumspot-adf7021-usb-duplex: zumspot-adf7021-usb
 
-pihat-7021-r2: CFLAGS+=-DPI_HAT_7021_REV_02 -DSTM32_USART1_HOST
-pihat-7021-r2: CXXFLAGS+=-DZUMSPOT_ADF7021 -DSTM32_USART1_HOST
-pihat-7021-r2: hs
-pihat-7021-r2-duplex: CFLAGS+=-DDUPLEX
-pihat-7021-r2-duplex: CXXFLAGS+=-DDUPLEX
-pihat-7021-r2-duplex: pihat-7021-r2
-
 lonestar-usb: CFLAGS+=-DLONESTAR_USB -DSTM32_USB_HOST
 lonestar-usb: CXXFLAGS+=-DLONESTAR_USB -DSTM32_USB_HOST
 lonestar-usb: bl
 
-mmdvm-hs-hat: CFLAGS+=-DMMDVM_HS_HAT_REV12 -DSTM32_USART1_HOST
-mmdvm-hs-hat: CXXFLAGS+=-DMMDVM_HS_HAT_REV12 -DSTM32_USART1_HOST
-mmdvm-hs-hat: hs
-mmdvm-hs-hat-debug: CFLAGS+=-DMMDVM_HS_HAT_REV12 -DSTM32_USART1_HOST
-mmdvm-hs-hat-debug: CXXFLAGS+=-DMMDVM_HS_HAT_REV12 -DSTM32_USART1_HOST
-mmdvm-hs-hat-debug: hs-debug
-mmdvm-hs-hat-dual: CFLAGS+=-DDUPLEX
-mmdvm-hs-hat-dual: CXXFLAGS+=-DDUPLEX
-mmdvm-hs-hat-dual: mmdvm-hs-hat
-mmdvm-hs-hat-dual-debug: CFLAGS+=-DDUPLEX
-mmdvm-hs-hat-dual-debug: CXXFLAGS+=-DDUPLEX
-mmdvm-hs-hat-dual-debug: mmdvm-hs-hat-debug
 mmdvm-hs-hat-usb: CFLAGS+=-DMMDVM_HS_HAT_REV12 -DSTM32_USB_HOST
 mmdvm-hs-hat-usb: CXXFLAGS+=-DMMDVM_HS_HAT_REV12 -DSTM32_USB_HOST
 mmdvm-hs-hat-usb: bl
@@ -163,24 +138,10 @@ mmdvm-hs-hat-usb-dual: CFLAGS+=-DDUPLEX
 mmdvm-hs-hat-usb-dual: CXXFLAGS+=-DDUPLEX
 mmdvm-hs-hat-usb-dual: mmdvm-hs-hat-usb
 
-hs: CFLAGS+=$(CFLAGS_F1) $(DEFS_F1_HS)
-hs: CXXFLAGS+=$(CXXFLAGS_F1) $(DEFS_F1_HS)
-hs: LDFLAGS+=$(LDFLAGS_F1_N)
-hs: release_f1
-
-hs-debug: CFLAGS+=$(CFLAGS_F1) $(DEFS_F1_HS)
-hs-debug: CXXFLAGS+=$(CXXFLAGS_F1) $(DEFS_F1_HS)
-hs-debug: LDFLAGS+=$(LDFLAGS_F1_D)
-hs-debug: release_f1
-
 bl: CFLAGS+=$(CFLAGS_F1) $(DEFS_F1_HS_BL)
 bl: CXXFLAGS+=$(CXXFLAGS_F1) $(DEFS_F1_HS_BL)
 bl: LDFLAGS+=$(LDFLAGS_F1_BL)
 bl: release_f1bl
-
-release_f1: $(BINDIR)
-release_f1: $(OBJDIR_F1)
-release_f1: $(BINDIR)/$(BINBIN_F1)
 
 release_f1bl: $(BINDIR)
 release_f1bl: $(OBJDIR_F1)
@@ -208,12 +169,6 @@ $(BINDIR)/$(BINBIN_F1BL): $(BINDIR)/$(BINELF_F1BL)
 $(BINDIR)/$(BINELF_F1BL): $(OBJ_F1BL)
 	$(CXX) $(OBJ_F1BL) $(LDFLAGS) -o $@
 	$(SIZE) $(BINDIR)/$(BINELF_F1BL)
-
-$(BINDIR)/$(BINBIN_F1): $(BINDIR)/$(BINELF_F1)
-	$(CP) -O binary $< $@
-$(BINDIR)/$(BINELF_F1): $(OBJ_F1)
-	$(CXX) $(OBJ_F1) $(LDFLAGS) -o $@
-	$(SIZE) $(BINDIR)/$(BINELF_F1)
 
 $(BINDIR)/$(BINBIN_F4): $(BINDIR)/$(BINELF_F4)
 	$(CP) -O binary $< $@

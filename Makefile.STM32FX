@@ -120,23 +120,23 @@ all: hs
 
 #error "Either PI_HAT_7021_REV_02, ZUMSPOT_ADF7021, LONESTAR_USB, MMDVM_HS_HAT_REV12, MMDVM_HS_DUAL_HAT_REV10, NANO_HOTSPOT, NANO_DV_REV11, or SKYBRIDGE_HS
 
-zumspot-adf7021-usb: CFLAGS+=-DZUMSPOT_ADF7021 -DSTM32_USB_HOST
-zumspot-adf7021-usb: CXXFLAGS+=-DZUMSPOT_ADF7021 -DSTM32_USB_HOST
-zumspot-adf7021-usb: bl
-zumspot-adf7021-usb-duplex: CFLAGS+=-DDUPLEX
-zumspot-adf7021-usb-duplex: CXXFLAGS+=-DDUPLEX
-zumspot-adf7021-usb-duplex: zumspot-adf7021-usb
+zumspot-adf7021: CFLAGS+=-DZUMSPOT_ADF7021 -DSTM32_USB_HOST
+zumspot-adf7021: CXXFLAGS+=-DZUMSPOT_ADF7021 -DSTM32_USB_HOST
+zumspot-adf7021: bl
+zumspot-adf7021-duplex: CFLAGS+=-DDUPLEX
+zumspot-adf7021-duplex: CXXFLAGS+=-DDUPLEX
+zumspot-adf7021-duplex: zumspot-adf7021
 
 lonestar-usb: CFLAGS+=-DLONESTAR_USB -DSTM32_USB_HOST
 lonestar-usb: CXXFLAGS+=-DLONESTAR_USB -DSTM32_USB_HOST
 lonestar-usb: bl
 
-mmdvm-hs-hat-usb: CFLAGS+=-DMMDVM_HS_HAT_REV12 -DSTM32_USB_HOST
-mmdvm-hs-hat-usb: CXXFLAGS+=-DMMDVM_HS_HAT_REV12 -DSTM32_USB_HOST
-mmdvm-hs-hat-usb: bl
-mmdvm-hs-hat-usb-dual: CFLAGS+=-DDUPLEX
-mmdvm-hs-hat-usb-dual: CXXFLAGS+=-DDUPLEX
-mmdvm-hs-hat-usb-dual: mmdvm-hs-hat-usb
+mmdvm-hs-hat: CFLAGS+=-DMMDVM_HS_HAT_REV12 -DSTM32_USB_HOST
+mmdvm-hs-hat: CXXFLAGS+=-DMMDVM_HS_HAT_REV12 -DSTM32_USB_HOST
+mmdvm-hs-hat: bl
+mmdvm-hs-hat-dual: CFLAGS+=-DDUPLEX
+mmdvm-hs-hat-dual: CXXFLAGS+=-DDUPLEX
+mmdvm-hs-hat-dual: mmdvm-hs-hat
 
 bl: CFLAGS+=$(CFLAGS_F1) $(DEFS_F1_HS_BL)
 bl: CXXFLAGS+=$(CXXFLAGS_F1) $(DEFS_F1_HS_BL)

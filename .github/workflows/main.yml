@@ -41,13 +41,6 @@ jobs:
           rm -f dvm-firmware-hs_f1.bin
           make -f Makefile.STM32FX mmdvm-hs-hat-dual
           mv -f dvm-firmware-hs_f1.bin dvm-firmware-hs-hat-dual.bin
-      - name: Build STM32FX mmdvm-hs-hat-usb-dual Firmware
-        run: |
-          rm -rf obj_f1
-          rm -rf obj_f4
-          rm -f dvm-firmware-hs_f1bl.bin
-          make -f Makefile.STM32FX mmdvm-hs-hat-usb-dual
-          mv -f dvm-firmware-hs_f1bl.bin dvm-firmware-hs-hat-dual_usb.bin
       - name: Build STM32FX mmdvm-hs-hat Firmware
         run: |
           rm -rf obj_f1
@@ -55,13 +48,6 @@ jobs:
           rm -f dvm-firmware-hs_f1.bin
           make -f Makefile.STM32FX mmdvm-hs-hat
           mv -f dvm-firmware-hs_f1.bin dvm-firmware-hs-hat.bin
-      - name: Build STM32FX mmdvm-hs-hat-usb Firmware
-        run: |
-          rm -rf obj_f1
-          rm -rf obj_f4
-          rm -f dvm-firmware-hs_f1bl.bin
-          make -f Makefile.STM32FX mmdvm-hs-hat-usb
-          mv -f dvm-firmware-hs_f1bl.bin dvm-firmware-hs-hat_usb.bin
         
       - name: Firmware Hash
         run: |
@@ -76,23 +62,11 @@ jobs:
           sha1  : $(sha1sum   dvm-firmware-hs-hat-dual.bin)
           sha256: $(sha256sum dvm-firmware-hs-hat-dual.bin)
 
-          dvm-firmware-hs-hat-dual_usb.bin
-          size  : $(wc -c     dvm-firmware-hs-hat-dual_usb.bin)
-          md5   : $(md5sum    dvm-firmware-hs-hat-dual_usb.bin)
-          sha1  : $(sha1sum   dvm-firmware-hs-hat-dual_usb.bin)
-          sha256: $(sha256sum dvm-firmware-hs-hat-dual_usb.bin)
-
           dvm-firmware-hs-hat.bin
           size  : $(wc -c     dvm-firmware-hs-hat.bin)
           md5   : $(md5sum    dvm-firmware-hs-hat.bin)
           sha1  : $(sha1sum   dvm-firmware-hs-hat.bin)
           sha256: $(sha256sum dvm-firmware-hs-hat.bin)
-
-          dvm-firmware-hs-hat_usb.bin
-          size  : $(wc -c     dvm-firmware-hs-hat_usb.bin)
-          md5   : $(md5sum    dvm-firmware-hs-hat_usb.bin)
-          sha1  : $(sha1sum   dvm-firmware-hs-hat_usb.bin)
-          sha256: $(sha256sum dvm-firmware-hs-hat_usb.bin)
           EOF
           echo '```' >> release.txt
           
@@ -103,6 +77,4 @@ jobs:
           body_path: release.txt
           files: |
             dvm-firmware-hs-hat-dual.bin
-            dvm-firmware-hs-hat-dual_usb.bin
             dvm-firmware-hs-hat.bin
-            dvm-firmware-hs-hat_usb.bin

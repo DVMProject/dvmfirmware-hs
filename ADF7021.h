@@ -141,13 +141,11 @@
 */
 #define ADF7021_DEV_DEFAULT     43U
 #define ADF7021_DEV_DMR         23U
-
-#if defined(ENABLE_P25_WIDE)
-#define ADF7021_DEV_P25         32U
+#if defined(P25_ALTERNATE_DEV_LEVEL)
+#define ADF7021_DEV_P25         24U
 #else
 #define ADF7021_DEV_P25         22U
-#endif // ENABLE_P25_WIDE
-
+#endif
 #define ADF7021_DEV_NXDN        13U
 
 /*
@@ -211,13 +209,11 @@
 */
 #define ADF7021_DEV_DEFAULT     26U
 #define ADF7021_DEV_DMR         14U
-
-#if defined(ENABLE_P25_WIDE)
-#define ADF7021_DEV_P25         19U
+#if defined(P25_ALTERNATE_DEV_LEVEL)
+#define ADF7021_DEV_P25         15U
 #else
 #define ADF7021_DEV_P25         13U
-#endif // ENABLE_P25_WIDE
-
+#endif
 #define ADF7021_DEV_NXDN        8U
 
 /*

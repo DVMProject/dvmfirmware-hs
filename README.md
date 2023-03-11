@@ -48,6 +48,7 @@ Reset done.
 
 ## Notes
 
+**USB Support Note**: See the usb-support branch for the version of this firmware that supports USB.
 **NXDN Support Note**: NXDN support is currently experimental.
 
 ## License

@@ -114,7 +114,7 @@ typedef unsigned long long  ulong64_t;
 #define FORCE_UHF_INTERAL_L
 
 // Alternate P25 Deviation Levels
-//#define P25_ALTERNATE_DEV_LEVEL
+// #define P25_ALTERNATE_DEV_LEVEL
 
 // Pass RSSI information to the host
 // #define SEND_RSSI_DATA

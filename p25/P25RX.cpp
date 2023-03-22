@@ -201,27 +201,35 @@ void P25RX::processBit(bool bit)
         }
     }
 
-    if (m_state == P25RXS_VOICE) {
-        m_lostCount = MAX_SYNC_FRAMES;
-        processVoice(bit);
+    if (m_state == P25RXS_SYNC) {
+        // only search for a sync in the right place +-2 bits
+        if (m_dataPtr >= (P25_SYNC_LENGTH_BITS - 2U) && m_dataPtr <= (P25_SYNC_LENGTH_BITS + 2U)) {
+            correlateSync();
+        }
+
+        // since we aren't processing voice or data -- simply wait till we've reached the end pointer
+        if (m_dataPtr == m_endPtr) {
+            // DEBUG3("P25RX: m_buffer dump endPtr/endPtrB", m_endPtr, m_endPtr / 8U);
+            // DEBUG_DUMP(m_buffer, P25_LDU_FRAME_LENGTH_BYTES + 3U);
+
+            uint8_t frame[P25_HDU_FRAME_LENGTH_BYTES + 1U];
+            ::memcpy(frame + 1U, m_buffer, m_endPtr / 8U);
+
+            frame[0U] = 0x01U; // has sync
+            serial.writeP25Data(frame, (m_endPtr / 8U) + 1U);
+            reset();
+        }
     }
+    else {
+        if (m_state == P25RXS_VOICE) {
+            m_lostCount = MAX_SYNC_FRAMES;
+            processVoice(bit);
+        }
 
-    if (m_state == P25RXS_DATA) {
-        m_lostCount = MAX_SYNC_FRAMES;
-        processData(bit);
-    }
-
-    // since we aren't processing voice or data -- simply wait till we've reached the end pointer
-    if (m_dataPtr == m_endPtr) {
-        // DEBUG3("P25RX: m_buffer dump endPtr/endPtrB", m_endPtr, m_endPtr / 8U);
-        // DEBUG_DUMP(m_buffer, P25_LDU_FRAME_LENGTH_BYTES + 3U);
-
-        uint8_t frame[P25_HDU_FRAME_LENGTH_BYTES + 1U];
-        ::memcpy(frame + 1U, m_buffer, m_endPtr / 8U);
-
-        frame[0U] = 0x01U; // has sync
-        serial.writeP25Data(frame, (m_endPtr / 8U) + 1U);
-        reset();
+        if (m_state == P25RXS_DATA) {
+            m_lostCount = MAX_SYNC_FRAMES;
+            processData(bit);
+        }
     }
 }
 

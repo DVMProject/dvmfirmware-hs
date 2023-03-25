@@ -60,7 +60,7 @@ const uint8_t CONTROL_DATA = 0x40U;
 /// Initializes a new instance of the DMRSlotRX class.
 /// </summary>
 DMRSlotRX::DMRSlotRX(bool slot) :
-    m_slot(false),
+    m_slot(slot),
     m_bitBuffer(0x00U),
     m_buffer(),
     m_dataPtr(0U),

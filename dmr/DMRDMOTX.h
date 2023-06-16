@@ -65,6 +65,9 @@ namespace dmr
         /// <summary>Sets the FDMA preamble count.</summary>
         void setPreambleCount(uint8_t preambleCnt);
 
+        /// <summary>Helper to resize the FIFO buffer.</summary>
+        void resizeBuffer(uint16_t size);
+
         /// <summary>Helper to get how much space the ring buffer has for samples.</summary>
         uint16_t getSpace() const;
 

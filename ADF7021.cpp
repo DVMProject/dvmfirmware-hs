@@ -299,7 +299,7 @@ void IO::rf1Conf(DVM_STATE modemState, bool reset)
 {
     uint32_t txFrequencyTmp, rxFrequencyTmp;
 
-    DEBUG4("IO::rf1Conf(): configuring ADF for Tx/Rx; modemState/reset/rxGain", modemState, reset, m_gainMode);
+    DEBUG4("IO::rf1Conf(): ADF1 (Tx/Rx); modemState/reset/rxGain", modemState, reset, m_gainMode);
 
 #if defined (ZUMSPOT_ADF7021) || defined(SKYBRIDGE_HS)
     io.checkBand(m_rxFrequency, m_txFrequency);
@@ -378,11 +378,15 @@ void IO::rf1Conf(DVM_STATE modemState, bool reset)
     AD7021_CONTROL = ADF7021_REG3;
     AD7021_1_IOCTL();
 
+    DEBUG3("IO::rf1Conf(): ADF1 REG3 =", (ADF7021_REG3 >> 16 & 0xFFFFU), (ADF7021_REG3 & 0xFFFFU));
+
     /*
     ** Demodulator Setup (Register 4)
     */
     AD7021_CONTROL = ADF7021_REG4;
     AD7021_1_IOCTL();
+
+    DEBUG3("IO::rf1Conf(): ADF1 REG4 =", (ADF7021_REG4 >> 16 & 0xFFFFU), (ADF7021_REG4 & 0xFFFFU));
 
     /*
     ** IF Fine Cal Setup (Register 6)
@@ -409,6 +413,8 @@ void IO::rf1Conf(DVM_STATE modemState, bool reset)
     */
     AD7021_CONTROL = ADF7021_REG2;
     AD7021_1_IOCTL();
+
+    DEBUG3("IO::rf1Conf(): ADF1 REG2 =", (ADF7021_REG2 >> 16 & 0xFFFFU), (ADF7021_REG3 & 0xFFFFU));
 
     /*
     ** Test DAC (Register 14)
@@ -446,6 +452,8 @@ void IO::rf1Conf(DVM_STATE modemState, bool reset)
     AD7021_CONTROL = ADF7021_REG10;
     AD7021_1_IOCTL();
 
+    DEBUG3("IO::rf1Conf(): ADF1 REG10 =", (ADF7021_REG10 >> 16 & 0xFFFFU), (ADF7021_REG10 & 0xFFFFU));
+
     /*
     ** Sync Word Detect (Register 11)
     */
@@ -463,6 +471,8 @@ void IO::rf1Conf(DVM_STATE modemState, bool reset)
     */
     AD7021_CONTROL = ADF7021_REG13;
     AD7021_1_IOCTL();
+
+    DEBUG3("IO::rf1Conf(): ADF1 REG13 =", (ADF7021_REG13 >> 16 & 0xFFFFU), (ADF7021_REG13 & 0xFFFFU));
 
     /*
     ** Test Mode (Register 15)
@@ -493,7 +503,7 @@ void IO::rf1Conf(DVM_STATE modemState, bool reset)
 /// <param name="reset"></param>
 void IO::rf2Conf(DVM_STATE modemState)
 {
-    DEBUG3("IO::rf2Conf(): configuring 2nd ADF for Rx; modemState/rxGain", modemState, m_gainMode);
+    DEBUG3("IO::rf2Conf(): ADF2 (Rx); modemState/rxGain", modemState, m_gainMode);
 
     // configure ADF Tx/RX
     configureTxRx(modemState);
@@ -511,11 +521,15 @@ void IO::rf2Conf(DVM_STATE modemState)
     AD7021_CONTROL = ADF7021_REG3;
     AD7021_2_IOCTL();
 
+    DEBUG3("IO::rf2Conf(): ADF2 REG3 =", (ADF7021_REG3 >> 16 & 0xFFFFU), (ADF7021_REG3 & 0xFFFFU));
+
     /*
     ** Demodulator Setup (Register 4)
     */
     AD7021_CONTROL = ADF7021_REG4;
     AD7021_2_IOCTL();
+
+    DEBUG3("IO::rf2Conf(): ADF2 REG4 =", (ADF7021_REG4 >> 16 & 0xFFFFU), (ADF7021_REG4 & 0xFFFFU));
 
     /*
     ** IF Fine Cal Setup (Register 6)
@@ -544,6 +558,8 @@ void IO::rf2Conf(DVM_STATE modemState)
     */
     AD7021_CONTROL = ADF7021_REG2;
     AD7021_2_IOCTL();
+
+    DEBUG3("IO::rf2Conf(): ADF2 REG2 =", (ADF7021_REG2 >> 16 & 0xFFFFU), (ADF7021_REG3 & 0xFFFFU));
 
     /*
     ** Test DAC (Register 14)
@@ -577,6 +593,8 @@ void IO::rf2Conf(DVM_STATE modemState)
     AD7021_CONTROL = ADF7021_REG10;
     AD7021_2_IOCTL();
 
+    DEBUG3("IO::rf2Conf(): ADF2 REG10 =", (ADF7021_REG10 >> 16 & 0xFFFFU), (ADF7021_REG10 & 0xFFFFU));
+
     /*
     ** Sync Word Detect (Register 11)
     */
@@ -594,6 +612,8 @@ void IO::rf2Conf(DVM_STATE modemState)
     */
     AD7021_CONTROL = ADF7021_REG13;
     AD7021_2_IOCTL();
+
+    DEBUG3("IO::rf2Conf(): ADF2 REG13 =", (ADF7021_REG13 >> 16 & 0xFFFFU), (ADF7021_REG13 & 0xFFFFU));
 
     /*
     ** Test Mode (Register 15)
@@ -636,8 +656,8 @@ void IO::setRFAdjust(int8_t dmrDiscBWAdj, int8_t p25DiscBWAdj, int8_t nxdnDiscBW
     m_p25PostBWAdj = p25PostBWAdj;
     m_nxdnPostBWAdj = nxdnPostBWADJ;
 
-    DEBUG4("IO::setRFAdjust(): setting RF adjustment, discBW", dmrDiscBWAdj, p25DiscBWAdj, nxdnDiscBWAdj);
-    DEBUG4("IO::setRFAdjust(): setting RF adjustment, postBW", dmrPostBWAdj, p25PostBWAdj, nxdnPostBWADJ);
+    DEBUG4("IO::setRFAdjust(): RF adjustment, discBW", dmrDiscBWAdj, p25DiscBWAdj, nxdnDiscBWAdj);
+    DEBUG4("IO::setRFAdjust(): RF adjustment, postBW", dmrPostBWAdj, p25PostBWAdj, nxdnPostBWADJ);
 }
 
 /// <summary>
@@ -654,7 +674,7 @@ void IO::setAFCParams(bool afcEnable, uint8_t afcKI, uint8_t afcKP, uint8_t afcR
     m_afcKP = afcKP;
     m_afcRange = afcRange;
 
-    DEBUG5("IO::setAFCParams(): setting AFC params", afcEnable, afcKI, afcKP, afcRange);
+    DEBUG5("IO::setAFCParams(): AFC params", afcEnable, afcKI, afcKP, afcRange);
 }
 
 /// <summary>
@@ -673,7 +693,7 @@ void IO::updateCal(DVM_STATE modemState)
     AD7021_CONTROL = ADF7021_REG1;
     AD7021_1_IOCTL();
 
-    // configure ADF Tx/RX
+    // configure ADF Tx/Rx
     configureTxRx(modemState);
 
     /*
@@ -712,7 +732,7 @@ void IO::updateCal(DVM_STATE modemState)
     AD7021_CONTROL = ADF7021_REG2;
     AD7021_1_IOCTL();
 
-    DEBUG2("IO::updateCal(): updating ADF calibration; modemState", modemState);
+    DEBUG2("IO::updateCal(): ADF calibration; modemState", modemState);
 
     if (m_tx)
         setTX();
@@ -881,7 +901,7 @@ void IO::configureBand()
     else
         f_div = 1U;
 
-    DEBUG3("IO::configureBand(): configuring ADF freq band; reg1/f_div", ADF7021_REG1, f_div);
+    DEBUG3("IO::configureBand(): ADF freq band; reg1/f_div", ADF7021_REG1, f_div);
 }
 
 /// <summary>
@@ -1093,7 +1113,7 @@ void IO::configureTxRx(DVM_STATE modemState)
             ADF7021_REG4 |= (uint32_t)ADF7021_REG4_INV_CLKDAT << 8;     // Clock/Data Inversion
             ADF7021_REG4 |= (uint32_t)(dmrDiscBW & 0x3FFU) << 10;       // Discriminator BW
             ADF7021_REG4 |= (uint32_t)(dmrPostBW & 0xFFFU) << 20;       // Post Demod BW
-            ADF7021_REG4 |= (uint32_t)ADF7021_REG4_IF_125K << 30;       // IF Filter
+            ADF7021_REG4 |= (uint32_t)ADF7021_REG4_IF_25K << 30;        // IF Filter
 
             /*
             ** 3FSK/4FSK Demod (Register 13)
@@ -1109,7 +1129,7 @@ void IO::configureTxRx(DVM_STATE modemState)
             ADF7021_REG2 |= (uint32_t)ADF7021_REG2_PA_DEF << 7;         // PA Enable & PA Bias
             ADF7021_REG2 |= (uint32_t)(m_rfPower & 0x3FU) << 13;        // PA Level (0 - Off, 63 - 13 dBm)
             ADF7021_REG2 |= (uint32_t)(dmrDev / div2) << 19;            // Freq. Deviation
-            ADF7021_REG2 |= (uint32_t)ADF7021_REG2_INV_CLKDAT << 28;    // Clock/Data Inversion
+            ADF7021_REG2 |= (uint32_t)ADF7021_REG2_INV_DATA << 28;      // Data Inversion
             ADF7021_REG2 |= (uint32_t)ADF7021_REG2_RC_5 << 30;          // R-Cosine Alpha
         }
         break;
@@ -1172,7 +1192,7 @@ void IO::configureTxRx(DVM_STATE modemState)
             ADF7021_REG4 |= (uint32_t)ADF7021_REG4_INV_CLKDAT << 8;     // Clock/Data Inversion
             ADF7021_REG4 |= (uint32_t)(p25DiscBW & 0x3FFU) << 10;       // Discriminator BW
             ADF7021_REG4 |= (uint32_t)(p25PostBW & 0xFFFU) << 20;       // Post Demod BW
-            ADF7021_REG4 |= (uint32_t)ADF7021_REG4_IF_125K << 30;       // IF Filter
+            ADF7021_REG4 |= (uint32_t)ADF7021_REG4_IF_25K << 30;        // IF Filter
 
             /*
             ** 3FSK/4FSK Demod (Register 13)
@@ -1263,7 +1283,7 @@ void IO::configureTxRx(DVM_STATE modemState)
             ADF7021_REG4 |= (uint32_t)ADF7021_REG4_INV_CLKDAT << 8;     // Clock/Data Inversion
             ADF7021_REG4 |= (uint32_t)(nxdnDiscBW & 0x3FFU) << 10;      // Discriminator BW
             ADF7021_REG4 |= (uint32_t)(nxdnPostBW & 0xFFFU) << 20;      // Post Demod BW
-            ADF7021_REG4 |= (uint32_t)ADF7021_REG4_IF_125K << 30;       // IF Filter
+            ADF7021_REG4 |= (uint32_t)ADF7021_REG4_IF_1875K << 30;      // IF Filter
 
             /*
             ** 3FSK/4FSK Demod (Register 13)
@@ -1362,12 +1382,6 @@ void IO::configureTxRx(DVM_STATE modemState)
         }
         break;
     }
-
-    DEBUG3("IO::configureTxRx(): ADF7021_REG3 =", (ADF7021_REG3 >> 16 & 0xFFFFU), (ADF7021_REG3 & 0xFFFFU));
-    DEBUG3("IO::configureTxRx(): ADF7021_REG10 =", (ADF7021_REG10 >> 16 & 0xFFFFU), (ADF7021_REG10 & 0xFFFFU));
-    DEBUG3("IO::configureTxRx(): ADF7021_REG4 =", (ADF7021_REG4 >> 16 & 0xFFFFU), (ADF7021_REG4 & 0xFFFFU));
-    DEBUG3("IO::configureTxRx(): ADF7021_REG13 =", (ADF7021_REG13 >> 16 & 0xFFFFU), (ADF7021_REG13 & 0xFFFFU));
-    DEBUG3("IO::configureTxRx(): ADF7021_REG2 =", (ADF7021_REG2 >> 16 & 0xFFFFU), (ADF7021_REG3 & 0xFFFFU));
 
     DEBUG5("IO::configureTxRx(): ADF Tx/Rx values; dmrDiscBW/dmrPostBW/p25DiscBW/p25PostBW", dmrDiscBW, dmrPostBW, p25DiscBW, p25PostBW);
     DEBUG3("IO::configureTxRx(): ADF Tx/Rx values; nxdnDiscBW/nxdnPostBW", nxdnDiscBW, nxdnPostBW);

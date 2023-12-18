@@ -94,17 +94,12 @@ void DMRSlotRX::start()
 /// </summary>
 void DMRSlotRX::reset()
 {
-    m_syncPtr = 0U;
     m_dataPtr = 0U;
     m_delayPtr = 0U;
 
     m_bitBuffer = 0U;
 
-    m_control = CONTROL_NONE;
-    m_syncCount = 0U;
-    m_state = DMRRXS_NONE;
-    m_startPtr = 0U;
-    m_endPtr = NOENDPTR;
+    resetSlot();
 }
 
 /// <summary>
@@ -228,8 +223,7 @@ bool DMRSlotRX::databit(bool bit)
                 if (m_syncCount >= MAX_SYNC_LOST_FRAMES) {
                     DEBUG1("DMRSlotRX: databit(): sync timeout, lost lock");
                     serial.writeDMRLost(m_slot);
-                    m_state = DMRRXS_NONE;
-                    m_endPtr = NOENDPTR;
+                    resetSlot();
                 }
             }
 
@@ -251,6 +245,9 @@ bool DMRSlotRX::databit(bool bit)
                 }
             }
         }
+
+        // end of this slot, reset some items for the next slot
+        m_control = CONTROL_NONE;
     }
 
     m_dataPtr++;
@@ -345,6 +342,22 @@ void DMRSlotRX::correlateSync()
 
         DEBUG4("DMRSlotRX: correlateSync(): dataPtr/startPtr/endPtr", m_dataPtr, m_startPtr, m_endPtr);
     }
+}
+
+/// <summary>
+/// 
+/// </summary>
+void DMRSlotRX::resetSlot()
+{
+    m_syncPtr = 0U;
+
+    m_control = CONTROL_NONE;
+    m_syncCount = 0U;
+    m_state = DMRRXS_NONE;
+    m_startPtr = 0U;
+    m_endPtr = NOENDPTR;
+    m_type = 0U;
+    m_n = 0U;
 }
 
 /// <summary>

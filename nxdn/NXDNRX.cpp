@@ -57,7 +57,6 @@ NXDNRX::NXDNRX() :
     m_outBuffer(),
     m_buffer(NULL),
     m_dataPtr(0U),
-    m_endPtr(NOENDPTR),
     m_lostCount(0U),
     m_state(NXDNRXS_NONE)
 {
@@ -72,8 +71,6 @@ void NXDNRX::reset()
 {
     m_bitBuffer = 0x00U;
     m_dataPtr = 0U;
-
-    m_endPtr = NOENDPTR;
 
     m_lostCount = 0U;
 
@@ -90,23 +87,13 @@ void NXDNRX::databit(bool bit)
     if (bit)
         m_bitBuffer |= 0x01U;
 
-    if (m_state != NXDNRXS_NONE) {
-        _WRITE_BIT(m_buffer, m_dataPtr, bit);
-
-        m_dataPtr++;
-        if (m_dataPtr > NXDN_FRAME_LENGTH_BITS) {
-            reset();
-        }
-    }
-
     if (m_state == NXDNRXS_DATA) {
         processData(bit);
     }
     else {
-
         bool ret = correlateSync(true);
         if (ret) {
-            DEBUG3("NXDNRX: databit(): dataPtr/endPtr", m_dataPtr, m_endPtr);
+            DEBUG2("NXDNRX: databit(): dataPtr", m_dataPtr);
             m_state = NXDNRXS_DATA;
         }
 
@@ -124,13 +111,20 @@ void NXDNRX::databit(bool bit)
 /// <param name="bit"></param>
 void NXDNRX::processData(bool bit)
 {
+    _WRITE_BIT(m_buffer, m_dataPtr, bit);
+
+    m_dataPtr++;
+    if (m_dataPtr > NXDN_FRAME_LENGTH_BITS) {
+        reset();
+    }
+
     // only search for a sync in the right place +-2 bits
     if (m_dataPtr >= (NXDN_FSW_LENGTH_BITS - 2U) && m_dataPtr <= (NXDN_FSW_LENGTH_BITS + 2U)) {
         correlateSync();
     }
 
     // process frame
-    if (m_dataPtr == m_endPtr) {
+    if (m_dataPtr == NXDN_FRAME_LENGTH_BITS) {
         m_lostCount--;
         
         // we've not seen a data sync for too long, signal sync lost and change to NXDNRXS_NONE
@@ -187,9 +181,8 @@ bool NXDNRX::correlateSync(bool first)
 
         m_lostCount = MAX_FSW_FRAMES;
         m_dataPtr = NXDN_FSW_LENGTH_BITS;
-        m_endPtr = NXDN_FRAME_LENGTH_BITS;
 
-        DEBUG3("NXDNRX: correlateSync(): dataPtr/endPtr", m_dataPtr, m_endPtr);
+        DEBUG2("NXDNRX: correlateSync(): dataPtr", m_dataPtr);
 
         return true;
     }

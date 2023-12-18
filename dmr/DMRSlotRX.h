@@ -102,6 +102,8 @@ namespace dmr
 
         /// <summary>Frame synchronization correlator.</summary>
         void correlateSync();
+        /// <summary></summary>
+        void resetSlot();
 
         /// <summary></summary>
         void bitsToBytes(uint16_t start, uint8_t count, uint8_t* buffer);

@@ -68,8 +68,6 @@ namespace nxdn
 
         uint16_t m_dataPtr;
 
-        uint16_t m_endPtr;
-
         uint16_t m_lostCount;
 
         NXDNRX_STATE m_state;

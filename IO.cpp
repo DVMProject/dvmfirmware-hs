@@ -110,8 +110,6 @@ void IO::process()
                 if (m_modemState == STATE_DMR && m_tx)
                     dmrTX.setStart(false);
 #endif
-                m_modemState = STATE_IDLE;
-                setMode(m_modemState);
             }
 
             m_watchdog = 0U;

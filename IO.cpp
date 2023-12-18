@@ -105,12 +105,15 @@ void IO::process()
     if (m_started) {
         // Two seconds timeout
         if (m_watchdog >= 19200U) {
-/*            
-            if (m_modemState == STATE_DMR || m_modemState == STATE_P25) {
+            if (m_modemState == STATE_DMR || m_modemState == STATE_P25 || m_modemState == STATE_NXDN) {
+#if defined(DUPLEX)
+                if (m_modemState == STATE_DMR && m_tx)
+                    dmrTX.setStart(false);
+#endif
                 m_modemState = STATE_IDLE;
                 setMode(m_modemState);
             }
-*/
+
             m_watchdog = 0U;
         }
 

@@ -151,7 +151,6 @@ enum CMD_REASON_CODE {
 const uint8_t DVM_FRAME_START = 0xFEU;
 
 #define SERIAL_SPEED 115200
-#define STATE_SCAN_MAX 3
 
 // ---------------------------------------------------------------------------
 //  Class Declaration

@@ -895,49 +895,61 @@ void IO::configureTxRx(DVM_STATE modemState)
     uint16_t nxdnDiscBW = ADF7021_DISC_BW_NXDN, nxdnPostBW = ADF7021_POST_BW_NXDN;
 
     // configure DMR discriminator and post demodulator BW
-    if (dmrDiscBW + m_dmrDiscBWAdj < 0U)
-        dmrDiscBW = 0U;
-    else
-        dmrDiscBW = ADF7021_DISC_BW_DMR + m_dmrDiscBWAdj;
-    if (dmrDiscBW > ADF7021_DISC_BW_MAX)
-        dmrDiscBW = ADF7021_DISC_BW_MAX;
+    if (m_dmrDiscBWAdj != 0) {
+        if (dmrDiscBW + m_dmrDiscBWAdj < 0)
+            dmrDiscBW = 0U;
+        else
+            dmrDiscBW = ADF7021_DISC_BW_DMR + m_dmrDiscBWAdj;
+        if (dmrDiscBW > ADF7021_DISC_BW_MAX)
+            dmrDiscBW = ADF7021_DISC_BW_MAX;
+    }
 
-    if (dmrPostBW + m_dmrPostBWAdj < 0)
-        dmrPostBW = 0U;
-    else
-        dmrPostBW = ADF7021_POST_BW_DMR + m_dmrPostBWAdj;
-    if (dmrPostBW > ADF7021_POST_BW_MAX)
-        dmrPostBW = ADF7021_POST_BW_MAX;
+    if (m_dmrPostBWAdj != 0) {
+        if (dmrPostBW + m_dmrPostBWAdj < 0)
+            dmrPostBW = 0U;
+        else
+            dmrPostBW = ADF7021_POST_BW_DMR + m_dmrPostBWAdj;
+        if (dmrPostBW > ADF7021_POST_BW_MAX)
+            dmrPostBW = ADF7021_POST_BW_MAX;
+    }
 
     // configure P25 discriminator and post demodulator BW
-    if (p25DiscBW + m_p25DiscBWAdj < 0U)
-        p25DiscBW = 0U;
-    else
-        p25DiscBW = ADF7021_DISC_BW_P25 + m_p25DiscBWAdj;
-    if (p25DiscBW > ADF7021_DISC_BW_MAX)
-        p25DiscBW = ADF7021_DISC_BW_MAX;
+    if (m_p25DiscBWAdj != 0) {
+        if (p25DiscBW + m_p25DiscBWAdj < 0)
+            p25DiscBW = 0U;
+        else
+            p25DiscBW = ADF7021_DISC_BW_P25 + m_p25DiscBWAdj;
+        if (p25DiscBW > ADF7021_DISC_BW_MAX)
+            p25DiscBW = ADF7021_DISC_BW_MAX;
+    }
 
-    if (p25PostBW + m_p25PostBWAdj < 0)
-        p25PostBW = 0U;
-    else
-        p25PostBW = ADF7021_POST_BW_P25 + m_p25PostBWAdj;
-    if (p25PostBW > ADF7021_POST_BW_MAX)
-        p25PostBW = ADF7021_POST_BW_MAX;
+    if (m_p25PostBWAdj != 0) {
+        if (p25PostBW + m_p25PostBWAdj < 0)
+            p25PostBW = 0U;
+        else
+            p25PostBW = ADF7021_POST_BW_P25 + m_p25PostBWAdj;
+        if (p25PostBW > ADF7021_POST_BW_MAX)
+            p25PostBW = ADF7021_POST_BW_MAX;
+    }
 
     // configure NXDN discriminator and post demodulator BW
-    if (nxdnDiscBW + m_nxdnDiscBWAdj < 0U)
-        nxdnDiscBW = 0U;
-    else
-        nxdnDiscBW = ADF7021_DISC_BW_NXDN + m_nxdnDiscBWAdj;
-    if (nxdnDiscBW > ADF7021_DISC_BW_MAX)
-        nxdnDiscBW = ADF7021_DISC_BW_MAX;
+    if (m_nxdnDiscBWAdj != 0) {
+        if (nxdnDiscBW + m_nxdnDiscBWAdj < 0)
+            nxdnDiscBW = 0U;
+        else
+            nxdnDiscBW = ADF7021_DISC_BW_NXDN + m_nxdnDiscBWAdj;
+        if (nxdnDiscBW > ADF7021_DISC_BW_MAX)
+            nxdnDiscBW = ADF7021_DISC_BW_MAX;
+    }
 
-    if (nxdnPostBW + m_nxdnPostBWAdj < 0)
-        nxdnPostBW = 0U;
-    else
-        nxdnPostBW = ADF7021_POST_BW_NXDN + m_nxdnPostBWAdj;
-    if (nxdnPostBW > ADF7021_POST_BW_MAX)
-        nxdnPostBW = ADF7021_POST_BW_MAX;
+    if (m_nxdnPostBWAdj != 0) {
+        if (nxdnPostBW + m_nxdnPostBWAdj < 0)
+            nxdnPostBW = 0U;
+        else
+            nxdnPostBW = ADF7021_POST_BW_NXDN + m_nxdnPostBWAdj;
+        if (nxdnPostBW > ADF7021_POST_BW_MAX)
+            nxdnPostBW = ADF7021_POST_BW_MAX;
+    }
 
     /*
     ** Configure the remaining registers based on modem state.
@@ -1007,7 +1019,7 @@ void IO::configureTxRx(DVM_STATE modemState)
             /*
             ** 3FSK/4FSK Demod (Register 13)
             */
-            ADF7021_REG13 = (uint32_t)0b1101 << 0;                      // Register Address 13
+            ADF7021_REG13 = (uint32_t)ADF7021_REG13_ADDR;               // Register Address 13
             ADF7021_REG13 |= (uint32_t)ADF7021_SLICER_TH_DMR << 4;      // Slicer Threshold
 
             /*
@@ -1086,7 +1098,7 @@ void IO::configureTxRx(DVM_STATE modemState)
             /*
             ** 3FSK/4FSK Demod (Register 13)
             */
-            ADF7021_REG13 = (uint32_t)0b1101 << 0;                      // Register Address 13
+            ADF7021_REG13 = (uint32_t)ADF7021_REG13_ADDR;               // Register Address 13
             ADF7021_REG13 |= (uint32_t)ADF7021_SLICER_TH_DMR << 4;      // Slicer Threshold
 
             /*
@@ -1165,7 +1177,7 @@ void IO::configureTxRx(DVM_STATE modemState)
             /*
             ** 3FSK/4FSK Demod (Register 13)
             */
-            ADF7021_REG13 = (uint32_t)ADF70210_REG13_ADDR;              // Register Address 13
+            ADF7021_REG13 = (uint32_t)ADF7021_REG13_ADDR;               // Register Address 13
             ADF7021_REG13 |= (uint32_t)ADF7021_SLICER_TH_P25 << 4;      // Slicer Threshold
 
             /*
@@ -1256,7 +1268,7 @@ void IO::configureTxRx(DVM_STATE modemState)
             /*
             ** 3FSK/4FSK Demod (Register 13)
             */
-            ADF7021_REG13 = (uint32_t)ADF70210_REG13_ADDR;              // Register Address 13
+            ADF7021_REG13 = (uint32_t)ADF7021_REG13_ADDR;               // Register Address 13
             ADF7021_REG13 |= (uint32_t)ADF7021_SLICER_TH_NXDN << 4;     // Slicer Threshold
 
             /*
@@ -1334,7 +1346,7 @@ void IO::configureTxRx(DVM_STATE modemState)
             /*
             ** 3FSK/4FSK Demod (Register 13)
             */
-            ADF7021_REG13 = (uint32_t)ADF70210_REG13_ADDR;              // Register Address 13
+            ADF7021_REG13 = (uint32_t)ADF7021_REG13_ADDR;               // Register Address 13
             ADF7021_REG13 |= (uint32_t)ADF7021_SLICER_TH_DEFAULT << 4;  // Slicer Threshold
 
             /*
@@ -1351,9 +1363,15 @@ void IO::configureTxRx(DVM_STATE modemState)
         break;
     }
 
-    DEBUG5("IO::configureTxRx(): configuring ADF Tx/Rx values; dmrDiscBW/dmrPostBW/p25DiscBW/p25PostBW", dmrDiscBW, dmrPostBW, p25DiscBW, p25PostBW);
-    DEBUG3("IO::configureTxRx(): configuring ADF Tx/Rx values; nxdnDiscBW/nxdnPostBW", nxdnDiscBW, nxdnPostBW);
-    DEBUG5("IO::configureTxRx(): configuring ADF Tx/Rx values; dmrSymDev/p25SymDev/nxdnSymDev/rfPower", (uint16_t)((ADF7021_PFD * dmrDev) / (f_div * 65536)),
+    DEBUG3("IO::configureTxRx(): ADF7021_REG3 =", (ADF7021_REG3 >> 16 & 0xFFFFU), (ADF7021_REG3 & 0xFFFFU));
+    DEBUG3("IO::configureTxRx(): ADF7021_REG10 =", (ADF7021_REG10 >> 16 & 0xFFFFU), (ADF7021_REG10 & 0xFFFFU));
+    DEBUG3("IO::configureTxRx(): ADF7021_REG4 =", (ADF7021_REG4 >> 16 & 0xFFFFU), (ADF7021_REG4 & 0xFFFFU));
+    DEBUG3("IO::configureTxRx(): ADF7021_REG13 =", (ADF7021_REG13 >> 16 & 0xFFFFU), (ADF7021_REG13 & 0xFFFFU));
+    DEBUG3("IO::configureTxRx(): ADF7021_REG2 =", (ADF7021_REG2 >> 16 & 0xFFFFU), (ADF7021_REG3 & 0xFFFFU));
+
+    DEBUG5("IO::configureTxRx(): ADF Tx/Rx values; dmrDiscBW/dmrPostBW/p25DiscBW/p25PostBW", dmrDiscBW, dmrPostBW, p25DiscBW, p25PostBW);
+    DEBUG3("IO::configureTxRx(): ADF Tx/Rx values; nxdnDiscBW/nxdnPostBW", nxdnDiscBW, nxdnPostBW);
+    DEBUG5("IO::configureTxRx(): ADF Tx/Rx values; dmrSymDev/p25SymDev/nxdnSymDev/rfPower", (uint16_t)((ADF7021_PFD * dmrDev) / (f_div * 65536)),
         (uint16_t)((ADF7021_PFD * p25Dev) / (f_div * 65536)), (uint16_t)((ADF7021_PFD * nxdnDev) / (f_div * 65536)), m_rfPower);
 }
 

@@ -179,10 +179,10 @@ bool NXDNRX::correlateSync(bool first)
             sync[1U] = (uint8_t)((m_bitBuffer >> 8) & NXDN_FSW_BYTES_MASK[1U]);
             sync[2U] = (uint8_t)((m_bitBuffer >> 0) & NXDN_FSW_BYTES_MASK[2U]);
 
-            DEBUG4("NXDNRX: correlateSync(): sync [b0 - b2]", sync[0], sync[1], sync[2]);
-
             for (uint8_t i = 0U; i < NXDN_FSW_BYTES_LENGTH; i++)
                 m_buffer[i] = sync[i];
+
+            DEBUG4("NXDNRX: correlateSync(): sync [b0 - b2]", m_buffer[0], m_buffer[1], m_buffer[2]);
         }
 
         m_lostCount = MAX_FSW_FRAMES;

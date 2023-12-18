@@ -310,7 +310,7 @@
 /*
 ** 3FSK/4FSK Demod (Register 13)
 */
-#define ADF70210_REG13_ADDR     0b1101
+#define ADF7021_REG13_ADDR     0b1101
 
 // Slicer threshold for 4FSK demodulator
 #define ADF7021_SLICER_TH_DEFAULT 0U

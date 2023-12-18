@@ -1283,7 +1283,7 @@ void IO::configureTxRx(DVM_STATE modemState)
             ADF7021_REG4 |= (uint32_t)ADF7021_REG4_INV_CLKDAT << 8;     // Clock/Data Inversion
             ADF7021_REG4 |= (uint32_t)(nxdnDiscBW & 0x3FFU) << 10;      // Discriminator BW
             ADF7021_REG4 |= (uint32_t)(nxdnPostBW & 0xFFFU) << 20;      // Post Demod BW
-            ADF7021_REG4 |= (uint32_t)ADF7021_REG4_IF_1875K << 30;      // IF Filter
+            ADF7021_REG4 |= (uint32_t)ADF7021_REG4_IF_125K << 30;       // IF Filter
 
             /*
             ** 3FSK/4FSK Demod (Register 13)

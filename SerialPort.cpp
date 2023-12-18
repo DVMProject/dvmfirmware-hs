@@ -155,7 +155,7 @@ void SerialPort::process()
                         sendACK();
                     }
                     else {
-                        DEBUG2("SerialPort: process(): received invalid calibration data", err);
+                        DEBUG2("SerialPort::process() received invalid calibration data", err);
                         sendNAK(err);
                     }
                     break;
@@ -170,7 +170,7 @@ void SerialPort::process()
                         sendACK();
                     }
                     else {
-                        DEBUG2("SerialPort: process(): received invalid data to write to flash", err);
+                        DEBUG2("SerialPort::process() received invalid data to write to flash", err);
                         sendNAK(err);
                     }
                     break;
@@ -181,7 +181,7 @@ void SerialPort::process()
                         sendACK();
                     }
                     else {
-                        DEBUG2("SerialPort: process(): received invalid data to set buffers", err);
+                        DEBUG2("SerialPort::process() received invalid data to set buffers", err);
                         sendNAK(err);
                     }
                     break;
@@ -192,13 +192,13 @@ void SerialPort::process()
                     if (m_modemState == STATE_IDLE) {
                         m_cwIdState = true;
                         
-                        DEBUG2("SerialPort: process(): setting modem state", STATE_CW);
+                        DEBUG2("SerialPort::process() setting modem state", STATE_CW);
                         io.rf1Conf(STATE_CW, true);
                         
                         err = cwIdTX.write(m_buffer + 3U, m_len - 3U);
                     }
                     if (err != RSN_OK) {
-                        DEBUG2("SerialPort: process(): invalid CW Id data", err);
+                        DEBUG2("SerialPort::process() invalid CW Id data", err);
                         sendNAK(err);
                     }
                     break;
@@ -217,7 +217,7 @@ void SerialPort::process()
                             setMode(STATE_DMR);
                     }
                     else {
-                        DEBUG2("SerialPort: process() received invalid DMR data", err);
+                        DEBUG2("SerialPort::process() received invalid DMR data", err);
                         sendNAK(err);
                     }
 #else
@@ -243,7 +243,7 @@ void SerialPort::process()
                             setMode(STATE_DMR);
                     }
                     else {
-                        DEBUG2("SerialPort: process(): received invalid DMR data", err);
+                        DEBUG2("SerialPort::process() received invalid DMR data", err);
                         sendNAK(err);
                     }
                     break;
@@ -266,7 +266,7 @@ void SerialPort::process()
                         }
                     }
                     if (err != RSN_OK) {
-                        DEBUG3("SerialPort: process(): received invalid DMR start", err, m_len);
+                        DEBUG3("SerialPort::process() received invalid DMR start", err, m_len);
                         sendNAK(err);
                     }
 #else
@@ -279,7 +279,7 @@ void SerialPort::process()
                     if (m_dmrEnable)
                         err = dmrTX.writeShortLC(m_buffer + 3U, m_len - 3U);
                     if (err != RSN_OK) {
-                        DEBUG2("SerialPort: process(): received invalid DMR Short LC", err);
+                        DEBUG2("SerialPort::process() received invalid DMR Short LC", err);
                         sendNAK(err);
                     }
 #else
@@ -292,7 +292,7 @@ void SerialPort::process()
                     if (m_dmrEnable)
                         err = dmrTX.writeAbort(m_buffer + 3U, m_len - 3U);
                     if (err != RSN_OK) {
-                        DEBUG2("SerialPort: process(): received invalid DMR Abort", err);
+                        DEBUG2("SerialPort::process() received invalid DMR Abort", err);
                         sendNAK(err);
                     }
 #else
@@ -310,7 +310,7 @@ void SerialPort::process()
                         }
                     }
                     if (err != RSN_OK) {
-                        DEBUG2("SerialPort: process(): received invalid DMR CACH AT Control", err);
+                        DEBUG2("SerialPort::process() received invalid DMR CACH AT Control", err);
                         sendNAK(err);
                     }
 #else
@@ -351,7 +351,7 @@ void SerialPort::process()
                             setMode(STATE_P25);
                     }
                     else {
-                        DEBUG2("SerialPort: process(): Received invalid P25 data", err);
+                        DEBUG2("SerialPort::process() received invalid P25 data", err);
                         sendNAK(err);
                     }
                     break;
@@ -374,7 +374,7 @@ void SerialPort::process()
                             setMode(STATE_NXDN);
                     }
                     else {
-                        DEBUG2("SerialPort: process(): Received invalid NXDN data", err);
+                        DEBUG2("SerialPort::process() received invalid NXDN data", err);
                         sendNAK(err);
                     }
                     break;
@@ -1061,12 +1061,12 @@ uint8_t SerialPort::setConfig(const uint8_t* data, uint8_t length)
 
 #if !defined(DUPLEX)
     if (m_duplex) {
-        DEBUG1("Full duplex not supported with this firmware");
+        DEBUG1("SerialPort::setConfig() Full duplex not supported with this firmware");
         return RSN_INVALID_REQUEST;
     }
 #elif defined(DUPLEX) && (defined(ZUMSPOT_ADF7021) || defined(LONESTAR_USB) || defined(SKYBRIDGE_HS))
     if (io.isDualBand() && m_duplex) {
-        DEBUG1("Full duplex is not supported on this board");
+        DEBUG1("SerialPort::setConfig() Full duplex is not supported on this board");
         return RSN_INVALID_REQUEST;
     }
 #endif
@@ -1132,13 +1132,13 @@ void SerialPort::setMode(DVM_STATE modemState)
 {
     switch (modemState) {
     case STATE_DMR:
-        DEBUG1("SerialPort: setMode(): mode set to DMR");
+        DEBUG1("SerialPort::setMode() mode set to DMR");
         p25RX.reset();
         nxdnRX.reset();
         cwIdTX.reset();
         break;
     case STATE_P25:
-        DEBUG1("SerialPort: setMode(): mode set to P25");
+        DEBUG1("SerialPort::setMode() mode set to P25");
 #if defined(DUPLEX)
         dmrIdleRX.reset();
         dmrRX.reset();
@@ -1148,7 +1148,7 @@ void SerialPort::setMode(DVM_STATE modemState)
         cwIdTX.reset();
         break;
     case STATE_NXDN:
-        DEBUG1("SerialPort: setMode(): mode set to NXDN");
+        DEBUG1("SerialPort::setMode() mode set to NXDN");
 #if defined(DUPLEX)
         dmrIdleRX.reset();
         dmrRX.reset();
@@ -1158,7 +1158,7 @@ void SerialPort::setMode(DVM_STATE modemState)
         cwIdTX.reset();
         break;
     case STATE_DMR_CAL:
-        DEBUG1("SerialPort: setMode(): mode set to DMR Calibrate");
+        DEBUG1("SerialPort::setMode() mode set to DMR Calibrate");
 #if defined(DUPLEX)
         dmrIdleRX.reset();
         dmrRX.reset();
@@ -1169,7 +1169,7 @@ void SerialPort::setMode(DVM_STATE modemState)
         cwIdTX.reset();
         break;
     case STATE_P25_CAL:
-        DEBUG1("SerialPort: setMode(): mode set to P25 Calibrate");
+        DEBUG1("SerialPort::setMode() mode set to P25 Calibrate");
 #if defined(DUPLEX)
         dmrIdleRX.reset();
         dmrRX.reset();
@@ -1180,7 +1180,7 @@ void SerialPort::setMode(DVM_STATE modemState)
         cwIdTX.reset();
         break;
     case STATE_NXDN_CAL:
-        DEBUG1("SerialPort: setMode(): mode set to NXDN Calibrate");
+        DEBUG1("SerialPort::setMode() mode set to NXDN Calibrate");
 #if defined(DUPLEX)
         dmrIdleRX.reset();
         dmrRX.reset();
@@ -1191,7 +1191,7 @@ void SerialPort::setMode(DVM_STATE modemState)
         cwIdTX.reset();
         break;
     case STATE_RSSI_CAL:
-        DEBUG1("SerialPort: setMode(): mode set to RSSI Calibrate");
+        DEBUG1("SerialPort::setMode() mode set to RSSI Calibrate");
 #if defined(DUPLEX)
         dmrIdleRX.reset();
         dmrRX.reset();
@@ -1202,7 +1202,7 @@ void SerialPort::setMode(DVM_STATE modemState)
         cwIdTX.reset();
         break;
     case STATE_DMR_LF_CAL:
-        DEBUG1("SerialPort: setMode(): mode set to DMR 80Hz Calibrate");
+        DEBUG1("SerialPort::setMode() mode set to DMR 80Hz Calibrate");
 #if defined(DUPLEX)
         dmrIdleRX.reset();
         dmrRX.reset();
@@ -1213,7 +1213,7 @@ void SerialPort::setMode(DVM_STATE modemState)
         cwIdTX.reset();
         break;
     case STATE_DMR_CAL_1K:
-        DEBUG1("SerialPort: setMode(): mode set to DMR BS 1031Hz Calibrate");
+        DEBUG1("SerialPort::setMode() mode set to DMR BS 1031Hz Calibrate");
 #if defined(DUPLEX)
         dmrIdleRX.reset();
         dmrRX.reset();
@@ -1224,7 +1224,7 @@ void SerialPort::setMode(DVM_STATE modemState)
         cwIdTX.reset();
         break;
     case STATE_DMR_DMO_CAL_1K:
-        DEBUG1("SerialPort: setMode(): mode set to DMR MS 1031Hz Calibrate");
+        DEBUG1("SerialPort::setMode() mode set to DMR MS 1031Hz Calibrate");
 #if defined(DUPLEX)
         dmrIdleRX.reset();
         dmrRX.reset();
@@ -1235,7 +1235,7 @@ void SerialPort::setMode(DVM_STATE modemState)
         cwIdTX.reset();
         break;
     case STATE_P25_CAL_1K:
-        DEBUG1("SerialPort: setMode(): mode set to P25 1011Hz Calibrate");
+        DEBUG1("SerialPort::setMode() mode set to P25 1011Hz Calibrate");
 #if defined(DUPLEX)
         dmrIdleRX.reset();
         dmrRX.reset();
@@ -1246,7 +1246,7 @@ void SerialPort::setMode(DVM_STATE modemState)
         cwIdTX.reset();
         break;
     default:
-        DEBUG1("SerialPort: setMode(): mode set to Idle");
+        DEBUG1("SerialPort::setMode() mode set to Idle");
         // STATE_IDLE
         break;
     }

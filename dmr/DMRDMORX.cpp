@@ -141,7 +141,7 @@ void DMRDMORX::databit(bool bit)
 
                 switch (dataType) {
                 case DT_DATA_HEADER:
-                    DEBUG2("DMRDMORX: databit(): data header found pos", m_syncPtr);
+                    DEBUG2("DMRDMORX::databit() data header found pos", m_syncPtr);
                     writeRSSIData(frame);
                     m_state = DMORXS_DATA;
                     m_type = 0x00U;
@@ -150,32 +150,32 @@ void DMRDMORX::databit(bool bit)
                 case DT_RATE_34_DATA:
                 case DT_RATE_1_DATA:
                     if (m_state == DMORXS_DATA) {
-                        DEBUG2("DMRDMORX: databit(): data payload found pos", m_syncPtr);
+                        DEBUG2("DMRDMORX::databit() data payload found pos", m_syncPtr);
                         writeRSSIData(frame);
                         m_type = dataType;
                     }
                     break;
                 case DT_VOICE_LC_HEADER:
-                    DEBUG2("DMRDMORX: databit(): voice header found pos", m_syncPtr);
+                    DEBUG2("DMRDMORX::databit() voice header found pos", m_syncPtr);
                     writeRSSIData(frame);
                     m_state = DMORXS_VOICE;
                     break;
                 case DT_VOICE_PI_HEADER:
                     if (m_state == DMORXS_VOICE) {
-                        DEBUG2("DMRDMORX: databit(): voice pi header found pos", m_syncPtr);
+                        DEBUG2("DMRDMORX::databit() voice pi header found pos", m_syncPtr);
                         writeRSSIData(frame);
                     }
                     m_state = DMORXS_VOICE;
                     break;
                 case DT_TERMINATOR_WITH_LC:
                     if (m_state == DMORXS_VOICE) {
-                        DEBUG2("DMRDMORX: databit(): voice terminator found pos", m_syncPtr);
+                        DEBUG2("DMRDMORX::databit() voice terminator found pos", m_syncPtr);
                         writeRSSIData(frame);
                         reset();
                     }
                     break;
                 default:    // DT_CSBK
-                    DEBUG2("DMRDMORX: databit(): csbk found pos", m_syncPtr);
+                    DEBUG2("DMRDMORX::databit() csbk found pos", m_syncPtr);
                     writeRSSIData(frame);
                     reset();
                     break;
@@ -184,7 +184,7 @@ void DMRDMORX::databit(bool bit)
         }
         else if (m_control == CONTROL_VOICE) {
             // Voice sync
-            DEBUG2("DMRDMORX: databit(): voice sync found pos", m_syncPtr);
+            DEBUG2("DMRDMORX::databit() voice sync found pos", m_syncPtr);
             writeRSSIData(frame);
 
             m_state = DMORXS_VOICE;
@@ -195,7 +195,7 @@ void DMRDMORX::databit(bool bit)
             if (m_state != DMORXS_NONE) {
                 m_syncCount++;
                 if (m_syncCount >= MAX_SYNC_LOST_FRAMES) {
-                    DEBUG1("DMRDMORX: databit(): sync timeout, lost lock");
+                    DEBUG1("DMRDMORX::databit() sync timeout, lost lock");
                     serial.writeDMRLost(true);
                     reset();
                 }
@@ -265,11 +265,11 @@ void DMRDMORX::correlateSync()
         for (uint8_t i = 0U; i < DMR_SYNC_BYTES_LENGTH; i++)
             errs += countBits8((sync[i] & DMR_SYNC_BYTES_MASK[i]) ^ DMR_MS_DATA_SYNC_BYTES[i]);
 
-        DEBUG2("DMRDMORX: correlateSync(): correlateSync errs", errs);
+        DEBUG2("DMRDMORX::correlateSync() sync errs", errs);
 
-        DEBUG4("DMRDMORX: correlateSync(): sync [b0 - b2]", sync[0], sync[1], sync[2]);
-        DEBUG4("DMRDMORX: correlateSync(): sync [b3 - b5]", sync[3], sync[4], sync[5]);
-        DEBUG2("DMRDMORX: correlateSync(): sync [b6]", sync[6]);
+        DEBUG4("DMRDMORX::correlateSync() sync [b0 - b2]", sync[0], sync[1], sync[2]);
+        DEBUG4("DMRDMORX::correlateSync() sync [b3 - b5]", sync[3], sync[4], sync[5]);
+        DEBUG2("DMRDMORX::correlateSync() sync [b6]", sync[6]);
 
         m_control = CONTROL_DATA;
         m_syncPtr = m_dataPtr;
@@ -282,18 +282,18 @@ void DMRDMORX::correlateSync()
         if (m_endPtr >= DMO_BUFFER_LENGTH_BITS)
             m_endPtr -= DMO_BUFFER_LENGTH_BITS;
 
-        DEBUG4("DMRDMORX: correlateSync(): dataPtr/startPtr/endPtr", m_dataPtr, m_startPtr, m_endPtr);
+        DEBUG4("DMRDMORX::correlateSync() dataPtr/startPtr/endPtr", m_dataPtr, m_startPtr, m_endPtr);
     } else if ((countBits64((m_bitBuffer & DMR_SYNC_BITS_MASK) ^ DMR_MS_VOICE_SYNC_BITS) <= MAX_SYNC_BYTES_ERRS) || 
         (countBits64((m_bitBuffer & DMR_SYNC_BITS_MASK) ^ DMR_S2_VOICE_SYNC_BITS) <= MAX_SYNC_BYTES_ERRS)) {
         uint8_t errs = 0U;
         for (uint8_t i = 0U; i < DMR_SYNC_BYTES_LENGTH; i++)
             errs += countBits8((sync[i] & DMR_SYNC_BYTES_MASK[i]) ^ DMR_MS_VOICE_SYNC_BYTES[i]);
 
-        DEBUG2("DMRDMORX: correlateSync(): correlateSync errs", errs);
+        DEBUG2("DMRDMORX::correlateSync() correlateSync errs", errs);
 
-        DEBUG4("DMRDMORX: correlateSync(): sync [b0 - b2]", sync[0], sync[1], sync[2]);
-        DEBUG4("DMRDMORX: correlateSync(): sync [b3 - b5]", sync[3], sync[4], sync[5]);
-        DEBUG2("DMRDMORX: correlateSync(): sync [b6]", sync[6]);
+        DEBUG4("DMRDMORX::correlateSync() sync [b0 - b2]", sync[0], sync[1], sync[2]);
+        DEBUG4("DMRDMORX::correlateSync() sync [b3 - b5]", sync[3], sync[4], sync[5]);
+        DEBUG2("DMRDMORX::correlateSync() sync [b6]", sync[6]);
 
         m_control  = CONTROL_VOICE;
         m_syncPtr  = m_dataPtr;
@@ -306,7 +306,7 @@ void DMRDMORX::correlateSync()
         if (m_endPtr >= DMO_BUFFER_LENGTH_BITS)
             m_endPtr -= DMO_BUFFER_LENGTH_BITS;
 
-        DEBUG4("DMRDMORX: correlateSync(): dataPtr/startPtr/endPtr", m_dataPtr, m_startPtr, m_endPtr);
+        DEBUG4("DMRDMORX::correlateSync() dataPtr/startPtr/endPtr", m_dataPtr, m_startPtr, m_endPtr);
     }    
 }
 
@@ -379,4 +379,3 @@ void DMRDMORX::writeRSSIData(uint8_t* frame)
     serial.writeDMRData(true, frame, DMR_FRAME_LENGTH_BYTES + 1U);
 #endif
 }
-

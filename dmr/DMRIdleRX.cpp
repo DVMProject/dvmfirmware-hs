@@ -91,7 +91,7 @@ void DMRIdleRX::databit(bool bit)
         if (m_endPtr >= DMR_IDLE_LENGTH_BITS)
             m_endPtr -= DMR_IDLE_LENGTH_BITS;
 
-        DEBUG3("DMRIdleRx: databit(): dataPtr/endPtr", m_dataPtr, m_endPtr);
+        DEBUG3("DMRIdleRx::databit() dataPtr/endPtr", m_dataPtr, m_endPtr);
     }
 
     if (m_dataPtr == m_endPtr) {

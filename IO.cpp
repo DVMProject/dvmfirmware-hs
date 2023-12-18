@@ -135,7 +135,7 @@ void IO::process()
         if (m_cwIdState) { 
             // check for CW ID end of transmission
             m_cwIdState = false;
-            DEBUG2("IO::process(): setting modem state", m_modemState);
+            DEBUG2("IO::process() setting modem state", m_modemState);
             io.rf1Conf(m_modemState, true);
         }
 
@@ -230,10 +230,10 @@ void IO::setMode(DVM_STATE modemState)
         relativeState = serial.calRelativeState(modemState);
     }
 
-    DEBUG3("IO::setMode(): setting modem state", modemState, relativeState);
+    DEBUG3("IO::setMode() setting modem state", modemState, relativeState);
     rf1Conf(relativeState, true);
 
-    DEBUG4("IO::setMode(): setting lights", relativeState == STATE_DMR, relativeState == STATE_P25, relativeState == STATE_NXDN);
+    DEBUG4("IO::setMode() setting lights", relativeState == STATE_DMR, relativeState == STATE_P25, relativeState == STATE_NXDN);
     setDMRInt(relativeState == STATE_DMR);
     setP25Int(relativeState == STATE_P25);
     setNXDNInt(relativeState == STATE_NXDN);
@@ -300,7 +300,7 @@ uint8_t IO::setRFParams(uint32_t rxFreq, uint32_t txFreq, uint8_t rfPower, ADF_G
     m_rxFrequency = rxFreq;
     m_txFrequency = txFreq;
 
-    DEBUG5("IO::setRFParams(): setting RF params", m_rxFrequency, m_txFrequency, m_rfPower, m_gainMode);
+    DEBUG5("IO::setRFParams() setting RF params", m_rxFrequency, m_txFrequency, m_rfPower, m_gainMode);
 
     return RSN_OK;
 }

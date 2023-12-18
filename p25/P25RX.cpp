@@ -145,7 +145,7 @@ void P25RX::processBit(bool bit)
 {
     // process NID
     if (m_dataPtr == P25_SYNC_LENGTH_BITS + P25_NID_LENGTH_BITS + 1) {
-        DEBUG3("P25RX: processBit(): dataPtr/endPtr", m_dataPtr, m_endPtr);
+        DEBUG3("P25RX::processBit() dataPtr/endPtr", m_dataPtr, m_endPtr);
 
         if (!decodeNid()) {
             io.setDecode(false);
@@ -157,13 +157,13 @@ void P25RX::processBit(bool bit)
             switch (m_duid) {
             case P25_DUID_HDU:
                 {
-                    DEBUG2("P25RX: processBit(): sync found in HDU pos", m_dataPtr);
+                    DEBUG2("P25RX::processBit() sync found in HDU pos", m_dataPtr);
                     m_endPtr = P25_HDU_FRAME_LENGTH_BITS;
                 }
                 break;
             case P25_DUID_TDU:
                 {
-                    DEBUG2("P25RX: processBit(): sync found in TDU pos", m_dataPtr);
+                    DEBUG2("P25RX::processBit() sync found in TDU pos", m_dataPtr);
                     m_endPtr = P25_TDU_FRAME_LENGTH_BITS;
                 }
                 break;
@@ -173,7 +173,7 @@ void P25RX::processBit(bool bit)
                 return;
             case P25_DUID_TSDU:
                 {
-                    DEBUG2("P25RX: processBit(): sync found in TSDU pos", m_dataPtr);
+                    DEBUG2("P25RX::processBit() sync found in TSDU pos", m_dataPtr);
                     m_endPtr = P25_TSDU_FRAME_LENGTH_BITS;
                 }
                 break;
@@ -187,13 +187,13 @@ void P25RX::processBit(bool bit)
                 return;
             case P25_DUID_TDULC:
                 {
-                    DEBUG2("P25RX: processBit(): sync found in TDULC pos", m_dataPtr);
+                    DEBUG2("P25RX::processBit() sync found in TDULC pos", m_dataPtr);
                     m_endPtr = P25_TDULC_FRAME_LENGTH_BITS;
                 }
                 break;
             default:
                 {
-                    DEBUG3("P25RX: processBit(): illegal DUID in NID", m_nac, m_duid);
+                    DEBUG3("P25RX::processBit() illegal DUID in NID", m_nac, m_duid);
                     reset();
                 }
                 return;
@@ -246,7 +246,7 @@ void P25RX::processVoice(bool bit)
 
     // process NID
     if (m_dataPtr == P25_SYNC_LENGTH_BITS + P25_NID_LENGTH_BITS + 1) {
-        DEBUG3("P25RX: processVoice(): dataPtr/endPtr", m_dataPtr, m_endPtr);
+        DEBUG3("P25RX::processVoice() dataPtr/endPtr", m_dataPtr, m_endPtr);
 
         if (!decodeNid()) {
             io.setDecode(false);
@@ -258,7 +258,7 @@ void P25RX::processVoice(bool bit)
             switch (m_duid) {
             case P25_DUID_TDU:
                 {
-                    DEBUG2("P25RX: processVoice(): sync found in TDU pos", m_dataPtr);
+                    DEBUG2("P25RX::processVoice() sync found in TDU pos", m_dataPtr);
                     m_endPtr = P25_TDU_FRAME_LENGTH_BITS;
                 }
                 break;
@@ -270,7 +270,7 @@ void P25RX::processVoice(bool bit)
                 return;
             default:
                 {
-                    DEBUG3("P25RX: processVoice(): illegal DUID in NID", m_nac, m_duid);
+                    DEBUG3("P25RX::processVoice() illegal DUID in NID", m_nac, m_duid);
                     reset();
                 }
                 return;
@@ -281,7 +281,7 @@ void P25RX::processVoice(bool bit)
     // if we've reached the end pointer and the DUID is a TDU; send it
     if (m_dataPtr == m_endPtr && m_duid == P25_DUID_TDU)
     {
-        DEBUG2("P25RX: processVoice(): sync found in TDU pos", m_dataPtr);
+        DEBUG2("P25RX::processVoice() sync found in TDU pos", m_dataPtr);
 
         uint8_t frame[P25_TDU_FRAME_LENGTH_BYTES + 1U];
         ::memcpy(frame + 1U, m_buffer, m_endPtr / 8U);
@@ -301,7 +301,7 @@ void P25RX::processVoice(bool bit)
         
         // we've not seen a data sync for too long, signal sync lost and change to P25RXS_NONE
         if (m_lostCount == 0U) {
-            DEBUG1("P25RX: processVoice(): sync timeout in LDU, lost lock");
+            DEBUG1("P25RX::processVoice() sync timeout in LDU, lost lock");
 
             io.setDecode(false);
 
@@ -309,7 +309,7 @@ void P25RX::processVoice(bool bit)
             reset();
         }
         else {
-            DEBUG2("P25RX: processVoice(): sync found in LDU pos", m_dataPtr);
+            DEBUG2("P25RX::processVoice() sync found in LDU pos", m_dataPtr);
 
             uint8_t frame[P25_LDU_FRAME_LENGTH_BYTES + 3U];
             ::memcpy(frame + 1U, m_buffer, m_endPtr / 8U);
@@ -342,7 +342,7 @@ void P25RX::processData(bool bit)
 
     // process NID
     if (m_dataPtr == P25_SYNC_LENGTH_BITS + P25_NID_LENGTH_BITS + 1) {
-        DEBUG3("P25RX: processVoice(): dataPtr/endPtr", m_dataPtr, m_endPtr);
+        DEBUG3("P25RX::processData() dataPtr/endPtr", m_dataPtr, m_endPtr);
 
         if (!decodeNid()) {
             io.setDecode(false);
@@ -357,7 +357,7 @@ void P25RX::processData(bool bit)
                 return;
             default:
                 {
-                    DEBUG3("P25RX: processData(): illegal DUID in NID", m_nac, m_duid);
+                    DEBUG3("P25RX::processData() illegal DUID in NID", m_nac, m_duid);
                     reset();
                 }
                 return;
@@ -371,7 +371,7 @@ void P25RX::processData(bool bit)
         
         // we've not seen a data sync for too long, signal sync lost and change to P25RXS_NONE
         if (m_lostCount == 0U) {
-            DEBUG1("P25RX: processData(): sync timeout in PDU, lost lock");
+            DEBUG1("P25RX::processData() sync timeout in PDU, lost lock");
 
             io.setDecode(false);
 
@@ -379,7 +379,7 @@ void P25RX::processData(bool bit)
             reset();
         }
         else {
-            DEBUG2("P25RX: processData(): sync found in PDU pos", m_dataPtr);
+            DEBUG2("P25RX::processData() sync found in PDU pos", m_dataPtr);
 
             uint8_t frame[P25_LDU_FRAME_LENGTH_BYTES + 1U];
             ::memcpy(frame + 1U, m_buffer, m_endPtr / 8U);
@@ -407,7 +407,7 @@ bool P25RX::correlateSync()
     if (errs <= maxErrs) {
         ::memset(m_buffer, 0x00U, P25_LDU_FRAME_LENGTH_BYTES + 3U);
 
-        DEBUG2("P25RX: correlateSync(): correlateSync errs", errs);
+        DEBUG2("P25RX::correlateSync() sync errs", errs);
 
         // unpack sync bytes
         uint8_t sync[P25_SYNC_BYTES_LENGTH];
@@ -418,8 +418,8 @@ bool P25RX::correlateSync()
         sync[4U] = (uint8_t)((m_bitBuffer >> 8) & 0xFFU);
         sync[5U] = (uint8_t)((m_bitBuffer >> 0) & 0xFFU);
 
-        DEBUG4("P25RX: correlateSync(): sync [b0 - b2]", sync[0], sync[1], sync[2]);
-        DEBUG4("P25RX: correlateSync(): sync [b3 - b5]", sync[3], sync[4], sync[5]);
+        DEBUG4("P25RX::correlateSync() sync [b0 - b2]", sync[0], sync[1], sync[2]);
+        DEBUG4("P25RX::correlateSync() sync [b3 - b5]", sync[3], sync[4], sync[5]);
 
         for (uint8_t i = 0U; i < P25_SYNC_BYTES_LENGTH; i++)
             m_buffer[i] = sync[i];
@@ -434,7 +434,7 @@ bool P25RX::correlateSync()
         m_lostCount = MAX_SYNC_FRAMES;
         m_dataPtr = P25_SYNC_LENGTH_BITS;
 
-        DEBUG3("P25RX: correlateSync(): dataPtr/endPtr", m_dataPtr, m_endPtr);
+        DEBUG3("P25RX::correlateSync() dataPtr/endPtr", m_dataPtr, m_endPtr);
 
         return true;
     }
@@ -453,18 +453,18 @@ bool P25RX::decodeNid()
 
     if (m_nac == 0xF7EU) {
         m_duid = nid[1U] & 0x0FU;
-        DEBUG2("P25RX: decodeNid(): DUID for xDU", m_duid);
+        DEBUG2("P25RX::decodeNid() DUID for xDU", m_duid);
         return true;
     }
 
     uint16_t nac = (nid[0U] << 4) | ((nid[1U] & 0xF0U) >> 4);
     if (nac == m_nac) {
         m_duid = nid[1U] & 0x0FU;
-        DEBUG2("P25RX: decodeNid(): DUID for xDU", m_duid);
+        DEBUG2("P25RX::decodeNid() DUID for xDU", m_duid);
         return true;
     }
     else {
-        DEBUG3("P25RX: decodeNid(): invalid NAC found; nac != m_nac", nac, m_nac);
+        DEBUG3("P25RX::decodeNid() invalid NAC found; nac != m_nac", nac, m_nac);
     }
 
     return false;

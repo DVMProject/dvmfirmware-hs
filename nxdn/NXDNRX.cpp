@@ -83,17 +83,16 @@ void NXDNRX::reset()
 /// <param name="bit"></param>
 void NXDNRX::databit(bool bit)
 {
-    m_bitBuffer <<= 1;
-    if (bit)
-        m_bitBuffer |= 0x01U;
-
     if (m_state == NXDNRXS_DATA) {
         processData(bit);
     }
     else {
+        m_bitBuffer <<= 1;
+        if (bit)
+            m_bitBuffer |= 0x01U;
+
         bool ret = correlateSync(true);
         if (ret) {
-            DEBUG2("NXDNRX: databit(): dataPtr", m_dataPtr);
             m_state = NXDNRXS_DATA;
         }
 
@@ -111,6 +110,10 @@ void NXDNRX::databit(bool bit)
 /// <param name="bit"></param>
 void NXDNRX::processData(bool bit)
 {
+    m_bitBuffer <<= 1;
+    if (bit)
+        m_bitBuffer |= 0x01U;
+
     _WRITE_BIT(m_buffer, m_dataPtr, bit);
 
     m_dataPtr++;
@@ -120,7 +123,9 @@ void NXDNRX::processData(bool bit)
 
     // only search for a sync in the right place +-2 bits
     if (m_dataPtr >= (NXDN_FSW_LENGTH_BITS - 2U) && m_dataPtr <= (NXDN_FSW_LENGTH_BITS + 2U)) {
-        correlateSync();
+        if (correlateSync()) {
+            DEBUG2("NXDNRX::processData() sync found pos", m_dataPtr - NXDN_FSW_LENGTH_BITS);
+        }
     }
 
     // process frame
@@ -129,7 +134,7 @@ void NXDNRX::processData(bool bit)
         
         // we've not seen a data sync for too long, signal sync lost and change to NXDNRXS_NONE
         if (m_lostCount == 0U) {
-            DEBUG1("NXDNRX: processData(): sync timed out, lost lock");
+            DEBUG1("NXDNRX::processData() sync timed out, lost lock");
 
             io.setDecode(false);
 
@@ -137,8 +142,6 @@ void NXDNRX::processData(bool bit)
             reset();
         }
         else {
-            DEBUG2("NXDNRX: processData(): sync found pos", m_dataPtr);
-
             m_outBuffer[0U] = m_lostCount == (MAX_FSW_FRAMES - 1U) ? 0x01U : 0x00U; // set sync flag
             serial.writeNXDNData(m_outBuffer, NXDN_FRAME_LENGTH_BYTES + 1U);
 
@@ -164,7 +167,7 @@ bool NXDNRX::correlateSync(bool first)
     // fuzzy matching of the data sync bit sequence
     uint8_t errs = countBits64((m_bitBuffer & NXDN_FSW_BITS_MASK) ^ NXDN_FSW_BITS);
     if (errs <= maxErrs) {
-        DEBUG2("NXDNRX: correlateSync(): correlateSync errs", errs);
+        DEBUG2("NXDNRX::correlateSync() sync errs", errs);
 
         if (first) {
             // unpack sync bytes
@@ -176,13 +179,13 @@ bool NXDNRX::correlateSync(bool first)
             for (uint8_t i = 0U; i < NXDN_FSW_BYTES_LENGTH; i++)
                 m_buffer[i] = sync[i];
 
-            DEBUG4("NXDNRX: correlateSync(): sync [b0 - b2]", m_buffer[0], m_buffer[1], m_buffer[2]);
+            DEBUG4("NXDNRX::correlateSync() sync [b0 - b2]", m_buffer[0], m_buffer[1], m_buffer[2]);
         }
 
         m_lostCount = MAX_FSW_FRAMES;
         m_dataPtr = NXDN_FSW_LENGTH_BITS;
 
-        DEBUG2("NXDNRX: correlateSync(): dataPtr", m_dataPtr);
+        DEBUG2("NXDNRX::correlateSync() dataPtr", m_dataPtr - NXDN_FSW_LENGTH_BITS);
 
         return true;
     }

@@ -166,7 +166,7 @@ bool DMRSlotRX::databit(bool bit)
 
                 switch (dataType) {
                 case DT_DATA_HEADER:
-                    DEBUG3("DMRSlotRX: databit(): data header found slot/pos", m_slot ? 2U : 1U, m_syncPtr);
+                    DEBUG3("DMRSlotRX::databit() data header found slot/pos", m_slot ? 2U : 1U, m_syncPtr);
                     writeRSSIData(frame);
                     m_state = DMRRXS_DATA;
                     m_type = 0x00U;
@@ -175,33 +175,33 @@ bool DMRSlotRX::databit(bool bit)
                 case DT_RATE_34_DATA:
                 case DT_RATE_1_DATA:
                     if (m_state == DMRRXS_DATA) {
-                        DEBUG3("DMRSlotRX: databit(): data payload found slot/pos", m_slot ? 2U : 1U, m_syncPtr);
+                        DEBUG3("DMRSlotRX::databit() data payload found slot/pos", m_slot ? 2U : 1U, m_syncPtr);
                         writeRSSIData(frame);
                         m_type = dataType;
                     }
                     break;
                 case DT_VOICE_LC_HEADER:
-                    DEBUG3("DMRSlotRX: databit(): voice header found slot/pos", m_slot ? 2U : 1U, m_syncPtr);
+                    DEBUG3("DMRSlotRX::databit() voice header found slot/pos", m_slot ? 2U : 1U, m_syncPtr);
                     writeRSSIData(frame);
                     m_state = DMRRXS_VOICE;
                     break;
                 case DT_VOICE_PI_HEADER:
                     if (m_state == DMRRXS_VOICE) {
-                        DEBUG3("DMRSlotRX: databit(): voice pi header found slot/pos", m_slot ? 2U : 1U, m_syncPtr);
+                        DEBUG3("DMRSlotRX::databit() voice pi header found slot/pos", m_slot ? 2U : 1U, m_syncPtr);
                         writeRSSIData(frame);
                     }
                     m_state = DMRRXS_VOICE;
                     break;
                 case DT_TERMINATOR_WITH_LC:
                     if (m_state == DMRRXS_VOICE) {
-                        DEBUG3("DMRSlotRX: databit(): voice terminator found slot/pos", m_slot ? 2U : 1U, m_syncPtr);
+                        DEBUG3("DMRSlotRX::databit() voice terminator found slot/pos", m_slot ? 2U : 1U, m_syncPtr);
                         writeRSSIData(frame);
                         m_state = DMRRXS_NONE;
                         m_endPtr = NOENDPTR;
                     }
                     break;
                 default:    // DT_CSBK
-                    DEBUG3("DMRSlotRX: databit(): csbk found slot/pos", m_slot ? 2U : 1U, m_syncPtr);
+                    DEBUG3("DMRSlotRX::databit() csbk found slot/pos", m_slot ? 2U : 1U, m_syncPtr);
                     writeRSSIData(frame);
                     m_state = DMRRXS_NONE;
                     m_endPtr = NOENDPTR;
@@ -211,7 +211,7 @@ bool DMRSlotRX::databit(bool bit)
         }
         else if (m_control == CONTROL_VOICE) {
             // Voice sync
-            DEBUG3("DMRSlotRX: databit(): voice sync found slot/pos", m_slot ? 2U : 1U, m_syncPtr);
+            DEBUG3("DMRSlotRX::databit() voice sync found slot/pos", m_slot ? 2U : 1U, m_syncPtr);
             writeRSSIData(frame);
             m_state = DMRRXS_VOICE;
             m_syncCount = 0U;
@@ -221,7 +221,7 @@ bool DMRSlotRX::databit(bool bit)
             if (m_state != DMRRXS_NONE) {
                 m_syncCount++;
                 if (m_syncCount >= MAX_SYNC_LOST_FRAMES) {
-                    DEBUG1("DMRSlotRX: databit(): sync timeout, lost lock");
+                    DEBUG1("DMRSlotRX::databit() sync timeout, lost lock");
                     serial.writeDMRLost(m_slot);
                     resetSlot();
                 }
@@ -300,11 +300,11 @@ void DMRSlotRX::correlateSync()
         for (uint8_t i = 0U; i < DMR_SYNC_BYTES_LENGTH; i++)
             errs += countBits8((sync[i] & DMR_SYNC_BYTES_MASK[i]) ^ DMR_MS_DATA_SYNC_BYTES[i]);
 
-        DEBUG2("DMRSlotRX: correlateSync(): correlateSync errs", errs);
+        DEBUG2("DMRSlotRX::correlateSync() sync errs", errs);
 
-        DEBUG4("DMRSlotRX: correlateSync(): sync [b0 - b2]", sync[0], sync[1], sync[2]);
-        DEBUG4("DMRSlotRX: correlateSync(): sync [b3 - b5]", sync[3], sync[4], sync[5]);
-        DEBUG2("DMRSlotRX: correlateSync(): sync [b6]", sync[6]);
+        DEBUG4("DMRSlotRX::correlateSync() sync [b0 - b2]", sync[0], sync[1], sync[2]);
+        DEBUG4("DMRSlotRX::correlateSync() sync [b3 - b5]", sync[3], sync[4], sync[5]);
+        DEBUG2("DMRSlotRX::correlateSync() sync [b6]", sync[6]);
 
         m_control = CONTROL_DATA;
         m_syncPtr = m_dataPtr;
@@ -317,17 +317,17 @@ void DMRSlotRX::correlateSync()
         if (m_endPtr >= DMR_BUFFER_LENGTH_BITS)
             m_endPtr -= DMR_BUFFER_LENGTH_BITS;
 
-        DEBUG4("DMRSlotRX: correlateSync(): dataPtr/startPtr/endPtr", m_dataPtr, m_startPtr, m_endPtr);
+        DEBUG4("DMRSlotRX::correlateSync() dataPtr/startPtr/endPtr", m_dataPtr, m_startPtr, m_endPtr);
     } else if (countBits64((m_bitBuffer & DMR_SYNC_BITS_MASK) ^ DMR_MS_VOICE_SYNC_BITS) <= MAX_SYNC_BYTES_ERRS) {
         uint8_t errs = 0U;
         for (uint8_t i = 0U; i < DMR_SYNC_BYTES_LENGTH; i++)
             errs += countBits8((sync[i] & DMR_SYNC_BYTES_MASK[i]) ^ DMR_MS_VOICE_SYNC_BYTES[i]);
 
-        DEBUG2("DMRSlotRX: correlateSync(): correlateSync errs", errs);
+        DEBUG2("DMRSlotRX::correlateSync() sync errs", errs);
 
-        DEBUG4("DMRSlotRX: correlateSync(): sync [b0 - b2]", sync[0], sync[1], sync[2]);
-        DEBUG4("DMRSlotRX: correlateSync(): sync [b3 - b5]", sync[3], sync[4], sync[5]);
-        DEBUG2("DMRSlotRX: correlateSync(): sync [b6]", sync[6]);
+        DEBUG4("DMRSlotRX::correlateSync() sync [b0 - b2]", sync[0], sync[1], sync[2]);
+        DEBUG4("DMRSlotRX::correlateSync() sync [b3 - b5]", sync[3], sync[4], sync[5]);
+        DEBUG2("DMRSlotRX::correlateSync() sync [b6]", sync[6]);
 
         m_control = CONTROL_VOICE;
         m_syncPtr = m_dataPtr;
@@ -340,7 +340,7 @@ void DMRSlotRX::correlateSync()
         if (m_endPtr >= DMR_BUFFER_LENGTH_BITS)
             m_endPtr -= DMR_BUFFER_LENGTH_BITS;
 
-        DEBUG4("DMRSlotRX: correlateSync(): dataPtr/startPtr/endPtr", m_dataPtr, m_startPtr, m_endPtr);
+        DEBUG4("DMRSlotRX::correlateSync() dataPtr/startPtr/endPtr", m_dataPtr, m_startPtr, m_endPtr);
     }
 }
 

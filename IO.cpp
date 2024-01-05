@@ -148,7 +148,7 @@ void IO::process()
         if (m_modemState == STATE_DMR) {
             /** Digital Mobile Radio */
 #if defined(DUPLEX)
-            if (m_duplex) {
+            if (m_duplex && !m_forceDMO) {
                 if (m_tx)
                     dmrRX.databit(bit, control);
                 else

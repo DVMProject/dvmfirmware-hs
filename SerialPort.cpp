@@ -1010,6 +1010,7 @@ uint8_t SerialPort::setConfig(const uint8_t* data, uint8_t length)
 
     bool simplex = (data[0U] & 0x80U) == 0x80U;
 
+    m_forceDMO = (data[0U] & 0x40U) == 0x40U;
     m_debug = (data[0U] & 0x10U) == 0x10U;
 
     bool dmrEnable = (data[1U] & 0x02U) == 0x02U;

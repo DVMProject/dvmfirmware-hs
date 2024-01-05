@@ -47,6 +47,7 @@ bool m_p25Enable = true;
 bool m_nxdnEnable = true;
 
 bool m_duplex = false;
+bool m_forceDMO = false;
 
 bool m_tx = false;
 bool m_dcd = false;

@@ -100,6 +100,7 @@ extern bool m_p25Enable;
 extern bool m_nxdnEnable;
 
 extern bool m_duplex;
+extern bool m_forceDMO;
 
 extern bool m_tx;
 extern bool m_dcd;

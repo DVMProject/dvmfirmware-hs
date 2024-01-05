@@ -138,9 +138,9 @@ void DMRDMOTX::setPreambleCount(uint8_t preambleCnt)
     uint32_t preambles = (uint32_t)((float)preambleCnt / 0.2083F);
     m_preambleCnt = DMRDMO_FIXED_DELAY + preambles;
 
-    // clamp preamble count to 250ms maximum
-    if (m_preambleCnt > 1200U)
-        m_preambleCnt = 1200U;
+    // clamp preamble count to 16ms maximum
+    if (m_preambleCnt > 80U)
+        m_preambleCnt = 80U;
 }
 
 /// <summary>

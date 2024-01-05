@@ -559,7 +559,7 @@ void IO::rf2Conf(DVM_STATE modemState)
     AD7021_CONTROL = ADF7021_REG2;
     AD7021_2_IOCTL();
 
-    DEBUG3("IO::rf2Conf(): ADF2 REG2 =", (ADF7021_REG2 >> 16 & 0xFFFFU), (ADF7021_REG3 & 0xFFFFU));
+    DEBUG3("IO::rf2Conf() ADF2 REG2 =", (ADF7021_REG2 >> 16 & 0xFFFFU), (ADF7021_REG3 & 0xFFFFU));
 
     /*
     ** Test DAC (Register 14)

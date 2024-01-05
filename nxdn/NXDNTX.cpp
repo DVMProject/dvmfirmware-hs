@@ -151,8 +151,9 @@ void NXDNTX::setPreambleCount(uint8_t preambleCnt)
 {
     m_preambleCnt = 300U + uint16_t(preambleCnt) * 6U; // 500ms + tx delay
 
-    if (m_preambleCnt > 1200U)
-        m_preambleCnt = 1200U;
+    // clamp preamble count
+    if (m_preambleCnt > 60U)
+        m_preambleCnt = 60U;
 }
 
 /// <summary>

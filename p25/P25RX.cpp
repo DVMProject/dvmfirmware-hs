@@ -152,6 +152,7 @@ void P25RX::processBit(bool bit)
                 }
                 break;
             case P25_DUID_LDU1:
+            case P25_DUID_VSELP1:
                 m_state = P25RXS_VOICE;
                 m_endPtr = P25_LDU_FRAME_LENGTH_BITS;
                 return;
@@ -162,6 +163,7 @@ void P25RX::processBit(bool bit)
                 }
                 break;
             case P25_DUID_LDU2:
+            case P25_DUID_VSELP2:
                 m_state = P25RXS_VOICE;
                 m_endPtr = P25_LDU_FRAME_LENGTH_BITS;
                 return;

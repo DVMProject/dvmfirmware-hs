@@ -10,7 +10,7 @@
 *
 *   Copyright (C) 2015,2016,2017 Jonathan Naylor, G4KLX
 *   Copyright (C) 2016,2017,2018 Andy Uribe, CA6JAU
-*   Copyright (C) 2021 Bryan Biedenkapp, N2PLL
+*   Copyright (C) 2021-2024 Bryan Biedenkapp, N2PLL
 *
 */
 #if !defined(__P25_RX_H__)
@@ -53,11 +53,12 @@ namespace p25
 
     private:
         uint64_t m_bitBuffer;
-        uint8_t m_buffer[P25_LDU_FRAME_LENGTH_BYTES + 3U];
+        uint8_t m_buffer[P25_PDU_FRAME_LENGTH_BYTES + 3U];
 
         uint16_t m_dataPtr;
 
         uint16_t m_endPtr;
+        uint16_t m_pduEndPtr;
 
         uint16_t m_lostCount;
 

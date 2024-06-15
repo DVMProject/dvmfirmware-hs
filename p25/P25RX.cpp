@@ -10,7 +10,7 @@
 *
 *   Copyright (C) 2016,2017 Jonathan Naylor, G4KLX
 *   Copyright (C) 2016,2017,2018 Andy Uribe, CA6JAU
-*   Copyright (C) 2021 Bryan Biedenkapp, N2PLL
+*   Copyright (C) 2021-2024 Bryan Biedenkapp, N2PLL
 *
 */
 #include "Globals.h"
@@ -42,6 +42,7 @@ P25RX::P25RX() :
     m_buffer(),
     m_dataPtr(0U),
     m_endPtr(NOENDPTR),
+    m_pduEndPtr(NOENDPTR),
     m_lostCount(0U),
     m_nac(0xF7EU),
     m_state(P25RXS_NONE),
@@ -61,6 +62,7 @@ void P25RX::reset()
     ::memset(m_buffer, 0x00U, P25_LDU_FRAME_LENGTH_BYTES + 3U);
 
     m_endPtr = NOENDPTR;
+    m_pduEndPtr = NOENDPTR;
 
     m_lostCount = 0U;
 
@@ -83,8 +85,14 @@ void P25RX::databit(bool bit)
         _WRITE_BIT(m_buffer, m_dataPtr, bit);
 
         m_dataPtr++;
-        if (m_dataPtr > P25_LDU_FRAME_LENGTH_BITS) {
-            reset();
+        if (m_state != P25RXS_DATA) {
+            if (m_dataPtr > P25_LDU_FRAME_LENGTH_BITS) {
+                reset();
+            }
+        } else {
+            if (m_dataPtr > P25_PDU_FRAME_LENGTH_BITS) {
+                reset();
+            }
         }
     }
 
@@ -169,7 +177,7 @@ void P25RX::processBit(bool bit)
                 return;
             case P25_DUID_PDU:
                 m_state = P25RXS_DATA;
-                m_endPtr = P25_LDU_FRAME_LENGTH_BITS;
+                m_endPtr = m_pduEndPtr = P25_PDU_FRAME_LENGTH_BITS;
                 return;
             case P25_DUID_TDULC:
                 {
@@ -328,7 +336,7 @@ void P25RX::processData(bool bit)
 
     // process NID
     if (m_dataPtr == P25_SYNC_LENGTH_BITS + P25_NID_LENGTH_BITS + 1) {
-        DEBUG3("P25RX::processData() dataPtr/endPtr", m_dataPtr, m_endPtr);
+        DEBUG3("P25RX::processData() dataPtr/pduEndPtr", m_dataPtr, m_pduEndPtr);
 
         if (!decodeNid()) {
             io.setDecode(false);
@@ -339,7 +347,7 @@ void P25RX::processData(bool bit)
         else {
             switch (m_duid) {
             case P25_DUID_PDU:
-                m_endPtr = P25_LDU_FRAME_LENGTH_BITS;
+                m_endPtr = m_pduEndPtr = P25_PDU_FRAME_LENGTH_BITS;
                 return;
             default:
                 {
@@ -351,8 +359,8 @@ void P25RX::processData(bool bit)
         }
     }
 
-    // process voice frame
-    if (m_dataPtr == m_endPtr) {
+    // process data frame
+    if (m_dataPtr == m_pduEndPtr) {
         m_lostCount--;
         
         // we've not seen a data sync for too long, signal sync lost and change to P25RXS_NONE
@@ -367,11 +375,11 @@ void P25RX::processData(bool bit)
         else {
             DEBUG2("P25RX::processData() sync found in PDU pos", m_dataPtr);
 
-            uint8_t frame[P25_LDU_FRAME_LENGTH_BYTES + 1U];
-            ::memcpy(frame + 1U, m_buffer, m_endPtr / 8U);
+            uint8_t frame[P25_PDU_FRAME_LENGTH_BYTES + 1U];
+            ::memcpy(frame + 1U, m_buffer, m_pduEndPtr / 8U);
 
             frame[0U] = m_lostCount == (MAX_SYNC_FRAMES - 1U) ? 0x01U : 0x00U; // set sync flag
-            serial.writeP25Data(frame, P25_LDU_FRAME_LENGTH_BYTES + 1U);
+            serial.writeP25Data(frame, P25_PDU_FRAME_LENGTH_BYTES + 1U);
         }
     }
 }
@@ -416,11 +424,14 @@ bool P25RX::correlateSync()
         m_endPtr = m_dataPtr + P25_LDU_FRAME_LENGTH_BITS - P25_SYNC_LENGTH_BITS;
         if (m_endPtr >= P25_LDU_FRAME_LENGTH_BITS)
             m_endPtr -= P25_LDU_FRAME_LENGTH_BITS;
+        m_pduEndPtr = m_dataPtr + P25_PDU_FRAME_LENGTH_BITS - P25_SYNC_LENGTH_BITS;
+        if (m_pduEndPtr >= P25_PDU_FRAME_LENGTH_BITS)
+            m_pduEndPtr -= P25_PDU_FRAME_LENGTH_BITS;
 
         m_lostCount = MAX_SYNC_FRAMES;
         m_dataPtr = P25_SYNC_LENGTH_BITS;
 
-        DEBUG3("P25RX::correlateSync() dataPtr/endPtr", m_dataPtr, m_endPtr);
+        DEBUG4("P25RX::correlateSync() dataPtr/endPtr/pduEndPtr", m_dataPtr, m_endPtr, m_pduEndPtr);
 
         return true;
     }

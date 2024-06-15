@@ -12,7 +12,7 @@
 *   Copyright (C) 2016 Colin Durbridge, G4EML
 *   Copyright (C) 2016,2017,2018,2019 Andy Uribe, CA6JAU
 *   Copyright (C) 2019 Florian Wolters, DF2ET
-*   Copyright (C) 2017-2022 Bryan Biedenkapp, N2PLL
+*   Copyright (C) 2017-2024 Bryan Biedenkapp, N2PLL
 *
 */
 #include "Globals.h"
@@ -25,7 +25,7 @@
 #define concat(a, b, c) a " (build " b " " c ")"
 const char HARDWARE[] = concat(DESCRIPTION, __TIME__, __DATE__);
 
-const uint8_t PROTOCOL_VERSION   = 3U;
+const uint8_t PROTOCOL_VERSION   = 4U;
 
 // ---------------------------------------------------------------------------
 //  Public Class Members
@@ -38,6 +38,7 @@ SerialPort::SerialPort() :
     m_buffer(),
     m_ptr(0U),
     m_len(0U),
+    m_dblFrame(false),
     m_debug(false)
 {
     // stub
@@ -60,11 +61,19 @@ void SerialPort::process()
         uint8_t c = readInt(1U);
 
         if (m_ptr == 0U) {
-            if (c == DVM_FRAME_START) {
+            if (c == DVM_SHORT_FRAME_START) {
                 // Handle the frame start correctly
                 m_buffer[0U] = c;
                 m_ptr = 1U;
                 m_len = 0U;
+                m_dblFrame = false;
+            }
+            else if (c == DVM_LONG_FRAME_START) {
+                // Handle the frame start correctly
+                m_buffer[0U] = c;
+                m_ptr = 1U;
+                m_len = 0U;
+                m_dblFrame = true;
             }
             else {
                 m_ptr = 0U;
@@ -73,8 +82,19 @@ void SerialPort::process()
         }
         else if (m_ptr == 1U) {
             // Handle the frame length
-            m_len = m_buffer[m_ptr] = c;
+            if (m_dblFrame) {
+                m_buffer[m_ptr] = c;
+                m_len = ((c & 0xFFU) << 8);
+            } else {
+                m_len = m_buffer[m_ptr] = c;
+            }
             m_ptr = 2U;
+        }
+        else if (m_ptr == 2U && m_dblFrame) {
+            // Handle the frame length
+            m_buffer[m_ptr] = c;
+            m_len = (m_len + (c & 0xFFU));
+            m_ptr = 3U;
         }
         else {
             // Any other bytes are added to the buffer
@@ -377,6 +397,7 @@ void SerialPort::process()
 
                 m_ptr = 0U;
                 m_len = 0U;
+                m_dblFrame = false;
             }
         }
     }
@@ -384,6 +405,7 @@ void SerialPort::process()
     if (io.getWatchdog() >= 48000U) {
         m_ptr = 0U;
         m_len = 0U;
+        m_dblFrame = false;
     }
 }
 
@@ -444,19 +466,22 @@ void SerialPort::writeDMRData(bool slot, const uint8_t* data, uint8_t length)
     if (!m_dmrEnable)
         return;
 
-    uint8_t reply[40U];
+    if (length + 3U > 40U) {
+        m_buffer[2U] = slot ? CMD_DMR_DATA2 : CMD_DMR_DATA1;
+        sendNAK(RSN_ILLEGAL_LENGTH);
+        return;
+    }
 
-    reply[0U] = DVM_FRAME_START;
-    reply[1U] = 0U;
+    uint8_t reply[40U];
+    ::memset(reply, 0x00U, 40U);
+
+    reply[0U] = DVM_SHORT_FRAME_START;
+    reply[1U] = length + 3U;
     reply[2U] = slot ? CMD_DMR_DATA2 : CMD_DMR_DATA1;
 
-    uint8_t count = 3U;
-    for (uint8_t i = 0U; i < length; i++, count++)
-        reply[count] = data[i];
+    ::memcpy(reply + 3U, data, length);
 
-    reply[1U] = count;
-
-    writeInt(1U, reply, count);
+    writeInt(1U, reply, length + 3U);
 }
 
 /// <summary>
@@ -473,7 +498,7 @@ void SerialPort::writeDMRLost(bool slot)
 
     uint8_t reply[3U];
 
-    reply[0U] = DVM_FRAME_START;
+    reply[0U] = DVM_SHORT_FRAME_START;
     reply[1U] = 3U;
     reply[2U] = slot ? CMD_DMR_LOST2 : CMD_DMR_LOST1;
 
@@ -485,7 +510,7 @@ void SerialPort::writeDMRLost(bool slot)
 /// </summary>
 /// <param name="data"></param>
 /// <param name="length"></param>
-void SerialPort::writeP25Data(const uint8_t* data, uint8_t length)
+void SerialPort::writeP25Data(const uint8_t* data, uint16_t length)
 {
     if (m_modemState != STATE_P25 && m_modemState != STATE_IDLE)
         return;
@@ -493,19 +518,33 @@ void SerialPort::writeP25Data(const uint8_t* data, uint8_t length)
     if (!m_p25Enable)
         return;
 
-    uint8_t reply[250U];
+    if (length + 4U > 520U) {
+        m_buffer[2U] = CMD_P25_DATA;
+        sendNAK(RSN_ILLEGAL_LENGTH);
+        return;
+    }
 
-    reply[0U] = DVM_FRAME_START;
-    reply[1U] = 0U;
-    reply[2U] = CMD_P25_DATA;
+    uint8_t reply[520U];
+    ::memset(reply, 0x00U, 520U);
 
-    uint8_t count = 3U;
-    for (uint8_t i = 0U; i < length; i++, count++)
-        reply[count] = data[i];
+    if (length < 252U) {
+        reply[0U] = DVM_SHORT_FRAME_START;
+        reply[1U] = length + 3U;
+        reply[2U] = CMD_P25_DATA;
+        ::memcpy(reply + 3U, data, length);
 
-    reply[1U] = count;
+        writeInt(1U, reply, length + 3U);
+    }
+    else {
+        length += 4U;
+        reply[0U] = DVM_LONG_FRAME_START;
+        reply[1U] = (length >> 8U) & 0xFFU;
+        reply[2U] = (length & 0xFFU);
+        reply[3U] = CMD_P25_DATA;
+        ::memcpy(reply + 4U, data, length);
 
-    writeInt(1U, reply, count);
+        writeInt(1U, reply, length + 4U);
+    }
 }
 
 /// <summary>
@@ -521,7 +560,7 @@ void SerialPort::writeP25Lost()
 
     uint8_t reply[3U];
 
-    reply[0U] = DVM_FRAME_START;
+    reply[0U] = DVM_SHORT_FRAME_START;
     reply[1U] = 3U;
     reply[2U] = CMD_P25_LOST;
 
@@ -541,19 +580,22 @@ void SerialPort::writeNXDNData(const uint8_t* data, uint8_t length)
     if (!m_nxdnEnable)
         return;
 
-    uint8_t reply[130U];
+    if (length + 3U > 130U) {
+        m_buffer[2U] = CMD_NXDN_DATA;
+        sendNAK(RSN_ILLEGAL_LENGTH);
+        return;
+    }
 
-    reply[0U] = DVM_FRAME_START;
-    reply[1U] = 0U;
+    uint8_t reply[130U];
+    ::memset(reply, 0x00U, 130U);
+
+    reply[0U] = DVM_SHORT_FRAME_START;
+    reply[1U] = length + 3U;
     reply[2U] = CMD_NXDN_DATA;
 
-    uint8_t count = 3U;
-    for (uint8_t i = 0U; i < length; i++, count++)
-        reply[count] = data[i];
+    ::memcpy(reply + 3U, data, length);
 
-    reply[1U] = count;
-
-    writeInt(1U, reply, count);
+    writeInt(1U, reply, length + 3U);
 }
 
 /// <summary>
@@ -569,7 +611,7 @@ void SerialPort::writeNXDNLost()
 
     uint8_t reply[3U];
 
-    reply[0U] = DVM_FRAME_START;
+    reply[0U] = DVM_SHORT_FRAME_START;
     reply[1U] = 3U;
     reply[2U] = CMD_NXDN_LOST;
 
@@ -583,19 +625,22 @@ void SerialPort::writeNXDNLost()
 /// <param name="length"></param>
 void SerialPort::writeCalData(const uint8_t* data, uint8_t length)
 {
-    uint8_t reply[130U];
+    if (length + 3U > 130U) {
+        m_buffer[2U] = CMD_CAL_DATA;
+        sendNAK(RSN_ILLEGAL_LENGTH);
+        return;
+    }
 
-    reply[0U] = DVM_FRAME_START;
-    reply[1U] = 0U;
+    uint8_t reply[130U];
+    ::memset(reply, 0x00U, 130U);
+
+    reply[0U] = DVM_SHORT_FRAME_START;
+    reply[1U] = length + 3U;
     reply[2U] = CMD_CAL_DATA;
 
-    uint8_t count = 3U;
-    for (uint8_t i = 0U; i < length; i++, count++)
-        reply[count] = data[i];
+    ::memcpy(reply + 3U, data, length);
 
-    reply[1U] = count;
-
-    writeInt(1U, reply, count);
+    writeInt(1U, reply, length + 3U);
 }
 
 /// <summary>
@@ -608,19 +653,22 @@ void SerialPort::writeRSSIData(const uint8_t* data, uint8_t length)
     if (m_modemState != STATE_RSSI_CAL)
         return;
 
-    uint8_t reply[30U];
+    if (length + 3U > 30U) {
+        m_buffer[2U] = CMD_RSSI_DATA;
+        sendNAK(RSN_ILLEGAL_LENGTH);
+        return;
+    }
 
-    reply[0U] = DVM_FRAME_START;
-    reply[1U] = 0U;
+    uint8_t reply[30U];
+    ::memset(reply, 0x00U, 30U);
+
+    reply[0U] = DVM_SHORT_FRAME_START;
+    reply[1U] = length + 3U;
     reply[2U] = CMD_RSSI_DATA;
 
-    uint8_t count = 3U;
-    for (uint8_t i = 0U; i < length; i++, count++)
-        reply[count] = data[i];
+    ::memcpy(reply + 3U, data, length);
 
-    reply[1U] = count;
-
-    writeInt(1U, reply, count);
+    writeInt(1U, reply, length + 3U);
 }
 
 /// <summary>
@@ -633,8 +681,9 @@ void SerialPort::writeDebug(const char* text)
         return;
 
     uint8_t reply[130U];
+    ::memset(reply, 0x00U, 130U);
 
-    reply[0U] = DVM_FRAME_START;
+    reply[0U] = DVM_SHORT_FRAME_START;
     reply[1U] = 0U;
     reply[2U] = CMD_DEBUG1;
 
@@ -658,8 +707,9 @@ void SerialPort::writeDebug(const char* text, int16_t n1)
         return;
 
     uint8_t reply[130U];
+    ::memset(reply, 0x00U, 130U);
 
-    reply[0U] = DVM_FRAME_START;
+    reply[0U] = DVM_SHORT_FRAME_START;
     reply[1U] = 0U;
     reply[2U] = CMD_DEBUG2;
 
@@ -687,8 +737,9 @@ void SerialPort::writeDebug(const char* text, int16_t n1, int16_t n2)
         return;
 
     uint8_t reply[130U];
+    ::memset(reply, 0x00U, 130U);
 
-    reply[0U] = DVM_FRAME_START;
+    reply[0U] = DVM_SHORT_FRAME_START;
     reply[1U] = 0U;
     reply[2U] = CMD_DEBUG3;
 
@@ -720,8 +771,9 @@ void SerialPort::writeDebug(const char* text, int16_t n1, int16_t n2, int16_t n3
         return;
 
     uint8_t reply[130U];
+    ::memset(reply, 0x00U, 130U);
 
-    reply[0U] = DVM_FRAME_START;
+    reply[0U] = DVM_SHORT_FRAME_START;
     reply[1U] = 0U;
     reply[2U] = CMD_DEBUG4;
 
@@ -757,8 +809,9 @@ void SerialPort::writeDebug(const char* text, int16_t n1, int16_t n2, int16_t n3
         return;
 
     uint8_t reply[130U];
+    ::memset(reply, 0x00U, 130U);
 
-    reply[0U] = DVM_FRAME_START;
+    reply[0U] = DVM_SHORT_FRAME_START;
     reply[1U] = 0U;
     reply[2U] = CMD_DEBUG5;
 
@@ -793,13 +846,19 @@ void SerialPort::writeDump(const uint8_t* data, uint16_t length)
     if (!m_debug)
         return;
 
-    uint8_t reply[512U];
+    if (length + 4U > 516U) {
+        m_buffer[2U] = CMD_DEBUG_DUMP;
+        sendNAK(RSN_ILLEGAL_LENGTH);
+        return;
+    }
 
-    reply[0U] = DVM_FRAME_START;
+    uint8_t reply[516U];
+    ::memset(reply, 0x00U, 516U);
 
     if (length > 252U) {
-        reply[1U] = 0U;
-        reply[2U] = (length + 4U) - 255U;
+        reply[0U] = DVM_LONG_FRAME_START;
+        reply[1U] = (length >> 8U) & 0xFFU;
+        reply[2U] = (length & 0xFFU);
         reply[3U] = CMD_DEBUG_DUMP;
 
         for (uint8_t i = 0U; i < length; i++)
@@ -808,6 +867,7 @@ void SerialPort::writeDump(const uint8_t* data, uint16_t length)
         writeInt(1U, reply, length + 4U);
     }
     else {
+        reply[0U] = DVM_SHORT_FRAME_START;
         reply[1U] = length + 3U;
         reply[2U] = CMD_DEBUG_DUMP;
 
@@ -829,7 +889,7 @@ void SerialPort::sendACK()
 {
     uint8_t reply[4U];
 
-    reply[0U] = DVM_FRAME_START;
+    reply[0U] = DVM_SHORT_FRAME_START;
     reply[1U] = 4U;
     reply[2U] = CMD_ACK;
     reply[3U] = m_buffer[2U];
@@ -845,7 +905,7 @@ void SerialPort::sendNAK(uint8_t err)
 {
     uint8_t reply[5U];
 
-    reply[0U] = DVM_FRAME_START;
+    reply[0U] = DVM_SHORT_FRAME_START;
     reply[1U] = 5U;
     reply[2U] = CMD_NAK;
     reply[3U] = m_buffer[2U];
@@ -864,7 +924,7 @@ void SerialPort::getStatus()
     uint8_t reply[15U];
 
     // send all sorts of interesting internal values
-    reply[0U] = DVM_FRAME_START;
+    reply[0U] = DVM_SHORT_FRAME_START;
     reply[1U] = 12U;
     reply[2U] = CMD_GET_STATUS;
 
@@ -930,7 +990,7 @@ void SerialPort::getVersion()
 {
     uint8_t reply[200U];
 
-    reply[0U] = DVM_FRAME_START;
+    reply[0U] = DVM_SHORT_FRAME_START;
     reply[1U] = 0U;
     reply[2U] = CMD_GET_VERSION;
 

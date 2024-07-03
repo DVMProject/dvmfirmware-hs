@@ -12,7 +12,7 @@
 /**
  * @file DMRRX.h
  * @ingroup dmr_hfw
- * @file DMRRX.h
+ * @file DMRRX.cpp
  * @ingroup dmr_hfw
  */
 #if !defined(__DMR_RX_H__)

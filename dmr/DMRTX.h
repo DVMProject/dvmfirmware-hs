@@ -13,7 +13,7 @@
 /**
  * @file DMRTX.h
  * @ingroup dmr_hfw
- * @file DMRTX.h
+ * @file DMRTX.cpp
  * @ingroup dmr_hfw
  */
 #if !defined(__DMR_TX_H__)

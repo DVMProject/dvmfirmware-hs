@@ -15,7 +15,7 @@
 /**
  * @file CalNXDN.h
  * @ingroup nxdn_hfw
- * @file CalNXDN.h
+ * @file CalNXDN.cpp
  * @ingroup nxdn_hfw
  */
 #if !defined(__CAL_NXDN_H__)

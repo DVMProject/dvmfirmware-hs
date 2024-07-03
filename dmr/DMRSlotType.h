@@ -10,7 +10,7 @@
 /**
  * @file DMRSlotType.h
  * @ingroup dmr_hfw
- * @file DMRSlotType.h
+ * @file DMRSlotType.cpp
  * @ingroup dmr_hfw
  */
 #if !defined(__DMR_SLOT_TYPE_H__)

@@ -11,7 +11,7 @@
 /**
  * @file NXDNTX.h
  * @ingroup nxdn_hfw
- * @file NXDNTX.h
+ * @file NXDNTX.cpp
  * @ingroup nxdn_hfw
  */
 #if !defined(__NXDN_TX_H__)

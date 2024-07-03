@@ -14,7 +14,7 @@
 /**
  * @file CalP25.h
  * @ingroup p25_hfw
- * @file CalP25.h
+ * @file CalP25.cpp
  * @ingroup p25_hfw
  */
 #if !defined(__CAL_P25_H__)

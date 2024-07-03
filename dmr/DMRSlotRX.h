@@ -12,7 +12,7 @@
 /**
  * @file DMRSlotRX.h
  * @ingroup dmr_hfw
- * @file DMRSlotRX.h
+ * @file DMRSlotRX.cpp
  * @ingroup dmr_hfw
  */
 #if !defined(__DMR_SLOT_RX_H__)

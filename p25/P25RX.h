@@ -12,7 +12,7 @@
 /**
  * @file P25RX.h
  * @ingroup p25_hfw
- * @file P25RX.h
+ * @file P25RX.cpp
  * @ingroup p25_hfw
  */
 #if !defined(__P25_RX_H__)

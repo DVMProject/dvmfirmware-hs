@@ -16,7 +16,7 @@
 /**
  * @file DMRDMORX.h
  * @ingroup dmr_hfw
- * @file DMRDMORX.h
+ * @file DMRDMORX.cpp
  * @ingroup dmr_hfw
  */
 #if !defined(__DMR_DMO_RX_H__)

@@ -1,20 +1,16 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/**
-* Digital Voice Modem - Hotspot Firmware
-* GPLv2 Open Source. Use is subject to license terms.
-* DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
-*
-* @package DVM / Hotspot Firmware
-* @derivedfrom MMDVM_HS (https://github.com/g4klx/MMDVM_HS)
-* @license GPLv2 License (https://opensource.org/licenses/GPL-2.0)
-*
-*   Copyright (C) 2020 Jonathan Naylor, G4KLX
-*   Copyright (C) 2016 Jim McLaughlin, KI6ZUM
-*   Copyright (C) 2016,2017,2018,2019,2020 Andy Uribe, CA6JAU
-*   Copyright (C) 2017 Danilo, DB4PLE
-*   Copyright (C) 2021 Bryan Biedenkapp, N2PLL
-*
-*/
+/*
+ * Digital Voice Modem - Hotspot Firmware
+ * GPLv2 Open Source. Use is subject to license terms.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ *  Copyright (C) 2020 Jonathan Naylor, G4KLX
+ *  Copyright (C) 2016 Jim McLaughlin, KI6ZUM
+ *  Copyright (C) 2016,2017,2018,2019,2020 Andy Uribe, CA6JAU
+ *  Copyright (C) 2017 Danilo, DB4PLE
+ *  Copyright (C) 2021 Bryan Biedenkapp, N2PLL
+ *
+ */
 #include "Globals.h"
 #include "IO.h"
 
@@ -293,10 +289,8 @@ extern "C" {
 #endif
 }
 
-/// <summary>
-/// Function delay_us() from stm32duino project
-/// </summary>
-/// <param name="us">Number of microseconds to delay.</param>
+/* Function delay_us() from stm32duino project */
+
 static inline void delay_us(uint32_t us) 
 {
     us *= 12;
@@ -312,9 +306,8 @@ static inline void delay_us(uint32_t us)
         : "r0");
 }
 
-/// <summary>
-/// 
-/// </summary>
+/* */
+
 static inline void delay_ns()
 {
 
@@ -329,121 +322,96 @@ static inline void delay_ns()
 //  Public Class Members
 // ---------------------------------------------------------------------------
 
-/// <summary>
-/// Gets the CPU type the firmware is running on.
-/// </summary>
-/// <returns></returns>
+/* Gets the CPU type the firmware is running on. */
+
 uint8_t IO::getCPU() const
 {
     return CPU_TYPE_STM32;
 }
 
-/// <summary>
-/// Gets the unique identifier for the air interface.
-/// </summary>
-/// <returns></returns>
+/* Gets the unique identifier for the air interface. */
+
 void IO::getUDID(uint8_t* buffer)
 {
     ::memcpy(buffer, (void*)STM32_UUID, 12U);
 }
 
-/// <summary>
-/// 
-/// </summary>
+/* */
+
 void IO::delayBit()
 {
     delay_ns();
 }
 
 #if defined(ZUMSPOT_ADF7021) || defined(SKYBRIDGE_HS)
-/// <summary>
-/// 
-/// </summary>
-/// <returns></returns>
+/* */
+
 bool IO::isDualBand()
 {
     return GPIO_ReadInputDataBit(PORT_DL_DPX, PIN_DL_DPX) == Bit_SET;
 }
 #endif
 
-/// <summary>
-/// 
-/// </summary>
-/// <param name="on"></param>
+/* */
+
 void IO::SCLK(bool on)
 {
     GPIO_WriteBit(PORT_SCLK, PIN_SCLK, on ? Bit_SET : Bit_RESET);
 }
 
-/// <summary>
-/// 
-/// </summary>
-/// <param name="on"></param>
+/* */
+
 void IO::SDATA(bool on)
 {
     GPIO_WriteBit(PORT_SDATA, PIN_SDATA, on ? Bit_SET : Bit_RESET);
 }
 
-/// <summary>
-/// 
-/// </summary>
-/// <returns></returns>
+/* */
+
 bool IO::SREAD()
 {
     return GPIO_ReadInputDataBit(PORT_SREAD, PIN_SREAD) == Bit_SET;
 }
 
-/// <summary>
-/// 
-/// </summary>
-/// <param name="on"></param>
+/* */
+
 void IO::SLE1(bool on)
 {
     GPIO_WriteBit(PORT_SLE, PIN_SLE, on ? Bit_SET : Bit_RESET);
 }
 
 #if defined(DUPLEX)
-/// <summary>
-/// 
-/// </summary>
-/// <param name="on"></param>
+/* */
+
 void IO::SLE2(bool on)
 {
     GPIO_WriteBit(PORT_SLE2, PIN_SLE2, on ? Bit_SET : Bit_RESET);
 }
 
-/// <summary>
-/// 
-/// </summary>
-/// <returns></returns>
+/* */
+
 bool IO::RXD2()
 {
     return GPIO_ReadInputDataBit(PORT_RXD2, PIN_RXD2) == Bit_SET;
 }
 #endif
 
-/// <summary>
-/// 
-/// </summary>
-/// <param name="on"></param>
+/* */
+
 void IO::CE(bool on)
 {
     GPIO_WriteBit(PORT_CE, PIN_CE, on ? Bit_SET : Bit_RESET);
 }
 
-/// <summary>
-/// 
-/// </summary>
-/// <returns></returns>
+/* */
+
 bool IO::RXD1()
 {
     return GPIO_ReadInputDataBit(PORT_RXD, PIN_RXD) == Bit_SET;
 }
 
-/// <summary>
-/// 
-/// </summary>
-/// <returns></returns>
+/* */
+
 bool IO::CLK()
 {
 #if defined(BIDIR_DATA_PIN)
@@ -458,53 +426,44 @@ bool IO::CLK()
 // ---------------------------------------------------------------------------
 
 #if defined(ZUMSPOT_ADF7021) || defined(SKYBRIDGE_HS)
-/// <summary>
-/// 
-/// </summary>
-/// <param name="enable"></param>
+/* */
+
 void IO::setBandVHF(bool enable)
 {
     GPIO_WriteBit(PORT_SET_BAND, PIN_SET_BAND, enable ? Bit_SET : Bit_RESET);
 }
 
-/// <summary>
-/// 
-/// </summary>
-/// <returns></returns>
+/* */
+
 bool IO::hasSingleADF7021()
 {
     return GPIO_ReadInputDataBit(PORT_SGL_DBL, PIN_SGL_DBL) == Bit_SET;
 }
 #endif
 
-/// <summary>
-/// 
-/// </summary>
+/* */
+
 void IO::delayIfCal() 
 {
     delayUS(10000);
 }
 
-/// <summary>
-/// 
-/// </summary>
+/* */
+
 void IO::delayReset() 
 {
     delayUS(300);
 }
 
-/// <summary>
-/// 
-/// </summary>
-/// <param name="us"></param>
+/* */
+
 void IO::delayUS(uint32_t us) 
 {
     ::delay_us(us);
 }
 
-/// <summary>
-/// Initializes hardware interrupts.
-/// </summary>
+/* Initializes hardware interrupts. */
+
 void IO::initInt()
 {
     GPIO_InitTypeDef GPIO_InitStruct;
@@ -726,9 +685,8 @@ void IO::initInt()
 #endif
 }
 
-/// <summary>
-/// Starts hardware interrupts.
-/// </summary>
+/* Starts hardware interrupts. */
+
 void IO::startInt()
 {
     NVIC_InitTypeDef NVIC_InitStructure;
@@ -772,11 +730,8 @@ void IO::startInt()
 
 #if defined(BIDIR_DATA_PIN)
 
-/// <summary>
-/// 
-/// </summary>
-/// <remarks>RXD pin is bidirectional in standard interfaces</remarks>
-/// <param name="dir"></param>
+/* */
+
 void IO::setDataDirOut(bool dir)
 {
     GPIO_InitTypeDef GPIO_InitStruct;
@@ -794,74 +749,58 @@ void IO::setDataDirOut(bool dir)
 #endif
 
 #if defined(BIDIR_DATA_PIN)
-/// <summary>
-/// 
-/// </summary>
-/// <param name="on"></param>
+/* */
+
 void IO::setRXDInt(bool on)
 {
     GPIO_WriteBit(PORT_RXD, PIN_RXD, on ? Bit_SET : Bit_RESET);
 }
 #endif
 
-/// <summary>
-/// 
-/// </summary>
-/// <param name="on"></param>
+/* */
+
 void IO::setTXDInt(bool on)
 {
     GPIO_WriteBit(PORT_TXD, PIN_TXD, on ? Bit_SET : Bit_RESET);
 }
 
-/// <summary>
-/// 
-/// </summary>
-/// <param name="on"></param>
+/* */
+
 void IO::setLEDInt(bool on)
 {
     GPIO_WriteBit(PORT_LED, PIN_LED, on ? Bit_SET : Bit_RESET);
 }
 
-/// <summary>
-/// 
-/// </summary>
-/// <param name="on"></param>
+/* */
+
 void IO::setPTTInt(bool on)
 {
     GPIO_WriteBit(PORT_PTT_LED, PIN_PTT_LED, on ? Bit_SET : Bit_RESET);
 }
 
-/// <summary>
-/// 
-/// </summary>
-/// <param name="on"></param>
+/* */
+
 void IO::setCOSInt(bool on)
 {
     GPIO_WriteBit(PORT_COS_LED, PIN_COS_LED, on ? Bit_SET : Bit_RESET);
 }
 
-/// <summary>
-/// 
-/// </summary>
-/// <param name="on"></param>
+/* */
+
 void IO::setDMRInt(bool on)
 {
     GPIO_WriteBit(PORT_DMR_LED, PIN_DMR_LED, on ? Bit_SET : Bit_RESET);
 }
 
-/// <summary>
-/// 
-/// </summary>
-/// <param name="on"></param>
+/* */
+
 void IO::setP25Int(bool on)
 {
     GPIO_WriteBit(PORT_P25_LED, PIN_P25_LED, on ? Bit_SET : Bit_RESET);
 }
 
-/// <summary>
-/// 
-/// </summary>
-/// <param name="on"></param>
+/* */
+
 void IO::setNXDNInt(bool on)
 {
     GPIO_WriteBit(PORT_NXDN_LED, PIN_NXDN_LED, on ? Bit_SET : Bit_RESET);

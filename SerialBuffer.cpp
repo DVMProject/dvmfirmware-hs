@@ -1,27 +1,22 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/**
-* Digital Voice Modem - Hotspot Firmware
-* GPLv2 Open Source. Use is subject to license terms.
-* DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
-*
-* @package DVM / Hotspot Firmware
-* @derivedfrom MMDVM_HS (https://github.com/g4klx/MMDVM_HS)
-* @license GPLv2 License (https://opensource.org/licenses/GPL-2.0)
-*
-*   Copyright (C) 2015,2016 Jonathan Naylor, G4KLX
-*   Serial FIFO Control Copyright (C) 2015 by James McLaughlin, KI6ZUM
-*   Copyright (C) 2022 Bryan Biedenkapp, N2PLL
-*
-*/
+/*
+ * Digital Voice Modem - Hotspot Firmware
+ * GPLv2 Open Source. Use is subject to license terms.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ *  Copyright (C) 2015,2016 Jonathan Naylor, G4KLX
+ *  Serial FIFO Control Copyright (C) 2015 by James McLaughlin, KI6ZUM
+ *  Copyright (C) 2022 Bryan Biedenkapp, N2PLL
+ *
+ */
 #include "SerialBuffer.h"
 
 // ---------------------------------------------------------------------------
 //  Public Class Members
 // ---------------------------------------------------------------------------
 
-/// <summary>
-/// Initializes a new instance of the SerialBuffer class.
-/// </summary>
+/* Initializes a new instance of the SerialBuffer class. */
+
 SerialBuffer::SerialBuffer(uint16_t length) :
     m_length(length),
     m_buffer(NULL),
@@ -32,18 +27,15 @@ SerialBuffer::SerialBuffer(uint16_t length) :
     m_buffer = new uint8_t[length];
 }
 
-/// <summary>
-/// Finalizes a instance of the SerialBuffer class.
-/// </summary>
+/* Finalizes a instance of the SerialBuffer class. */
+
 SerialBuffer::~SerialBuffer()
 {
     delete[] m_buffer;
 }
 
-/// <summary>
-/// Helper to get how much space the ring buffer has for samples.
-/// </summary>
-/// <returns></returns>
+/* Helper to get how much space the ring buffer has for samples. */
+
 uint16_t SerialBuffer::getSpace() const
 {
     uint16_t n = 0U;
@@ -61,10 +53,8 @@ uint16_t SerialBuffer::getSpace() const
     return n;
 }
 
-/// <summary>
-///
-/// </summary>
-/// <returns></returns>
+/* */
+
 uint16_t SerialBuffer::getData() const
 {
     if (m_tail == m_head)
@@ -75,9 +65,8 @@ uint16_t SerialBuffer::getData() const
         return m_length - m_tail + m_head;
 }
 
-/// <summary>
-/// Helper to reset data values to defaults.
-/// </summary>
+/* Helper to reset data values to defaults. */
+
 void SerialBuffer::reset()
 {
     m_head = 0U;
@@ -85,9 +74,8 @@ void SerialBuffer::reset()
     m_full = false;
 }
 
-/// <summary>
-/// Helper to reset and reinitialize data values to defaults.
-/// </summary>
+/* Helper to reset and reinitialize data values to defaults. */
+
 void SerialBuffer::reinitialize(uint16_t length)
 {
     reset();
@@ -98,11 +86,8 @@ void SerialBuffer::reinitialize(uint16_t length)
     m_buffer = new uint8_t[length];
 }
 
-/// <summary>
-///
-/// </summary>
-/// <param name="c"></param>
-/// <returns></returns>
+/* */
+
 bool SerialBuffer::put(uint8_t c)
 {
     if (m_full)
@@ -120,19 +105,15 @@ bool SerialBuffer::put(uint8_t c)
     return true;
 }
 
-/// <summary>
-///
-/// </summary>
-/// <returns></returns>
+/* */
+
 uint8_t SerialBuffer::peek() const
 {
     return m_buffer[m_tail];
 }
 
-/// <summary>
-///
-/// </summary>
-/// <returns></returns>
+/* */
+
 uint8_t SerialBuffer::get()
 {
     uint8_t value = m_buffer[m_tail];

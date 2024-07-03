@@ -1,18 +1,14 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/**
-* Digital Voice Modem - Hotspot Firmware
-* GPLv2 Open Source. Use is subject to license terms.
-* DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
-*
-* @package DVM / Hotspot Firmware
-* @derivedfrom MMDVM_HS (https://github.com/g4klx/MMDVM_HS)
-* @license GPLv2 License (https://opensource.org/licenses/GPL-2.0)
-*
-*   Copyright (C) 2009-2017 Jonathan Naylor, G4KLX
-*   Copyright (C) 2016 Colin Durbridge, G4EML
-*   Copyright (C) 2017 Andy Uribe, CA6JAU
-*
-*/
+/*
+ * Digital Voice Modem - Hotspot Firmware
+ * GPLv2 Open Source. Use is subject to license terms.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ *  Copyright (C) 2009-2017 Jonathan Naylor, G4KLX
+ *  Copyright (C) 2016 Colin Durbridge, G4EML
+ *  Copyright (C) 2017 Andy Uribe, CA6JAU
+ *
+ */
 #include "Globals.h"
 #include "CWIdTX.h"
 
@@ -85,9 +81,8 @@ const struct {
 //  Public Class Members
 // ---------------------------------------------------------------------------
 
-/// <summary>
-/// Initializes a new instance of the CWIdTX class.
-/// </summary>
+/* Initializes a new instance of the CWIdTX class. */
+
 CWIdTX::CWIdTX() :
     m_poBuffer(),
     m_poLen(0U),
@@ -97,9 +92,8 @@ CWIdTX::CWIdTX() :
     /* stub */
 }
 
-/// <summary>
-/// Process local buffer and transmit on the air interface.
-/// </summary>
+/* Process local buffer and transmit on the air interface. */
+
 void CWIdTX::process()
 {
     if (m_poLen == 0U)
@@ -130,12 +124,8 @@ void CWIdTX::process()
     }
 }
 
-/// <summary>
-/// Write CW ID data to the local buffer.
-/// </summary>
-/// <param name="data"></param>
-/// <param name="length"></param>
-/// <returns></returns>
+/* Write CW ID data to the local buffer. */
+
 uint8_t CWIdTX::write(const uint8_t* data, uint8_t length)
 {
     ::memset(m_poBuffer, 0x00U, 300U * sizeof(uint8_t));
@@ -176,9 +166,8 @@ uint8_t CWIdTX::write(const uint8_t* data, uint8_t length)
     return RSN_OK;
 }
 
-/// <summary>
-/// Helper to reset data values to defaults.
-/// </summary>
+/* Helper to reset data values to defaults. */
+
 void CWIdTX::reset()
 {
     m_poLen = 0U;

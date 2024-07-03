@@ -1,19 +1,24 @@
 // SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Digital Voice Modem - Hotspot Firmware
+ * GPLv2 Open Source. Use is subject to license terms.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ *  Copyright (C) 2015,2016,2020 Jonathan Naylor, G4KLX
+ *  Copyright (C) 2016,2017,2018,2019 Andy Uribe, CA6JAU
+ *  Copyright (C) 2019 Florian Wolters, DF2ET
+ *  Copyright (C) 2021 Bryan Biedenkapp, N2PLL
+ *
+ */
 /**
-* Digital Voice Modem - Hotspot Firmware
-* GPLv2 Open Source. Use is subject to license terms.
-* DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
-*
-* @package DVM / Hotspot Firmware
-* @derivedfrom MMDVM_HS (https://github.com/g4klx/MMDVM_HS)
-* @license GPLv2 License (https://opensource.org/licenses/GPL-2.0)
-*
-*   Copyright (C) 2015,2016,2020 Jonathan Naylor, G4KLX
-*   Copyright (C) 2016,2017,2018,2019 Andy Uribe, CA6JAU
-*   Copyright (C) 2019 Florian Wolters, DF2ET
-*   Copyright (C) 2021 Bryan Biedenkapp, N2PLL
-*
-*/
+ * @defgroup hotspot_fw Hotspot Firmware
+ * @brief Digital Voice Modem - Hotspot Firmware
+ * @details Firmware that is used for all-in-one hotspots.
+ * @ingroup hotspot_fw
+ * 
+ * @file Globals.h
+ * @ingroup hotspot_fw
+ */
 #if !defined(__GLOBALS_H__)
 #define __GLOBALS_H__
 
@@ -94,32 +99,32 @@ extern uint8_t m_control;
 extern SerialPort serial;
 extern IO io;
 
-/** DMR BS */
+/* DMR BS */
 #if defined(DUPLEX)
 extern dmr::DMRIdleRX dmrIdleRX;
 extern dmr::DMRRX dmrRX;
 #endif
 extern dmr::DMRTX dmrTX;
 
-/** DMR MS-DMO */
+/* DMR MS-DMO */
 extern dmr::DMRDMORX dmrDMORX;
 extern dmr::DMRDMOTX dmrDMOTX;
 
-/** P25 BS */
+/* P25 BS */
 extern p25::P25RX p25RX;
 extern p25::P25TX p25TX;
 
-/** NXDN BS */
+/* NXDN BS */
 extern nxdn::NXDNRX nxdnRX;
 extern nxdn::NXDNTX nxdnTX;
 
-/** Calibration */
+/* Calibration */
 extern dmr::CalDMR calDMR;
 extern p25::CalP25 calP25;
 extern nxdn::CalNXDN calNXDN;
 extern CalRSSI calRSSI;
 
-/** CW */
+/* CW */
 extern CWIdTX cwIdTX;
 
 #endif // __GLOBALS_H__

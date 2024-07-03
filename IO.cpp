@@ -1,19 +1,15 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/**
-* Digital Voice Modem - Hotspot Firmware
-* GPLv2 Open Source. Use is subject to license terms.
-* DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
-*
-* @package DVM / Hotspot Firmware
-* @derivedfrom MMDVM_HS (https://github.com/g4klx/MMDVM_HS)
-* @license GPLv2 License (https://opensource.org/licenses/GPL-2.0)
-*
-*   Copyright (C) 2015,2016,2020 Jonathan Naylor, G4KLX
-*   Copyright (C) 2016,2017,2018,2019,2020 Andy Uribe, CA6JAU
-*   Copyright (C) 2017 Danilo, DB4PLE
-*   Copyright (C) 2021 Bryan Biedenkapp, N2PLL
-*
-*/
+/*
+ * Digital Voice Modem - Hotspot Firmware
+ * GPLv2 Open Source. Use is subject to license terms.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ *  Copyright (C) 2015,2016,2020 Jonathan Naylor, G4KLX
+ *  Copyright (C) 2016,2017,2018,2019,2020 Andy Uribe, CA6JAU
+ *  Copyright (C) 2017 Danilo, DB4PLE
+ *  Copyright (C) 2021 Bryan Biedenkapp, N2PLL
+ *
+ */
 #include "Globals.h"
 #include "ADF7021.h"
 #include "IO.h"
@@ -22,9 +18,8 @@
 //  Public Class Members
 // ---------------------------------------------------------------------------
 
-/// <summary>
-/// Initializes a new instance of the IO class.
-/// </summary>
+/* Initializes a new instance of the IO class. */
+
 IO::IO():
     m_started(false),
     m_rxBuffer(1024U),
@@ -64,9 +59,8 @@ IO::IO():
     selfTest();
 }
 
-/// <summary>
-/// Starts air interface sampler.
-/// </summary>
+/* Starts air interface sampler. */
+
 void IO::start()
 {
     if (m_started)
@@ -77,9 +71,8 @@ void IO::start()
     m_started = true;
 }
 
-/// <summary>
-/// Process samples from air interface.
-/// </summary>
+/* Process samples from air interface. */
+
 void IO::process()
 {
     uint8_t bit;
@@ -155,13 +148,8 @@ void IO::process()
     }
 }
 
-/// <summary>
-/// Write bits to air interface.
-/// </summary>
-/// <param name="mode"></param>
-/// <param name="samples"></param>
-/// <param name="length"></param>
-/// <param name="control"></param>
+/* Write bits to air interface. */
+
 void IO::write(uint8_t* data, uint16_t length, const uint8_t* control)
 {
     if (!m_started)
@@ -181,19 +169,15 @@ void IO::write(uint8_t* data, uint16_t length, const uint8_t* control)
     }
 }
 
-/// <summary>
-/// Helper to get how much space the transmit ring buffer has for samples.
-/// </summary>
-/// <returns></returns>
+/* Helper to get how much space the transmit ring buffer has for samples. */
+
 uint16_t IO::getSpace() const
 {
     return m_txBuffer.getSpace();
 }
 
-/// <summary>
-///
-/// </summary>
-/// <param name="dcd"></param>
+/* */
+
 void IO::setDecode(bool dcd)
 {
     if (dcd != m_dcd)
@@ -202,10 +186,8 @@ void IO::setDecode(bool dcd)
     m_dcd = dcd;
 }
 
-/// <summary>
-/// Helper to set the modem air interface state.
-/// </summary>
-/// <param name="modemState"></param>
+/* Helper to set the modem air interface state. */
+
 void IO::setMode(DVM_STATE modemState)
 {
     DVM_STATE relativeState = modemState;
@@ -223,13 +205,8 @@ void IO::setMode(DVM_STATE modemState)
     setNXDNInt(relativeState == STATE_NXDN);
 }
 
-/// <summary>
-/// Sets the RF parameters.
-/// </summary>
-/// <param name="rxFreq"></param>
-/// <param name="txFreq"></param>
-/// <param name="rfPower"></param>
-/// <param name="gainMode"></param>
+/* Sets the RF parameters. */
+
 uint8_t IO::setRFParams(uint32_t rxFreq, uint32_t txFreq, uint8_t rfPower, ADF_GAIN_MODE gainMode)
 {
     m_rfPower = rfPower >> 2;
@@ -237,22 +214,22 @@ uint8_t IO::setRFParams(uint32_t rxFreq, uint32_t txFreq, uint8_t rfPower, ADF_G
 
     // check frequency ranges
     if (!(
-        /** 136 - 174 mhz */
-        ((rxFreq >= VHF_MIN) && (rxFreq < VHF_MAX)) || ((txFreq >= VHF_MIN) && (txFreq < VHF_MAX)) ||
-        /** 216 - 225 mhz */
-        ((rxFreq >= VHF_220_MIN) && (rxFreq < VHF_220_MAX)) || ((txFreq >= VHF_220_MIN) && (txFreq < VHF_220_MAX)) ||
-        /** 380 - 431 mhz */
-        ((rxFreq >= UHF_380_MIN) && (rxFreq < UHF_380_MAX)) || ((txFreq >= UHF_380_MIN) && (txFreq < UHF_380_MAX)) ||
-        /** 431 - 450 mhz */
-        ((rxFreq >= UHF_1_MIN) && (rxFreq < UHF_1_MAX)) || ((txFreq >= UHF_1_MIN) && (txFreq < UHF_1_MAX)) ||
-        /** 450 - 470 mhz */
-        ((rxFreq >= UHF_2_MIN) && (rxFreq < UHF_2_MAX)) || ((txFreq >= UHF_2_MIN) && (txFreq < UHF_2_MAX)) ||
-        /** 470 - 520 mhz */
-        ((rxFreq >= UHF_T_MIN) && (rxFreq < UHF_T_MAX)) || ((txFreq >= UHF_T_MIN) && (txFreq < UHF_T_MAX)) ||
-        /** 842 - 900 mhz */
-        ((rxFreq >= UHF_800_MIN) && (rxFreq < UHF_800_MAX)) || ((txFreq >= UHF_800_MIN) && (txFreq < UHF_800_MAX)) ||
-        /** 900 - 950 mhz */
-        ((rxFreq >= UHF_900_MIN) && (rxFreq < UHF_900_MAX)) || ((txFreq >= UHF_900_MIN) && (txFreq < UHF_900_MAX))
+            /* 136 - 174 mhz */
+            ((rxFreq >= VHF_MIN) && (rxFreq < VHF_MAX)) || ((txFreq >= VHF_MIN) && (txFreq < VHF_MAX)) ||
+            /* 216 - 225 mhz */
+            ((rxFreq >= VHF_220_MIN) && (rxFreq < VHF_220_MAX)) || ((txFreq >= VHF_220_MIN) && (txFreq < VHF_220_MAX)) ||
+            /* 380 - 431 mhz */
+            ((rxFreq >= UHF_380_MIN) && (rxFreq < UHF_380_MAX)) || ((txFreq >= UHF_380_MIN) && (txFreq < UHF_380_MAX)) ||
+            /* 431 - 450 mhz */
+            ((rxFreq >= UHF_1_MIN) && (rxFreq < UHF_1_MAX)) || ((txFreq >= UHF_1_MIN) && (txFreq < UHF_1_MAX)) ||
+            /* 450 - 470 mhz */
+            ((rxFreq >= UHF_2_MIN) && (rxFreq < UHF_2_MAX)) || ((txFreq >= UHF_2_MIN) && (txFreq < UHF_2_MAX)) ||
+            /* 470 - 520 mhz */
+            ((rxFreq >= UHF_T_MIN) && (rxFreq < UHF_T_MAX)) || ((txFreq >= UHF_T_MIN) && (txFreq < UHF_T_MAX)) ||
+            /* 842 - 900 mhz */
+            ((rxFreq >= UHF_800_MIN) && (rxFreq < UHF_800_MAX)) || ((txFreq >= UHF_800_MIN) && (txFreq < UHF_800_MAX)) ||
+            /* 900 - 950 mhz */
+            ((rxFreq >= UHF_900_MIN) && (rxFreq < UHF_900_MAX)) || ((txFreq >= UHF_900_MIN) && (txFreq < UHF_900_MAX))
         ))
         return RSN_INVALID_REQUEST;
 
@@ -289,44 +266,36 @@ uint8_t IO::setRFParams(uint32_t rxFreq, uint32_t txFreq, uint8_t rfPower, ADF_G
     return RSN_OK;
 }
 
-/// <summary>
-/// Flag indicating the TX ring buffer has overflowed.
-/// </summary>
-/// <returns></returns>
+/* Flag indicating the TX ring buffer has overflowed. */
+
 bool IO::hasTXOverflow()
 {
     return m_txBuffer.hasOverflowed();
 }
 
-/// <summary>
-/// Flag indicating the RX ring buffer has overflowed.
-/// </summary>
-/// <returns></returns>
+/* Flag indicating the RX ring buffer has overflowed. */
+
 bool IO::hasRXOverflow()
 {
     return m_rxBuffer.hasOverflowed();
 }
 
-/// <summary>
-///
-/// </summary>
+/* */
+
 void IO::resetWatchdog()
 {
     m_watchdog = 0U;
 }
 
-/// <summary>
-///
-/// </summary>
-/// <returns></returns>
+/* */
+
 uint32_t IO::getWatchdog()
 {
     return m_watchdog;
 }
 
-/// <summary>
-///
-/// </summary>
+/* */
+
 void IO::selfTest()
 {
     bool ledValue = false;
@@ -420,11 +389,8 @@ void IO::selfTest()
     delayUS(125000U);
 }
 
-/// <summary>
-/// 
-/// </summary>
-/// <param name="int1"></param>
-/// <param name="int2"></param>
+/* */
+
 void IO::getIntCounter(uint16_t& int1, uint16_t& int2)
 {
     int1 = m_int1Counter;
@@ -438,11 +404,8 @@ void IO::getIntCounter(uint16_t& int1, uint16_t& int2)
 // ---------------------------------------------------------------------------
 
 #if defined(ZUMSPOT_ADF7021) || defined(LONESTAR_USB) || defined(SKYBRIDGE_HS)
-/// <summary>
-/// 
-/// </summary>
-/// <param name="rxFreq"></param>
-/// <param name="txFreq"></param>
+/* */
+
 void IO::checkBand(uint32_t rxFreq, uint32_t txFreq)
 {
     // check hotspot configuration for single or dual ADF7021

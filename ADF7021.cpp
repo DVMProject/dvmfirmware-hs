@@ -1,20 +1,16 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/**
-* Digital Voice Modem - Hotspot Firmware
-* GPLv2 Open Source. Use is subject to license terms.
-* DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
-*
-* @package DVM / Hotspot Firmware
-* @derivedfrom MMDVM_HS (https://github.com/g4klx/MMDVM_HS)
-* @license GPLv2 License (https://opensource.org/licenses/GPL-2.0)
-*
-*   Copyright (C) 2020,2021 Jonathan Naylor, G4KLX
-*   Copyright (C) 2016 Jim McLaughlin, KI6ZUM
-*   Copyright (C) 2016,2017,2018,2019,2020 Andy Uribe, CA6JAU
-*   Copyright (C) 2017 Danilo, DB4PLE
-*   Copyright (C) 2021 Bryan Biedenkapp, N2PLL
-*
-*/
+/*
+ * Digital Voice Modem - Hotspot Firmware
+ * GPLv2 Open Source. Use is subject to license terms.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ *  Copyright (C) 2020,2021 Jonathan Naylor, G4KLX
+ *  Copyright (C) 2016 Jim McLaughlin, KI6ZUM
+ *  Copyright (C) 2016,2017,2018,2019,2020 Andy Uribe, CA6JAU
+ *  Copyright (C) 2017 Danilo, DB4PLE
+ *  Copyright (C) 2021 Bryan Biedenkapp, N2PLL
+ *
+ */
 #include <math.h>
 
 #include "Globals.h"
@@ -74,9 +70,8 @@ uint8_t m_afcRange;
 //  Global Functions
 // ---------------------------------------------------------------------------
 
-/// <summary>
-/// 
-/// </summary>
+/* */
+
 static void AD7021_IOCTL_Shift()
 {
     for (int i = 31; i >= 0; i--) {
@@ -95,9 +90,8 @@ static void AD7021_IOCTL_Shift()
     io.SDATA(LOW);
 }
 
-/// <summary>
-/// 
-/// </summary>
+/* */
+
 static void AD7021_IOCTL_SLEPulse()
 {
     io.SLE1(HIGH);
@@ -105,10 +99,8 @@ static void AD7021_IOCTL_SLEPulse()
     io.SLE1(LOW);
 }
 
-/// <summary>
-/// 
-/// </summary>
-/// <param name="doSle"></param>
+/* */
+
 static void AD7021_1_IOCTL(bool doSle = true)
 {
     AD7021_IOCTL_Shift();
@@ -118,9 +110,8 @@ static void AD7021_1_IOCTL(bool doSle = true)
 }
 
 #if defined(DUPLEX)
-/// <summary>
-/// 
-/// </summary>
+/* */
+
 static void AD7021_2_IOCTL_SLEPulse()
 {
     io.SLE2(HIGH);
@@ -128,10 +119,8 @@ static void AD7021_2_IOCTL_SLEPulse()
     io.SLE2(LOW);
 }
 
-/// <summary>
-/// 
-/// </summary>
-/// <param name="doSle"></param>
+/* */
+
 static void AD7021_2_IOCTL(bool doSle = true)
 {
     AD7021_IOCTL_Shift();
@@ -145,9 +134,8 @@ static void AD7021_2_IOCTL(bool doSle = true)
 //  Public Class Members
 // ---------------------------------------------------------------------------
 
-/// <summary>
-/// Hardware interrupt handler.
-/// </summary>
+/* Hardware interrupt handler. */
+
 void IO::interrupt1()
 {
     uint8_t bit = 0U;
@@ -256,9 +244,8 @@ void IO::interrupt1()
 }
 
 #if defined(DUPLEX)
-/// <summary>
-/// Hardware interrupt handler.
-/// </summary>
+/* Hardware interrupt handler. */
+
 void IO::interrupt2()
 {
     uint8_t bit = 0U;
@@ -276,11 +263,8 @@ void IO::interrupt2()
 }
 #endif
 
-/// <summary>
-/// Sets the ADF7021 RF configuration.
-/// </summary>
-/// <param name="modemState"></param>
-/// <param name="reset"></param>
+/* Sets the ADF7021 RF configuration. */
+
 void IO::rf1Conf(DVM_STATE modemState, bool reset)
 {
     uint32_t txFrequencyTmp, rxFrequencyTmp;
@@ -482,11 +466,8 @@ void IO::rf1Conf(DVM_STATE modemState, bool reset)
 }
 
 #if defined(DUPLEX)
-/// <summary>
-/// Sets the ADF7021 RF configuration.
-/// </summary>
-/// <param name="modemState"></param>
-/// <param name="reset"></param>
+/* Sets the ADF7021 RF configuration. */
+
 void IO::rf2Conf(DVM_STATE modemState)
 {
     DEBUG3("IO::rf2Conf() ADF2 (Rx); modemState/rxGain", modemState, m_gainMode);
@@ -609,12 +590,8 @@ void IO::rf2Conf(DVM_STATE modemState)
 }
 #endif // DUPLEX
 
-/// <summary>
-/// 
-/// </summary>
-/// <param name="dmrTXLevel"></param>
-/// <param name="p25TXLevel"></param>
-/// <param name="nxdnTXLevel"></param>
+/* Sets the deviation levels. */
+
 void IO::setDeviations(uint8_t dmrTXLevel, uint8_t p25TXLevel, uint8_t nxdnTXLevel)
 {
     dmrDev = uint16_t((ADF7021_DEV_DMR * uint16_t(dmrTXLevel)) / 128U);
@@ -622,17 +599,8 @@ void IO::setDeviations(uint8_t dmrTXLevel, uint8_t p25TXLevel, uint8_t nxdnTXLev
     nxdnDev = uint16_t((ADF7021_DEV_NXDN * uint16_t(nxdnTXLevel)) / 128U);
 }
 
-/// <summary>
-/// Sets the RF adjustment parameters.
-/// </summary>
-/// <param name="dmrDevAdj"></param>
-/// <param name="p25DevAdj"></param>
-/// <param name="dmrDiscBWAdj"></param>
-/// <param name="p25DiscBWAdj"></param>
-/// <param name="nxdnDiscBWAdj"></param>
-/// <param name="dmrPostBWAdj"></param>
-/// <param name="p25PostBWAdj"></param>
-/// <param name="nxdnPostBWAdj"></param>
+/* Sets the RF adjustment parameters. */
+
 void IO::setRFAdjust(int8_t dmrDiscBWAdj, int8_t p25DiscBWAdj, int8_t nxdnDiscBWAdj, int8_t dmrPostBWAdj, int8_t p25PostBWAdj, int8_t nxdnPostBWADJ)
 {
     m_dmrDiscBWAdj = dmrDiscBWAdj;
@@ -646,13 +614,8 @@ void IO::setRFAdjust(int8_t dmrDiscBWAdj, int8_t p25DiscBWAdj, int8_t nxdnDiscBW
     DEBUG4("IO::setRFAdjust() RF adjustment, postBW", dmrPostBWAdj, p25PostBWAdj, nxdnPostBWADJ);
 }
 
-/// <summary>
-/// Sets the RF AFC parameters.
-/// </summary>
-/// <param name="afcEnable"></param>
-/// <param name="afcKI"></param>
-/// <param name="afcKP"></param>
-/// <param name="afcRange"></param>
+/* Sets the RF AFC parameters. */
+
 void IO::setAFCParams(bool afcEnable, uint8_t afcKI, uint8_t afcKP, uint8_t afcRange)
 {
     m_afcEnable = afcEnable;
@@ -663,9 +626,8 @@ void IO::setAFCParams(bool afcEnable, uint8_t afcKI, uint8_t afcKP, uint8_t afcR
     DEBUG5("IO::setAFCParams() AFC params", afcEnable, afcKI, afcKP, afcRange);
 }
 
-/// <summary>
-/// 
-/// </summary>
+/* */
+
 void IO::updateCal(DVM_STATE modemState)
 {
     uint32_t ADF7021_REG2;
@@ -726,10 +688,8 @@ void IO::updateCal(DVM_STATE modemState)
         setRX();
 }
 
-/// <summary>
-/// 
-/// </summary>
-/// <returns></returns>
+/* */
+
 uint16_t IO::readRSSI()
 {
     uint32_t AD7021_RB;
@@ -818,9 +778,8 @@ uint16_t IO::readRSSI()
 //  Private Class Members
 // ---------------------------------------------------------------------------
 
-/// <summary>
-///
-/// </summary>
+/* */
+
 void IO::configureBand()
 {
     /*
@@ -890,10 +849,8 @@ void IO::configureBand()
     DEBUG3("IO::configureBand() ADF freq band; reg1/f_div", ADF7021_REG1, f_div);
 }
 
-/// <summary>
-///
-/// </summary>
-/// <param name="modemState"></param>
+/* */
+
 void IO::configureTxRx(DVM_STATE modemState)
 {
     uint16_t dmrDiscBW = ADF7021_DISC_BW_DMR, dmrPostBW = ADF7021_POST_BW_DMR;
@@ -1375,9 +1332,8 @@ void IO::configureTxRx(DVM_STATE modemState)
         (uint16_t)((ADF7021_PFD * p25Dev) / (f_div * 65536)), (uint16_t)((ADF7021_PFD * nxdnDev) / (f_div * 65536)), m_rfPower);
 }
 
-/// <summary>
-/// 
-/// </summary>
+/* */
+
 void IO::setTX()
 {
     // PTT pin on (doing it earlier helps to measure timing impact)
@@ -1396,10 +1352,8 @@ void IO::setTX()
     while(CLK());
 }
 
-/// <summary>
-/// 
-/// </summary>
-/// <param name="doSle"></param>
+/* */
+
 void IO::setRX(bool doSle)
 {
     // PTT pin off (doing it earlier helps to measure timing impact)

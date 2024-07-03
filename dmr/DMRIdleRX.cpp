@@ -1,17 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/**
-* Digital Voice Modem - Hotspot Firmware
-* GPLv2 Open Source. Use is subject to license terms.
-* DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
-*
-* @package DVM / Hotspot Firmware
-* @derivedfrom MMDVM_HS (https://github.com/g4klx/MMDVM_HS)
-* @license GPLv2 License (https://opensource.org/licenses/GPL-2.0)
-*
-*   Copyright (C) 2009-2017 Jonathan Naylor, G4KLX
-*   Copyright (C) 2017,2018 Andy Uribe, CA6JAU
-*
-*/
+/*
+ * Digital Voice Modem - Hotspot Firmware
+ * GPLv2 Open Source. Use is subject to license terms.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ *  Copyright (C) 2009-2017 Jonathan Naylor, G4KLX
+ *  Copyright (C) 2017,2018 Andy Uribe, CA6JAU
+ *
+ */
 #include "Globals.h"
 #include "dmr/DMRIdleRX.h"
 #include "dmr/DMRSlotType.h"
@@ -36,9 +32,8 @@ const uint8_t CONTROL_DATA = 0x40U;
 //  Public Class Members
 // ---------------------------------------------------------------------------
 
-/// <summary>
-/// Initializes a new instance of the DMRIdleRX class.
-/// </summary>
+/* Initializes a new instance of the DMRIdleRX class. */
+
 DMRIdleRX::DMRIdleRX() :
     m_bitBuffer(0U),
     m_buffer(),
@@ -49,19 +44,16 @@ DMRIdleRX::DMRIdleRX() :
     /* stub */
 }
 
-/// <summary>
-/// Helper to reset data values to defaults.
-/// </summary>
+/* Helper to reset data values to defaults. */
+
 void DMRIdleRX::reset()
 {
     m_dataPtr = 0U;
     m_endPtr = NOENDPTR;
 }
 
-/// <summary>
-/// Sample DMR bits from the air interface.
-/// </summary>
-/// <param name="bit"></param>
+/* Sample DMR bits from the air interface. */
+
 void DMRIdleRX::databit(bool bit)
 {
     _WRITE_BIT(m_buffer, m_dataPtr, bit);
@@ -104,10 +96,8 @@ void DMRIdleRX::databit(bool bit)
         m_dataPtr = 0U;
 }
 
-/// <summary>
-/// Sets the DMR color code.
-/// </summary>
-/// <param name="colorCode">Color code.</param>
+/* Sets the DMR color code. */
+
 void DMRIdleRX::setColorCode(uint8_t colorCode)
 {
     m_colorCode = colorCode;
@@ -117,12 +107,8 @@ void DMRIdleRX::setColorCode(uint8_t colorCode)
 //  Private Class Members
 // ---------------------------------------------------------------------------
 
-/// <summary>
-/// 
-/// </summary>
-/// <param name="start"></param>
-/// <param name="count"></param>
-/// <param name="buffer"></param>
+/* */
+
 void DMRIdleRX::bitsToBytes(uint16_t start, uint8_t count, uint8_t* buffer)
 {
   for (uint8_t i = 0U; i < count; i++) {

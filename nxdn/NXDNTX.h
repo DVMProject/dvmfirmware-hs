@@ -1,17 +1,19 @@
 // SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Digital Voice Modem - Hotspot Firmware
+ * GPLv2 Open Source. Use is subject to license terms.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ *  Copyright (C) 2015,2016,2017,2018,2020 Jonathan Naylor, G4KLX
+ *  Copyright (C) 2022 Bryan Biedenkapp, N2PLL
+ *
+ */
 /**
-* Digital Voice Modem - Hotspot Firmware
-* GPLv2 Open Source. Use is subject to license terms.
-* DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
-*
-* @package DVM / Hotspot Firmware
-* @derivedfrom MMDVM_HS (https://github.com/g4klx/MMDVM_HS)
-* @license GPLv2 License (https://opensource.org/licenses/GPL-2.0)
-*
-*   Copyright (C) 2015,2016,2017,2018,2020 Jonathan Naylor, G4KLX
-*   Copyright (C) 2022 Bryan Biedenkapp, N2PLL
-*
-*/
+ * @file NXDNTX.h
+ * @ingroup nxdn_hfw
+ * @file NXDNTX.h
+ * @ingroup nxdn_hfw
+ */
 #if !defined(__NXDN_TX_H__)
 #define __NXDN_TX_H__
 
@@ -26,41 +28,74 @@ namespace nxdn
 
     #define NXDN_FIXED_TX_HANG 600
 
+    /**
+     * @brief NXDN Transmitter States
+     * @ingroup nxdn_hfw
+     */
     enum NXDNTXSTATE {
-        NXDNTXSTATE_NORMAL,
-        NXDNTXSTATE_CAL
+        NXDNTXSTATE_NORMAL,     //! Normal
+        NXDNTXSTATE_CAL         //! Calibration
     };
 
     // ---------------------------------------------------------------------------
     //  Class Declaration
-    //      Implements transmitter logic for NXDN mode operation.
     // ---------------------------------------------------------------------------
 
+    /**
+     * @brief Implements transmitter logic for NXDN mode operation.
+     * @ingroup nxdn_hfw
+     */
     class DSP_FW_API NXDNTX {
     public:
-        /// <summary>Initializes a new instance of the NXDNTX class.</summary>
+        /**
+         * @brief Initializes a new instance of the NXDNTX class.
+         */
         NXDNTX();
 
-        /// <summary>Process local buffer and transmit on the air interface.</summary>
+        /**
+         * @brief Process local buffer and transmit on the air interface.
+         */
         void process();
 
-        /// <summary>Write data to the local buffer.</summary>
+        /**
+         * @brief Write data to the local buffer.
+         * @param[in] data Buffer.
+         * @param length Length of buffer.
+         * @returns uint8_t Reason code.
+         */
         uint8_t writeData(const uint8_t* data, uint16_t length);
 
-        /// <summary>Clears the local buffer.</summary>
+        /**
+         * @brief Clears the local buffer.
+         */
         void clear();
 
-        /// <summary>Sets the FDMA preamble count.</summary>
+        /**
+         * @brief Sets the FDMA preamble count.
+         * @param preambleCnt FDMA preamble count.
+         */
         void setPreambleCount(uint8_t preambleCnt);
-        /// <summary>Sets the transmit hang time.</summary>
+        /**
+         * @brief Sets the transmit hang time.
+         * @param txHang Transmit hang time.
+         */
         void setTxHang(uint8_t txHang);
-        /// <summary>Helper to set the calibration state for Tx.</summary>
+        /**
+         * @brief Helper to set the calibration state for Tx.
+         * @param start 
+         */
         void setCal(bool start);
 
-        /// <summary>Helper to resize the FIFO buffer.</summary>
+        /**
+         * @brief Helper to resize the FIFO buffer.
+         * @param size 
+         */
         void resizeBuffer(uint16_t size);
 
-        /// <summary>Helper to get how much space the ring buffer has for samples.</summary>
+        /**
+         * @brief Helper to get how much space the ring buffer has for samples.
+         * @returns uint8_t Amount of space in ring buffer for samples. 
+         */
         uint8_t getSpace() const;
 
     private:
@@ -76,12 +111,19 @@ namespace nxdn
         uint32_t m_txHang;
         uint32_t m_tailCnt;
 
-        /// <summary></summary>
+        /**
+         * @brief Helper to generate data.
+         */
         void createData();
 
-        /// <summary></summary>
+        /**
+         * @brief Helper to write a raw byte to the DAC.
+         * @param c Byte.
+         */
         void writeByte(uint8_t c);
-        /// <summary></summary>
+        /**
+         * @brief 
+         */
         void writeSilence();
     };
 } // namespace nxdn

@@ -1,16 +1,20 @@
 // SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Digital Voice Modem - Hotspot Firmware
+ * GPLv2 Open Source. Use is subject to license terms.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ *  Copyright (C) 2016,2017,2018 Jonathan Naylor, G4KLX
+ *
+ */
 /**
-* Digital Voice Modem - Hotspot Firmware
-* GPLv2 Open Source. Use is subject to license terms.
-* DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
-*
-* @package DVM / Hotspot Firmware
-* @derivedfrom MMDVM_HS (https://github.com/g4klx/MMDVM_HS)
-* @license GPLv2 License (https://opensource.org/licenses/GPL-2.0)
-*
-*   Copyright (C) 2016,2017,2018 Jonathan Naylor, G4KLX
-*
-*/
+ * @defgroup nxdn_hfw Next Generation Digital Narrowband
+ * @brief Implementation for the NXDN standard.
+ * @ingroup hotspot_fw
+ * 
+ * @file NXDNDefines.h
+ * @ingroup nxdn_hfw
+ */
 #if !defined(__NXDN_DEFINES_H__)
 #define __NXDN_DEFINES_H__
 
@@ -21,6 +25,11 @@ namespace nxdn
     // ---------------------------------------------------------------------------
     //  Constants
     // ---------------------------------------------------------------------------
+
+    /**
+     * @addtogroup nxdn_hfw
+     * @{
+     */
 
     const uint32_t  NXDN_RADIO_SYMBOL_LENGTH = 10U;      // At 24 kHz sample rate
 
@@ -54,6 +63,8 @@ namespace nxdn
 
     // 538 = NXDN_FRAME_LENGTH_BYTES * 11 + 10 (BUFFER_LEN = NXDN_FRAME_LENGTH_BYTES * NO_OF_FRAMES)
     const uint32_t  NXDN_TX_BUFFER_LEN = 538U; // 11 frames + pad
+
+    /** @} */
 } // namespace nxdn
 
 #endif // __NXDN_DEFINES_H__

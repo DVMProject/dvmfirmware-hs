@@ -1,18 +1,14 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/**
-* Digital Voice Modem - Hotspot Firmware
-* GPLv2 Open Source. Use is subject to license terms.
-* DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
-*
-* @package DVM / Hotspot Firmware
-* @derivedfrom MMDVM_HS (https://github.com/g4klx/MMDVM_HS)
-* @license GPLv2 License (https://opensource.org/licenses/GPL-2.0)
-*
-*   Copyright (C) 2016,2017 Jonathan Naylor, G4KLX
-*   Copyright (C) 2016,2017,2018 Andy Uribe, CA6JAU
-*   Copyright (C) 2021-2024 Bryan Biedenkapp, N2PLL
-*
-*/
+/*
+ * Digital Voice Modem - Hotspot Firmware
+ * GPLv2 Open Source. Use is subject to license terms.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ *  Copyright (C) 2016,2017 Jonathan Naylor, G4KLX 
+ *  Copyright (C) 2016,2017,2018 Andy Uribe, CA6JAU
+ *  Copyright (C) 2021-2024 Bryan Biedenkapp, N2PLL
+ *
+ */
 #include "Globals.h"
 #include "p25/P25RX.h"
 #include "Utils.h"
@@ -34,9 +30,8 @@ const uint16_t NOENDPTR = 9999U;
 //  Public Class Members
 // ---------------------------------------------------------------------------
 
-/// <summary>
-/// Initializes a new instance of the P25RX class.
-/// </summary>
+/* Initializes a new instance of the P25RX class. */
+
 P25RX::P25RX() :
     m_bitBuffer(0x00U),
     m_buffer(),
@@ -51,9 +46,8 @@ P25RX::P25RX() :
     ::memset(m_buffer, 0x00U, P25_LDU_FRAME_LENGTH_BYTES + 3U);
 }
 
-/// <summary>
-/// Helper to reset data values to defaults.
-/// </summary>
+/* Helper to reset data values to defaults. */
+
 void P25RX::reset()
 {
     m_bitBuffer = 0x00U;
@@ -71,10 +65,8 @@ void P25RX::reset()
     m_duid = 0xFFU;
 }
 
-/// <summary>
-/// Sample P25 bits from the air interface.
-/// </summary>
-/// <param name="bit"></param>
+/* Sample P25 bits from the air interface. */
+
 void P25RX::databit(bool bit)
 {
     m_bitBuffer <<= 1;
@@ -116,10 +108,8 @@ void P25RX::databit(bool bit)
     }
 }
 
-/// <summary>
-/// Sets the P25 NAC.
-/// </summary>
-/// <param name="nac">NAC.</param>
+/* Sets the P25 NAC. */
+
 void P25RX::setNAC(uint16_t nac)
 {
     m_nac = nac;
@@ -129,10 +119,8 @@ void P25RX::setNAC(uint16_t nac)
 //  Private Class Members
 // ---------------------------------------------------------------------------
 
-/// <summary>
-/// Helper to process P25 samples.
-/// </summary>
-/// <param name="bit"></param>
+/* Helper to process P25 samples. */
+
 void P25RX::processBit(bool bit)
 {
     // process NID
@@ -227,10 +215,8 @@ void P25RX::processBit(bool bit)
     }
 }
 
-/// <summary>
-/// Helper to process LDU P25 bits.
-/// </summary>
-/// <param name="bit"></param>
+/* Helper to process LDU P25 bits. */
+
 void P25RX::processVoice(bool bit)
 {
     // only search for a sync in the right place +-2 bits
@@ -323,10 +309,8 @@ void P25RX::processVoice(bool bit)
     }
 }
 
-/// <summary>
-/// Helper to process PDU P25 bits.
-/// </summary>
-/// <param name="bit"></param>
+/* Helper to process PDU P25 bits. */
+
 void P25RX::processData(bool bit)
 {
     // only search for a sync in the right place +-2 bits
@@ -384,10 +368,8 @@ void P25RX::processData(bool bit)
     }
 }
 
-/// <summary>
-/// Frame synchronization correlator.
-/// </summary>
-/// <returns></returns>
+/* Frame synchronization correlator. */
+
 bool P25RX::correlateSync()
 {
     uint8_t maxErrs;
@@ -439,9 +421,8 @@ bool P25RX::correlateSync()
     return false;
 }
 
-/// <summary>
-/// Helper to decode the P25 NID.
-/// </summary>
+/* Helper to decode the P25 NID. */
+
 bool P25RX::decodeNid()
 {
     uint8_t nid[P25_NID_LENGTH_BYTES];

@@ -1,18 +1,22 @@
 // SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Digital Voice Modem - Hotspot Firmware
+ * GPLv2 Open Source. Use is subject to license terms.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ *  Copyright (C) 2009-2016 Jonathan Naylor, G4KLX
+ *  Copyright (C) 2018 Andy Uribe, CA6JAU
+ *  Copyright (C) 2017-2024 Bryan Biedenkapp, N2PLL
+ *
+ */
 /**
-* Digital Voice Modem - Hotspot Firmware
-* GPLv2 Open Source. Use is subject to license terms.
-* DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
-*
-* @package DVM / Hotspot Firmware
-* @derivedfrom MMDVM_HS (https://github.com/g4klx/MMDVM_HS)
-* @license GPLv2 License (https://opensource.org/licenses/GPL-2.0)
-*
-*   Copyright (C) 2009-2016 Jonathan Naylor, G4KLX
-*   Copyright (C) 2018 Andy Uribe, CA6JAU
-*   Copyright (C) 2017-2024 Bryan Biedenkapp, N2PLL
-*
-*/
+ * @defgroup p25_hfw Project 25
+ * @brief Implementation for the TIA-102 Project 25 standard.
+ * @ingroup hotspot_fw
+ * 
+ * @file P25Defines.h
+ * @ingroup p25_hfw
+ */
 #if !defined(__P25_DEFINES_H__)
 #define __P25_DEFINES_H__
 
@@ -23,6 +27,11 @@ namespace p25
     // ---------------------------------------------------------------------------
     //  Constants
     // ---------------------------------------------------------------------------
+
+    /**
+     * @addtogroup p25_hfw
+     * @{
+     */
 
     const uint32_t  P25_RADIO_SYMBOL_LENGTH = 5U;      // At 24 kHz sample rate
 
@@ -99,6 +108,8 @@ namespace p25
     const uint8_t   P25_DUID_LDU2 = 0x0AU;              // Logical Link Data Unit 2
     const uint8_t   P25_DUID_PDU = 0x0CU;               // Packet Data Unit 
     const uint8_t   P25_DUID_TDULC = 0x0FU;             // Terminator Data Unit with Link Control
+
+    /** @} */
 } // namespace p25
 
 #endif // __P25_DEFINES_H__

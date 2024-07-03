@@ -1,18 +1,14 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/**
-* Digital Voice Modem - Hotspot Firmware
-* GPLv2 Open Source. Use is subject to license terms.
-* DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
-*
-* @package DVM / Hotspot Firmware
-* @derivedfrom MMDVM_HS (https://github.com/g4klx/MMDVM_HS)
-* @license GPLv2 License (https://opensource.org/licenses/GPL-2.0)
-*
-*   Copyright (C) 2009-2016 Jonathan Naylor, G4KLX
-*   Copyright (C) 2016,2017,2018 Andy Uribe, CA6JAU
-*   Copyright (C) 2021 Bryan Biedenkapp, N2PLL
-*
-*/
+/*
+ * Digital Voice Modem - Hotspot Firmware
+ * GPLv2 Open Source. Use is subject to license terms.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ *  Copyright (C) 2009-2016 Jonathan Naylor, G4KLX
+ *  Copyright (C) 2016,2017,2018 Andy Uribe, CA6JAU
+ *  Copyright (C) 2021 Bryan Biedenkapp, N2PLL
+ *
+ */
 #include "Globals.h"
 #include "dmr/DMRDMORX.h"
 #include "dmr/DMRSlotType.h"
@@ -38,9 +34,8 @@ const uint8_t CONTROL_DATA  = 0x40U;
 //  Public Class Members
 // ---------------------------------------------------------------------------
 
-/// <summary>
-/// Initializes a new instance of the DMRDMORX class.
-/// </summary>
+/* Initializes a new instance of the DMRDMORX class. */
+
 DMRDMORX::DMRDMORX() :
     m_bitBuffer(0x00U),
     m_buffer(),
@@ -58,9 +53,8 @@ DMRDMORX::DMRDMORX() :
     /* stub */
 }
 
-/// <summary>
-/// Helper to reset data values to defaults.
-/// </summary>
+/* Helper to reset data values to defaults. */
+
 void DMRDMORX::reset()
 {
     m_syncPtr = 0U;
@@ -71,10 +65,8 @@ void DMRDMORX::reset()
     m_endPtr = NOENDPTR;
 }
 
-/// <summary>
-/// Sample DMR bits from the air interface.
-/// </summary>
-/// <param name="bit"></param>
+/* Sample DMR bits from the air interface. */
+
 void DMRDMORX::databit(bool bit)
 {
     _WRITE_BIT(m_buffer, m_dataPtr, bit);
@@ -215,10 +207,8 @@ void DMRDMORX::databit(bool bit)
     io.setDecode(m_state != DMORXS_NONE);
 }
 
-/// <summary>
-/// Sets the DMR color code.
-/// </summary>
-/// <param name="colorCode">Color code.</param>
+/* Sets the DMR color code. */
+
 void DMRDMORX::setColorCode(uint8_t colorCode)
 {
     m_colorCode = colorCode;
@@ -228,9 +218,8 @@ void DMRDMORX::setColorCode(uint8_t colorCode)
 //  Private Class Members
 // ---------------------------------------------------------------------------
 
-/// <summary>
-/// Frame synchronization correlator.
-/// </summary>
+/* Frame synchronization correlator. */
+
 void DMRDMORX::correlateSync()
 {
     // unpack sync bytes
@@ -294,12 +283,8 @@ void DMRDMORX::correlateSync()
     }    
 }
 
-/// <summary>
-/// 
-/// </summary>
-/// <param name="start"></param>
-/// <param name="count"></param>
-/// <param name="buffer"></param>
+/* */
+
 void DMRDMORX::bitsToBytes(uint16_t start, uint8_t count, uint8_t* buffer)
 {
     for (uint8_t i = 0U; i < count; i++) {
@@ -346,10 +331,8 @@ void DMRDMORX::bitsToBytes(uint16_t start, uint8_t count, uint8_t* buffer)
     }
 }
 
-/// <summary>
-/// 
-/// </summary>
-/// <param name="frame"></param>
+/* */
+
 void DMRDMORX::writeRSSIData(uint8_t* frame)
 {
 #if defined(SEND_RSSI_DATA)

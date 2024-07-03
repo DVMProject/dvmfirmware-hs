@@ -1,18 +1,20 @@
 // SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Digital Voice Modem - Hotspot Firmware
+ * GPLv2 Open Source. Use is subject to license terms.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ *  Copyright (C) 2015,2016 Jonathan Naylor, G4KLX
+ *  Copyright (C) 2017 Andy Uribe, CA6JAU
+ *  Copyright (C) 2021 Bryan Biedenkapp, N2PLL
+ *
+ */
 /**
-* Digital Voice Modem - Hotspot Firmware
-* GPLv2 Open Source. Use is subject to license terms.
-* DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
-*
-* @package DVM / Hotspot Firmware
-* @derivedfrom MMDVM_HS (https://github.com/g4klx/MMDVM_HS)
-* @license GPLv2 License (https://opensource.org/licenses/GPL-2.0)
-*
-*   Copyright (C) 2015,2016 Jonathan Naylor, G4KLX
-*   Copyright (C) 2017 Andy Uribe, CA6JAU
-*   Copyright (C) 2021 Bryan Biedenkapp, N2PLL
-*
-*/
+ * @file DMRRX.h
+ * @ingroup dmr_hfw
+ * @file DMRRX.h
+ * @ingroup dmr_hfw
+ */
 #if !defined(__DMR_RX_H__)
 #define __DMR_RX_H__
 
@@ -25,23 +27,40 @@ namespace dmr
 {
     // ---------------------------------------------------------------------------
     //  Class Declaration
-    //      Implements receiver logic for duplex DMR mode operation.
     // ---------------------------------------------------------------------------
 
+    /**
+     * @brief Implements receiver logic for duplex DMR mode operation.
+     * @ingroup dmr_hfw
+     */
     class DSP_FW_API DMRRX {
     public:
-        /// <summary>Initializes a new instance of the DMRRX class.</summary>
+        /**
+         * @brief Initializes a new instance of the DMRRX class.
+         */
         DMRRX();
 
-        /// <summary>Helper to reset data values to defaults.</summary>
+        /**
+         * @brief Helper to reset data values to defaults.
+         */
         void reset();
 
-        /// <summary>Sample DMR bits from the air interface.</summary>
+        /**
+         * @brief Sample DMR bits from the air interface.
+         * @param bit 
+         * @param[in] control 
+         */
         void databit(bool bit, const uint8_t control);
 
-        /// <summary>Sets the DMR color code.</summary>
+        /**
+         * @brief Sets the DMR color code.
+         * @param colorCode 
+         */
         void setColorCode(uint8_t colorCode);
-        /// <summary>Sets the number of samples to delay before processing.</summary>
+        /**
+         * @brief Sets the number of samples to delay before processing.
+         * @param delay 
+         */
         void setRxDelay(uint8_t delay);
 
     private:
@@ -51,5 +70,4 @@ namespace dmr
 } // namespace dmr
 
 #endif // DUPLEX
-
 #endif // __DMR_RX_H__

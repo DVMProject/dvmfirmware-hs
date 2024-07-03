@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Digital Voice Modem - Hotspot Firmware
+ * GPLv2 Open Source. Use is subject to license terms.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ *  Copyright (C) 2020 Jonathan Naylor, G4KLX
+ *  Copyright (C) 2016 Jim McLaughlin, KI6ZUM
+ *  Copyright (C) 2016,2017,2018 Andy Uribe, CA6JAU
+ *  Copyright (C) 2017 Danilo, DB4PLE
+ *  Copyright (C) 2021 Bryan Biedenkapp, N2PLL
+ *
+ */
 /**
-* Digital Voice Modem - Hotspot Firmware
-* GPLv2 Open Source. Use is subject to license terms.
-* DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
-*
-* @package DVM / Hotspot Firmware
-* @derivedfrom MMDVM_HS (https://github.com/g4klx/MMDVM_HS)
-* @license GPLv2 License (https://opensource.org/licenses/GPL-2.0)
-*
-*   Copyright (C) 2020 Jonathan Naylor, G4KLX
-*   Copyright (C) 2016 Jim McLaughlin, KI6ZUM
-*   Copyright (C) 2016,2017,2018 Andy Uribe, CA6JAU
-*   Copyright (C) 2017 Danilo, DB4PLE
-*   Copyright (C) 2021 Bryan Biedenkapp, N2PLL
-*
-*/
+ * @file ADF7021.h
+ * @ingroup hotspot_fw
+ */
 #if !defined(__ADF7021_H__)
 #define __ADF7021_H__
 
@@ -23,6 +23,11 @@
 // ---------------------------------------------------------------------------
 //  Constants
 // ---------------------------------------------------------------------------
+
+/**
+ * @addtogroup hotspot_fw
+ * @{
+ */
 
 #define LOW 0
 #define HIGH 1
@@ -312,4 +317,5 @@
 #endif // ADF7021_N_VER
 
 #endif // ENABLE_ADF7021
+/** @} */
 #endif // __ADF7021_H__

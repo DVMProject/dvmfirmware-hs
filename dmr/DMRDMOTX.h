@@ -1,19 +1,21 @@
 // SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Digital Voice Modem - Hotspot Firmware
+ * GPLv2 Open Source. Use is subject to license terms.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ *  Copyright (C) 2015,2016 Jonathan Naylor, G4KLX
+ *  Copyright (C) 2016 Colin Durbridge, G4EML
+ *  Copyright (C) 2016,2017,2018 Andy Uribe, CA6JAU
+ *  Copyright (C) 2021 Bryan Biedenkapp, N2PLL
+ *
+ */
 /**
-* Digital Voice Modem - Hotspot Firmware
-* GPLv2 Open Source. Use is subject to license terms.
-* DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
-*
-* @package DVM / Hotspot Firmware
-* @derivedfrom MMDVM_HS (https://github.com/g4klx/MMDVM_HS)
-* @license GPLv2 License (https://opensource.org/licenses/GPL-2.0)
-*
-*   Copyright (C) 2015,2016 Jonathan Naylor, G4KLX
-*   Copyright (C) 2016 Colin Durbridge, G4EML
-*   Copyright (C) 2016,2017,2018 Andy Uribe, CA6JAU
-*   Copyright (C) 2021 Bryan Biedenkapp, N2PLL
-*
-*/
+ * @file DMRDMOTX.h
+ * @ingroup dmr_hfw
+ * @file DMRDMOTX.h
+ * @ingroup dmr_hfw
+ */
 #if !defined(__DMR_DMO_TX_H__)
 #define __DMR_DMO_TX_H__
 
@@ -32,27 +34,48 @@ namespace dmr
 
     // ---------------------------------------------------------------------------
     //  Class Declaration
-    //      Implements transmitter logic for DMR DMO mode operation.
     // ---------------------------------------------------------------------------
 
+    /**
+     * @brief Implements transmitter logic for DMR DMO mode operation.
+     * @ingroup dmr_hfw
+     */
     class DSP_FW_API DMRDMOTX {
     public:
-        /// <summary>Initializes a new instance of the DMRDMOTX class.</summary>
+        /**
+         * @brief Initializes a new instance of the DMRDMOTX class.
+         */
         DMRDMOTX();
 
-        /// <summary>Process local buffer and transmit on the air interface.</summary>
+        /**
+         * @brief Process local buffer and transmit on the air interface.
+         */
         void process();
 
-        /// <summary>Write data to the local buffer.</summary>
+        /**
+         * @brief Write data to the local buffer.
+         * @param[in] data Buffer.
+         * @param length Length of buffer.
+         * @returns uint8_t Reason code.
+         */
         uint8_t writeData(const uint8_t* data, uint8_t length);
 
-        /// <summary>Sets the FDMA preamble count.</summary>
+        /**
+         * @brief Sets the FDMA preamble count.
+         * @param preambleCnt FDMA preamble count.
+         */
         void setPreambleCount(uint8_t preambleCnt);
 
-        /// <summary>Helper to resize the FIFO buffer.</summary>
+        /**
+         * @brief Helper to resize the FIFO buffer.
+         * @param size 
+         */
         void resizeBuffer(uint16_t size);
 
-        /// <summary>Helper to get how much space the ring buffer has for samples.</summary>
+        /**
+         * @brief Helper to get how much space the ring buffer has for samples.
+         * @returns uint8_t Amount of space in ring buffer for samples. 
+         */
         uint16_t getSpace() const;
 
     private:
@@ -64,7 +87,10 @@ namespace dmr
 
         uint32_t m_preambleCnt;
 
-        /// <summary></summary>
+        /**
+         * @brief Helper to write a raw byte to the DAC.
+         * @param c Byte.
+         */
         void writeByte(uint8_t c);
     };
 } // namespace dmr

@@ -1,18 +1,24 @@
 // SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Digital Voice Modem - Hotspot Firmware
+ * GPLv2 Open Source. Use is subject to license terms.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ * 
+ * @package DVM / Hotspot Firmware
+ * @derivedfrom MMDVM_HS (https://github.com/g4klx/MMDVM_HS)
+ * @license GPLv2 License (https://opensource.org/licenses/GPL-2.0)
+ *
+ *  Copyright (C) 2015,2016 Jonathan Naylor, G4KLX
+ *  Copyright (C) 2016,2017,2018 Andy Uribe, CA6JAU
+ *  Copyright (C) 2021 Bryan Biedenkapp, N2PLL
+ *
+ */
 /**
-* Digital Voice Modem - Hotspot Firmware
-* GPLv2 Open Source. Use is subject to license terms.
-* DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
-*
-* @package DVM / Hotspot Firmware
-* @derivedfrom MMDVM_HS (https://github.com/g4klx/MMDVM_HS)
-* @license GPLv2 License (https://opensource.org/licenses/GPL-2.0)
-*
-*   Copyright (C) 2015,2016 Jonathan Naylor, G4KLX
-*   Copyright (C) 2016,2017,2018 Andy Uribe, CA6JAU
-*   Copyright (C) 2021 Bryan Biedenkapp, N2PLL
-*
-*/
+ * @file DMRDMORX.h
+ * @ingroup dmr_hfw
+ * @file DMRDMORX.h
+ * @ingroup dmr_hfw
+ */
 #if !defined(__DMR_DMO_RX_H__)
 #define __DMR_DMO_RX_H__
 
@@ -27,29 +33,46 @@ namespace dmr
 
     const uint16_t DMO_BUFFER_LENGTH_BITS = 576U;
 
+    /**
+     * @brief DMR DMO Receiver State
+     * @ingroup dmr_hfw
+     */
     enum DMORX_STATE {
-        DMORXS_NONE,
-        DMORXS_VOICE,
-        DMORXS_DATA
+        DMORXS_NONE,        //! None
+        DMORXS_VOICE,       //! Voice Data
+        DMORXS_DATA         //! PDU Data
     };
 
     // ---------------------------------------------------------------------------
     //  Class Declaration
-    //      Implements receiver logic for DMR DMO mode operation.
     // ---------------------------------------------------------------------------
 
+    /**
+     * @brief Implements receiver logic for DMR DMO mode operation.
+     * @ingroup dmr_hfw
+     */
     class DSP_FW_API DMRDMORX {
     public:
-        /// <summary>Initializes a new instance of the DMRDMORX class.</summary>
+        /**
+         * @brief Initializes a new instance of the DMRDMORX class.
+         */
         DMRDMORX();
 
-        /// <summary>Helper to reset data values to defaults.</summary>
+        /**
+         * @brief Helper to reset data values to defaults.
+         */
         void reset();
 
-        /// <summary>Sample DMR bits from the air interface.</summary>
+        /**
+         * @brief Sample DMR bits from the air interface.
+         * @param bit 
+         */
         void databit(bool bit);
 
-        /// <summary>Sets the DMR color code.</summary>
+        /**
+         * @brief Sets the DMR color code.
+         * @param colorCode 
+         */
         void setColorCode(uint8_t colorCode);
 
     private:
@@ -74,12 +97,22 @@ namespace dmr
 
         uint8_t m_type;
 
-        /// <summary>Frame synchronization correlator.</summary>
+        /**
+         * @brief Frame synchronization correlator.
+         */
         void correlateSync();
         
-        /// <summary></summary>
+        /**
+         * @brief 
+         * @param start 
+         * @param count
+         * @param buffer
+         */
         void bitsToBytes(uint16_t start, uint8_t count, uint8_t* buffer);
-        /// <summary></summary>
+        /**
+         * @brief 
+         * @param frame 
+         */
         void writeRSSIData(uint8_t* frame);
     };
 } // namespace dmr

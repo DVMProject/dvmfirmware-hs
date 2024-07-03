@@ -1,17 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/**
-* Digital Voice Modem - Hotspot Firmware
-* GPLv2 Open Source. Use is subject to license terms.
-* DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
-*
-* @package DVM / Hotspot Firmware
-* @derivedfrom MMDVM_HS (https://github.com/g4klx/MMDVM_HS)
-* @license GPLv2 License (https://opensource.org/licenses/GPL-2.0)
-*
-*   Copyright (C) 2009-2018,2020 Jonathan Naylor, G4KLX
-*   Copyright (C) 2022 Bryan Biedenkapp, N2PLL
-*
-*/
+/*
+ * Digital Voice Modem - Hotspot Firmware
+ * GPLv2 Open Source. Use is subject to license terms.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ *  Copyright (C) 2009-2018,2020 Jonathan Naylor, G4KLX
+ *  Copyright (C) 2022 Bryan Biedenkapp, N2PLL
+ *
+ */
 #include "Globals.h"
 #include "nxdn/NXDNRX.h"
 #include "Utils.h"
@@ -33,9 +29,8 @@ const uint16_t NOENDPTR = 9999U;
 //  Public Class Members
 // ---------------------------------------------------------------------------
 
-/// <summary>
-/// Initializes a new instance of the NXDNRX class.
-/// </summary>
+/* Initializes a new instance of the NXDNRX class. */
+
 NXDNRX::NXDNRX() :
     m_bitBuffer(0x00U),
     m_outBuffer(),
@@ -48,9 +43,8 @@ NXDNRX::NXDNRX() :
     m_buffer = m_outBuffer + 1U;
 }
 
-/// <summary>
-/// Helper to reset data values to defaults.
-/// </summary>
+/* Helper to reset data values to defaults. */
+
 void NXDNRX::reset()
 {
     m_bitBuffer = 0x00U;
@@ -61,10 +55,8 @@ void NXDNRX::reset()
     m_state = NXDNRXS_NONE;
 }
 
-/// <summary>
-/// Sample NXDN bits from the air interface.
-/// </summary>
-/// <param name="bit"></param>
+/* Sample NXDN bits from the air interface. */
+
 void NXDNRX::databit(bool bit)
 {
     if (m_state == NXDNRXS_DATA) {
@@ -88,10 +80,8 @@ void NXDNRX::databit(bool bit)
 //  Private Class Members
 // ---------------------------------------------------------------------------
 
-/// <summary>
-/// Helper to process NXDN data bits.
-/// </summary>
-/// <param name="bit"></param>
+/* Helper to process NXDN data bits. */
+
 void NXDNRX::processData(bool bit)
 {
     m_bitBuffer <<= 1;
@@ -135,11 +125,8 @@ void NXDNRX::processData(bool bit)
     }
 }
 
-/// <summary>
-/// Frame synchronization correlator.
-/// </summary>
-/// <param name="first"></param>
-/// <returns></returns>
+/* Frame synchronization correlator. */
+
 bool NXDNRX::correlateSync(bool first)
 {
     uint8_t maxErrs;

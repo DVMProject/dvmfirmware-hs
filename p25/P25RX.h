@@ -1,18 +1,20 @@
 // SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Digital Voice Modem - Hotspot Firmware
+ * GPLv2 Open Source. Use is subject to license terms.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ *  Copyright (C) 2015,2016,2017 Jonathan Naylor, G4KLX
+ *  Copyright (C) 2016,2017,2018 Andy Uribe, CA6JAU
+ *  Copyright (C) 2021-2024 Bryan Biedenkapp, N2PLL
+ *
+ */
 /**
-* Digital Voice Modem - Hotspot Firmware
-* GPLv2 Open Source. Use is subject to license terms.
-* DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
-*
-* @package DVM / Hotspot Firmware
-* @derivedfrom MMDVM_HS (https://github.com/g4klx/MMDVM_HS)
-* @license GPLv2 License (https://opensource.org/licenses/GPL-2.0)
-*
-*   Copyright (C) 2015,2016,2017 Jonathan Naylor, G4KLX
-*   Copyright (C) 2016,2017,2018 Andy Uribe, CA6JAU
-*   Copyright (C) 2021-2024 Bryan Biedenkapp, N2PLL
-*
-*/
+ * @file P25RX.h
+ * @ingroup p25_hfw
+ * @file P25RX.h
+ * @ingroup p25_hfw
+ */
 #if !defined(__P25_RX_H__)
 #define __P25_RX_H__
 
@@ -25,30 +27,47 @@ namespace p25
     //  Constants
     // ---------------------------------------------------------------------------
 
+    /**
+     * @brief P25 Receiver State
+     * @ingroup p25_hfw
+     */
     enum P25RX_STATE {
-        P25RXS_NONE,
-        P25RXS_SYNC,
-        P25RXS_VOICE,
-        P25RXS_DATA
+        P25RXS_NONE,        //! None
+        P25RXS_SYNC,        //! Found Sync
+        P25RXS_VOICE,       //! Voice Data
+        P25RXS_DATA         //! PDU Data
     };
 
     // ---------------------------------------------------------------------------
     //  Class Declaration
-    //      Implements receiver logic for P25 mode operation.
     // ---------------------------------------------------------------------------
 
+    /**
+     * @brief Implements receiver logic for P25 mode operation.
+     * @ingroup p25_hfw
+     */
     class DSP_FW_API P25RX {
     public:
-        /// <summary>Initializes a new instance of the P25RX class.</summary>
+        /**
+         * @brief Initializes a new instance of the P25RX class.
+         */
         P25RX();
 
-        /// <summary>Helper to reset data values to defaults.</summary>
+        /**
+         * @brief Helper to reset data values to defaults.
+         */
         void reset();
 
-        /// <summary>Sample P25 bits from the air interface.</summary>
+        /**
+         * @brief Sample P25 bits from the air interface.
+         * @param bit 
+         */
         void databit(bool bit);
 
-        /// <summary>Sets the P25 NAC.</summary>
+        /**
+         * @brief Sets the P25 NAC.
+         * @param nac Network Access Code.
+         */
         void setNAC(uint16_t nac);
 
     private:
@@ -68,17 +87,32 @@ namespace p25
 
         uint8_t m_duid;
 
-        /// <summary>Helper to process P25 bits.</summary>
+        /**
+         * @brief Helper to process P25 bits.
+         * @param bit 
+         */
         void processBit(bool bit);
-        /// <summary>Helper to process LDU P25 bits.</summary>
+        /**
+         * @brief Helper to process LDU P25 bits.
+         * @param bit 
+         */
         void processVoice(bool bit);
-        /// <summary>Helper to process PDU P25 bits.</summary>
+        /**
+         * @brief Helper to process PDU P25 bits.
+         * @param bit 
+         */
         void processData(bool bit);
 
-        /// <summary>Frame synchronization correlator.</summary>
+        /**
+         * @brief Frame synchronization correlator.
+         * @returns bool 
+         */
         bool correlateSync();
 
-        /// <summary>Helper to decode the P25 NID.</summary>
+        /**
+         * @brief Helper to decode the P25 NID.
+         * @returns bool True, if P25 NID was decoded, otherwise false.
+         */
         bool decodeNid();
     };
 } // namespace p25

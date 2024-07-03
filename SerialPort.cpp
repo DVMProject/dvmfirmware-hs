@@ -1,20 +1,16 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/**
-* Digital Voice Modem - Hotspot Firmware
-* GPLv2 Open Source. Use is subject to license terms.
-* DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
-*
-* @package DVM / Hotspot Firmware
-* @derivedfrom MMDVM_HS (https://github.com/g4klx/MMDVM_HS)
-* @license GPLv2 License (https://opensource.org/licenses/GPL-2.0)
-*
-*   Copyright (C) 2013,2015,2016,2018,2020,2021 Jonathan Naylor, G4KLX
-*   Copyright (C) 2016 Colin Durbridge, G4EML
-*   Copyright (C) 2016,2017,2018,2019 Andy Uribe, CA6JAU
-*   Copyright (C) 2019 Florian Wolters, DF2ET
-*   Copyright (C) 2017-2024 Bryan Biedenkapp, N2PLL
-*
-*/
+/*
+ * Digital Voice Modem - Hotspot Firmware
+ * GPLv2 Open Source. Use is subject to license terms.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ *  Copyright (C) 2013,2015,2016,2018,2020,2021 Jonathan Naylor, G4KLX
+ *  Copyright (C) 2016 Colin Durbridge, G4EML
+ *  Copyright (C) 2016,2017,2018,2019 Andy Uribe, CA6JAU
+ *  Copyright (C) 2019 Florian Wolters, DF2ET
+ *  Copyright (C) 2017-2024 Bryan Biedenkapp, N2PLL
+ *
+ */
 #include "Globals.h"
 #include "SerialPort.h"
 
@@ -31,9 +27,8 @@ const uint8_t PROTOCOL_VERSION   = 4U;
 //  Public Class Members
 // ---------------------------------------------------------------------------
 
-/// <summary>
-/// Initializes a new instance of the SerialPort class.
-/// </summary>
+/* Initializes a new instance of the SerialPort class. */
+
 SerialPort::SerialPort() :
     m_buffer(),
     m_ptr(0U),
@@ -44,17 +39,15 @@ SerialPort::SerialPort() :
     // stub
 }
 
-/// <summary>
-/// Starts serial port communications.
-/// </summary>
+/* Starts serial port communications. */
+
 void SerialPort::start()
 {
     beginInt(1U, SERIAL_SPEED);
 }
 
-/// <summary>
-/// Process data from serial port.
-/// </summary>
+/* Process data from serial port. */
+
 void SerialPort::process()
 {
     while (availableInt(1U)) {
@@ -409,11 +402,8 @@ void SerialPort::process()
     }
 }
 
-/// <summary>
-/// Helper to check if the modem is in a calibration state.
-/// </summary>
-/// <param name="state"></param>
-/// <returns></returns>
+/* Helper to check if the modem is in a calibration state. */
+
 bool SerialPort::isCalState(DVM_STATE state)
 {
     // calibration mode check
@@ -429,11 +419,8 @@ bool SerialPort::isCalState(DVM_STATE state)
     return false;
 }
 
-/// <summary>
-/// Helper to determine digital mode if the modem is in a calibration state.
-/// </summary>
-/// <param name="state"></param>
-/// <returns></returns>
+/* Helper to determine digital mode if the modem is in a calibration state. */
+
 DVM_STATE SerialPort::calRelativeState(DVM_STATE state)
 {
     if (isCalState(state)) {
@@ -452,12 +439,8 @@ DVM_STATE SerialPort::calRelativeState(DVM_STATE state)
     return STATE_CW;
 }
 
-/// <summary>
-/// Write DMR frame data to serial port.
-/// </summary>
-/// <param name="slot"></param>
-/// <param name="data"></param>
-/// <param name="length"></param>
+/* Write DMR frame data to serial port. */
+
 void SerialPort::writeDMRData(bool slot, const uint8_t* data, uint8_t length)
 {
     if (m_modemState != STATE_DMR && m_modemState != STATE_IDLE)
@@ -484,10 +467,8 @@ void SerialPort::writeDMRData(bool slot, const uint8_t* data, uint8_t length)
     writeInt(1U, reply, length + 3U);
 }
 
-/// <summary>
-/// Write lost DMR frame data to serial port.
-/// </summary>
-/// <param name="slot"></param>
+/* Write lost DMR frame data to serial port. */
+
 void SerialPort::writeDMRLost(bool slot)
 {
     if (m_modemState != STATE_DMR && m_modemState != STATE_IDLE)
@@ -505,11 +486,8 @@ void SerialPort::writeDMRLost(bool slot)
     writeInt(1U, reply, 3);
 }
 
-/// <summary>
-/// Write P25 frame data to serial port.
-/// </summary>
-/// <param name="data"></param>
-/// <param name="length"></param>
+/* Write P25 frame data to serial port. */
+
 void SerialPort::writeP25Data(const uint8_t* data, uint16_t length)
 {
     if (m_modemState != STATE_P25 && m_modemState != STATE_IDLE)
@@ -547,9 +525,8 @@ void SerialPort::writeP25Data(const uint8_t* data, uint16_t length)
     }
 }
 
-/// <summary>
-/// Write lost P25 frame data to serial port.
-/// </summary>
+/* Write lost P25 frame data to serial port. */
+
 void SerialPort::writeP25Lost()
 {
     if (m_modemState != STATE_P25 && m_modemState != STATE_IDLE)
@@ -567,11 +544,8 @@ void SerialPort::writeP25Lost()
     writeInt(1U, reply, 3);
 }
 
-/// <summary>
-/// Write NXDN frame data to serial port.
-/// </summary>
-/// <param name="data"></param>
-/// <param name="length"></param>
+/* Write NXDN frame data to serial port. */
+
 void SerialPort::writeNXDNData(const uint8_t* data, uint8_t length)
 {
     if (m_modemState != STATE_NXDN && m_modemState != STATE_IDLE)
@@ -598,9 +572,8 @@ void SerialPort::writeNXDNData(const uint8_t* data, uint8_t length)
     writeInt(1U, reply, length + 3U);
 }
 
-/// <summary>
-/// Write lost NXDN frame data to serial port.
-/// </summary>
+/* Write lost NXDN frame data to serial port. */
+
 void SerialPort::writeNXDNLost()
 {
     if (m_modemState != STATE_NXDN && m_modemState != STATE_IDLE)
@@ -618,11 +591,8 @@ void SerialPort::writeNXDNLost()
     writeInt(1U, reply, 3);
 }
 
-/// <summary>
-/// Write calibration frame data to serial port.
-/// </summary>
-/// <param name="data"></param>
-/// <param name="length"></param>
+/* Write calibration frame data to serial port. */
+
 void SerialPort::writeCalData(const uint8_t* data, uint8_t length)
 {
     if (length + 3U > 130U) {
@@ -643,11 +613,8 @@ void SerialPort::writeCalData(const uint8_t* data, uint8_t length)
     writeInt(1U, reply, length + 3U);
 }
 
-/// <summary>
-/// Write RSSI frame data to serial port.
-/// </summary>
-/// <param name="data"></param>
-/// <param name="length"></param>
+/* Write RSSI frame data to serial port. */
+
 void SerialPort::writeRSSIData(const uint8_t* data, uint8_t length)
 {
     if (m_modemState != STATE_RSSI_CAL)
@@ -671,10 +638,8 @@ void SerialPort::writeRSSIData(const uint8_t* data, uint8_t length)
     writeInt(1U, reply, length + 3U);
 }
 
-/// <summary>
-///
-/// </summary>
-/// <param name="text"></param>
+/* */
+
 void SerialPort::writeDebug(const char* text)
 {
     if (!m_debug)
@@ -696,11 +661,8 @@ void SerialPort::writeDebug(const char* text)
     writeInt(1U, reply, count, true);
 }
 
-/// <summary>
-///
-/// </summary>
-/// <param name="text"></param>
-/// <param name="n1"></param>
+/* */
+
 void SerialPort::writeDebug(const char* text, int16_t n1)
 {
     if (!m_debug)
@@ -725,12 +687,8 @@ void SerialPort::writeDebug(const char* text, int16_t n1)
     writeInt(1U, reply, count, true);
 }
 
-/// <summary>
-///
-/// </summary>
-/// <param name="text"></param>
-/// <param name="n1"></param>
-/// <param name="n2"></param>
+/* */
+
 void SerialPort::writeDebug(const char* text, int16_t n1, int16_t n2)
 {
     if (!m_debug)
@@ -758,13 +716,8 @@ void SerialPort::writeDebug(const char* text, int16_t n1, int16_t n2)
     writeInt(1U, reply, count, true);
 }
 
-/// <summary>
-///
-/// </summary>
-/// <param name="text"></param>
-/// <param name="n1"></param>
-/// <param name="n2"></param>
-/// <param name="n3"></param>
+/* */
+
 void SerialPort::writeDebug(const char* text, int16_t n1, int16_t n2, int16_t n3)
 {
     if (!m_debug)
@@ -795,14 +748,8 @@ void SerialPort::writeDebug(const char* text, int16_t n1, int16_t n2, int16_t n3
     writeInt(1U, reply, count, true);
 }
 
-/// <summary>
-///
-/// </summary>
-/// <param name="text"></param>
-/// <param name="n1"></param>
-/// <param name="n2"></param>
-/// <param name="n3"></param>
-/// <param name="n4"></param>
+/* */
+
 void SerialPort::writeDebug(const char* text, int16_t n1, int16_t n2, int16_t n3, int16_t n4)
 {
     if (!m_debug)
@@ -836,11 +783,8 @@ void SerialPort::writeDebug(const char* text, int16_t n1, int16_t n2, int16_t n3
     writeInt(1U, reply, count, true);
 }
 
-/// <summary>
-///
-/// </summary>
-/// <param name="data"></param>
-/// <param name="length"></param>
+/* */
+
 void SerialPort::writeDump(const uint8_t* data, uint16_t length)
 {
     if (!m_debug)
@@ -882,9 +826,8 @@ void SerialPort::writeDump(const uint8_t* data, uint16_t length)
 //  Private Class Members
 // ---------------------------------------------------------------------------
 
-/// <summary>
-/// Write acknowlegement.
-/// </summary>
+/* Write acknowlegement. */
+
 void SerialPort::sendACK()
 {
     uint8_t reply[4U];
@@ -897,10 +840,8 @@ void SerialPort::sendACK()
     writeInt(1U, reply, 4);
 }
 
-/// <summary>
-/// Write negative acknowlegement.
-/// </summary>
-/// <param name="err"></param>
+/* Write negative acknowlegement. */
+
 void SerialPort::sendNAK(uint8_t err)
 {
     uint8_t reply[5U];
@@ -914,9 +855,8 @@ void SerialPort::sendNAK(uint8_t err)
     writeInt(1U, reply, 5);
 }
 
-/// <summary>
-/// Write modem DSP status.
-/// </summary>
+/* Write modem DSP status. */
+
 void SerialPort::getStatus()
 {
     io.resetWatchdog();
@@ -983,9 +923,8 @@ void SerialPort::getStatus()
     writeInt(1U, reply, 12);
 }
 
-/// <summary>
-/// Write modem DSP version.
-/// </summary>
+/* Write modem DSP version. */
+
 void SerialPort::getVersion()
 {
     uint8_t reply[200U];
@@ -1011,11 +950,8 @@ void SerialPort::getVersion()
     writeInt(1U, reply, count);
 }
 
-/// <summary>
-/// Helper to validate the passed modem state is valid.
-/// </summary>
-/// <param name="state"></param>
-/// <returns></returns>
+/* Helper to validate the passed modem state is valid. */
+
 uint8_t SerialPort::modemStateCheck(DVM_STATE state)
 {
     // invalid mode check
@@ -1041,12 +977,8 @@ uint8_t SerialPort::modemStateCheck(DVM_STATE state)
     return RSN_OK;
 }
 
-/// <summary>
-/// Set modem DSP configuration from serial port data.
-/// </summary>
-/// <param name="data"></param>
-/// <param name="length"></param>
-/// <returns></returns>
+/* Set modem DSP configuration from serial port data. */
+
 uint8_t SerialPort::setConfig(const uint8_t* data, uint8_t length)
 {
     if (length < 15U)
@@ -1144,12 +1076,8 @@ uint8_t SerialPort::setConfig(const uint8_t* data, uint8_t length)
     return RSN_OK;
 }
 
-/// <summary>
-/// Set modem DSP mode from serial port data.
-/// </summary>
-/// <param name="data"></param>
-/// <param name="length"></param>
-/// <returns></returns>
+/* Set modem DSP mode from serial port data. */
+
 uint8_t SerialPort::setMode(const uint8_t* data, uint8_t length)
 {
     if (length < 1U)
@@ -1169,10 +1097,8 @@ uint8_t SerialPort::setMode(const uint8_t* data, uint8_t length)
     return RSN_OK;
 }
 
-/// <summary>
-/// Sets the modem state.
-/// </summary>
-/// <param name="modemState"></param>
+/* Sets the modem state. */
+
 void SerialPort::setMode(DVM_STATE modemState)
 {
     switch (modemState) {
@@ -1301,12 +1227,8 @@ void SerialPort::setMode(DVM_STATE modemState)
     io.setMode(m_modemState);
 }
 
-/// <summary>
-/// Sets the RF parameters.
-/// </summary>
-/// <param name="data"></param>
-/// <param name="length"></param>
-/// <returns></returns>
+/* Sets the RF parameters. */
+
 uint8_t SerialPort::setRFParams(const uint8_t* data, uint8_t length)
 {
     if (length < 17U)
@@ -1386,12 +1308,8 @@ uint8_t SerialPort::setRFParams(const uint8_t* data, uint8_t length)
     return io.setRFParams(rxFreq, txFreq, rfPower, gainMode);
 }
 
-/// <summary>
-/// Sets the protocol ring buffer sizes.
-/// </summary>
-/// <param name="data"></param>
-/// <param name="length"></param>
-/// <returns></returns>
+/* Sets the protocol ring buffer sizes. */
+
 uint8_t SerialPort::setBuffers(const uint8_t* data, uint8_t length)
 {
     if (length < 1U)

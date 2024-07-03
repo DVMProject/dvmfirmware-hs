@@ -1,17 +1,19 @@
 // SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Digital Voice Modem - Hotspot Firmware
+ * GPLv2 Open Source. Use is subject to license terms.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ *  Copyright (C) 2015 Jonathan Naylor, G4KLX
+ *  Copyright (C) 2017,2018 Andy Uribe, CA6JAU
+ *
+ */
 /**
-* Digital Voice Modem - Hotspot Firmware
-* GPLv2 Open Source. Use is subject to license terms.
-* DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
-*
-* @package DVM / Hotspot Firmware
-* @derivedfrom MMDVM_HS (https://github.com/g4klx/MMDVM_HS)
-* @license GPLv2 License (https://opensource.org/licenses/GPL-2.0)
-*
-*   Copyright (C) 2015 Jonathan Naylor, G4KLX
-*   Copyright (C) 2017,2018 Andy Uribe, CA6JAU
-*
-*/
+ * @file DMRIdleRX.h
+ * @ingroup dmr_mfw
+ * @file DMRIdleRX.h
+ * @ingroup dmr_mfw
+ */
 #if !defined(__DMR_IDLE_RX_H__)
 #define __DMR_IDLE_RX_H__
 
@@ -30,21 +32,34 @@ namespace dmr
 
     // ---------------------------------------------------------------------------
     //  Class Declaration
-    //      Implements receiver logic for idle DMR mode operation.
     // ---------------------------------------------------------------------------
 
+    /**
+     * @brief Implements receiver logic for idle DMR mode operation.
+     * @ingroup dmr_hfw
+     */
     class DSP_FW_API DMRIdleRX {
     public:
-        /// <summary>Initializes a new instance of the DMRIdleRX class.</summary>
+        /**
+         * @brief Initializes a new instance of the DMRIdleRX class.
+         */
         DMRIdleRX();
 
-        /// <summary>Helper to reset data values to defaults.</summary>
+        /**
+         * @brief Helper to reset data values to defaults.
+         */
         void reset();
 
-        /// <summary>Sample DMR bits from the air interface.</summary>
+        /**
+         * @brief Sample DMR bits from the air interface.
+         * @param bit 
+         */
         void databit(bool bit);
 
-        /// <summary>Sets the DMR color code.</summary>
+        /**
+         * @brief Sets the DMR color code.
+         * @param colorCode 
+         */
         void setColorCode(uint8_t colorCode);
 
     private:
@@ -56,11 +71,15 @@ namespace dmr
         
         uint8_t m_colorCode;
 
-        /// <summary></summary>
+        /**
+         * @brief 
+         * @param start 
+         * @param count
+         * @param buffer
+         */
         void bitsToBytes(uint16_t start, uint8_t count, uint8_t* buffer);
     };
 } // namespace dmr
 
 #endif // DUPLEX
-
 #endif // __DMR_IDLE_RX_H__

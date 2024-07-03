@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/**
-* Digital Voice Modem - Hotspot Firmware
-* GPLv2 Open Source. Use is subject to license terms.
-* DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
-*
-* @package DVM / Hotspot Firmware
-* @derivedfrom MMDVM_HS (https://github.com/g4klx/MMDVM_HS)
-* @license GPLv2 License (https://opensource.org/licenses/GPL-2.0)
-*
-*   Copyright (C) 2015,2020 Jonathan Naylor, G4KLX
-*   Copyright (C) 2017 Andy Uribe, CA6JAU
-*
-*/
+/*
+ * Digital Voice Modem - Hotspot Firmware
+ * GPLv2 Open Source. Use is subject to license terms.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * @package DVM / Hotspot Firmware
+ * @derivedfrom MMDVM_HS (https://github.com/g4klx/MMDVM_HS)
+ * @license GPLv2 License (https://opensource.org/licenses/GPL-2.0)
+ *
+ *  Copyright (C) 2015,2020 Jonathan Naylor, G4KLX
+ *  Copyright (C) 2017 Andy Uribe, CA6JAU
+ *
+ */
 #include "Utils.h"
 
 // ---------------------------------------------------------------------------
@@ -29,10 +29,14 @@ const uint8_t BITS_TABLE[] = {
 //  Global Functions
 // ---------------------------------------------------------------------------
 
+/* Returns the count of bits in the passed 8 byte value. */
+
 uint8_t countBits8(uint8_t bits)
 {
     return BITS_TABLE[bits];
 }
+
+/* Returns the count of bits in the passed 16 byte value. */
 
 uint8_t countBits16(uint16_t bits)
 {
@@ -42,6 +46,8 @@ uint8_t countBits16(uint16_t bits)
     n += BITS_TABLE[p[1U]];
     return n;
 }
+
+/* Returns the count of bits in the passed 32 byte value. */
 
 uint8_t countBits32(uint32_t bits)
 {
@@ -53,6 +59,8 @@ uint8_t countBits32(uint32_t bits)
     n += BITS_TABLE[p[3U]];
     return n;
 }
+
+/* Returns the count of bits in the passed 64 byte value. */
 
 uint8_t countBits64(uint64_t bits)
 {

@@ -1,17 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/**
-* Digital Voice Modem - Hotspot Firmware
-* GPLv2 Open Source. Use is subject to license terms.
-* DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
-*
-* @package DVM / Hotspot Firmware
-* @derivedfrom MMDVM_HS (https://github.com/g4klx/MMDVM_HS)
-* @license GPLv2 License (https://opensource.org/licenses/GPL-2.0)
-*
-*   Copyright (C) 2016 Jonathan Naylor, G4KLX
-*   Copyright (C) 2018 Andy Uribe, CA6JAU
-*
-*/
+/*
+ * Digital Voice Modem - Hotspot Firmware
+ * GPLv2 Open Source. Use is subject to license terms.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ *  Copyright (C) 2016 Jonathan Naylor, G4KLX
+ *  Copyright (C) 2018 Andy Uribe, CA6JAU
+ *
+ */
 #include "Globals.h"
 #include "CalRSSI.h"
 #include "Utils.h"
@@ -20,9 +16,8 @@
 //  Public Class Members
 // ---------------------------------------------------------------------------
 
-/// <summary>
-/// Initializes a new instance of the CalRSSI class.
-/// </summary>
+/* Initializes a new instance of the CalRSSI class. */
+
 CalRSSI::CalRSSI() :
     m_count(0U),
     m_navg(0U),
@@ -33,9 +28,8 @@ CalRSSI::CalRSSI() :
     /* stub */
 }
 
-/// <summary>
-/// Sample RSSI values from the air interface.
-/// </summary>
+/* Sample RSSI values from the air interface. */
+
 void CalRSSI::process()
 {
     m_count++;

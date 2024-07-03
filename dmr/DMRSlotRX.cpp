@@ -1,18 +1,14 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/**
-* Digital Voice Modem - Hotspot Firmware
-* GPLv2 Open Source. Use is subject to license terms.
-* DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
-*
-* @package DVM / Hotspot Firmware
-* @derivedfrom MMDVM_HS (https://github.com/g4klx/MMDVM_HS)
-* @license GPLv2 License (https://opensource.org/licenses/GPL-2.0)
-*
-*   Copyright (C) 2009-2017 Jonathan Naylor, G4KLX
-*   Copyright (C) 2017,2018 Andy Uribe, CA6JAU
-*   Copyright (C) 2021 Bryan Biedenkapp, N2PLL
-*
-*/
+/*
+ * Digital Voice Modem - Hotspot Firmware
+ * GPLv2 Open Source. Use is subject to license terms.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ *  Copyright (C) 2009-2017 Jonathan Naylor, G4KLX
+ *  Copyright (C) 2017,2018 Andy Uribe, CA6JAU
+ *  Copyright (C) 2021 Bryan Biedenkapp, N2PLL
+ *
+ */
 #include "Globals.h"
 #include "dmr/DMRSlotRX.h"
 #include "dmr/DMRSlotType.h"
@@ -40,9 +36,8 @@ const uint8_t CONTROL_DATA = 0x40U;
 //  Public Class Members
 // ---------------------------------------------------------------------------
 
-/// <summary>
-/// Initializes a new instance of the DMRSlotRX class.
-/// </summary>
+/* Initializes a new instance of the DMRSlotRX class. */
+
 DMRSlotRX::DMRSlotRX(bool slot) :
     m_slot(slot),
     m_bitBuffer(0x00U),
@@ -63,9 +58,8 @@ DMRSlotRX::DMRSlotRX(bool slot) :
     /* stub */
 }
 
-/// <summary>
-/// Helper to set data values for start of Rx.
-/// </summary>
+/* Helper to set data values for start of Rx. */
+
 void DMRSlotRX::start()
 {
     m_dataPtr = 0U;
@@ -73,9 +67,8 @@ void DMRSlotRX::start()
     m_control = CONTROL_NONE;
 }
 
-/// <summary>
-/// Helper to reset data values to defaults.
-/// </summary>
+/* Helper to reset data values to defaults. */
+
 void DMRSlotRX::reset()
 {
     m_dataPtr = 0U;
@@ -86,10 +79,8 @@ void DMRSlotRX::reset()
     resetSlot();
 }
 
-/// <summary>
-/// Sample DMR bits from the air interface.
-/// </summary>
-/// <param name="bit"></param>
+/* Sample DMR bits from the air interface. */
+
 bool DMRSlotRX::databit(bool bit)
 {
     uint16_t min, max;
@@ -241,19 +232,15 @@ bool DMRSlotRX::databit(bool bit)
     return m_state != DMRRXS_NONE;
 }
 
-/// <summary>
-/// Sets the DMR color code.
-/// </summary>
-/// <param name="colorCode">Color code.</param>
+/* Sets the DMR color code. */
+
 void DMRSlotRX::setColorCode(uint8_t colorCode)
 {
     m_colorCode = colorCode;
 }
 
-/// <summary>
-/// Sets the number of samples to delay before processing.
-/// </summary>
-/// <param name="delay">Number of samples to delay.</param>
+/* Sets the number of samples to delay before processing. */
+
 void DMRSlotRX::setRxDelay(uint8_t delay)
 {
     m_delay = delay;
@@ -263,10 +250,8 @@ void DMRSlotRX::setRxDelay(uint8_t delay)
 //  Private Class Members
 // ---------------------------------------------------------------------------
 
-/// <summary>
-/// Frame synchronization correlator.
-/// </summary>
-/// <param name="first"></param>
+/* Frame synchronization correlator. */
+
 void DMRSlotRX::correlateSync()
 {
     // unpack sync bytes
@@ -328,9 +313,8 @@ void DMRSlotRX::correlateSync()
     }
 }
 
-/// <summary>
-/// 
-/// </summary>
+/* */
+
 void DMRSlotRX::resetSlot()
 {
     m_syncPtr = 0U;
@@ -344,12 +328,8 @@ void DMRSlotRX::resetSlot()
     m_n = 0U;
 }
 
-/// <summary>
-/// 
-/// </summary>
-/// <param name="start"></param>
-/// <param name="count"></param>
-/// <param name="buffer"></param>
+/* */
+
 void DMRSlotRX::bitsToBytes(uint16_t start, uint8_t count, uint8_t* buffer)
 {
     for (uint8_t i = 0U; i < count; i++) {
@@ -396,10 +376,8 @@ void DMRSlotRX::bitsToBytes(uint16_t start, uint8_t count, uint8_t* buffer)
     }
 }
 
-/// <summary>
-///
-/// </summary>
-/// <param name="frame"></param>
+/* */
+
 void DMRSlotRX::writeRSSIData(uint8_t* frame)
 {
 #if defined(SEND_RSSI_DATA)

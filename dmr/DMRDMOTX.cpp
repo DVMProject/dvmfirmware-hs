@@ -1,19 +1,15 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/**
-* Digital Voice Modem - Hotspot Firmware
-* GPLv2 Open Source. Use is subject to license terms.
-* DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
-*
-* @package DVM / Hotspot Firmware
-* @derivedfrom MMDVM_HS (https://github.com/g4klx/MMDVM_HS)
-* @license GPLv2 License (https://opensource.org/licenses/GPL-2.0)
-*
-*   Copyright (C) 2009-2016 Jonathan Naylor, G4KLX
-*   Copyright (C) 2016 Colin Durbridge, G4EML
-*   Copyright (C) 2016,2017,2018 Andy Uribe, CA6JAU
-*   Copyright (C) 2021 Bryan Biedenkapp, N2PLL
-*
-*/
+/*
+ * Digital Voice Modem - Hotspot Firmware
+ * GPLv2 Open Source. Use is subject to license terms.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ *  Copyright (C) 2009-2016 Jonathan Naylor, G4KLX
+ *  Copyright (C) 2016 Colin Durbridge, G4EML
+ *  Copyright (C) 2016,2017,2018 Andy Uribe, CA6JAU
+ *  Copyright (C) 2021 Bryan Biedenkapp, N2PLL
+ *
+ */
 #include "Globals.h"
 #include "dmr/DMRSlotType.h"
 
@@ -34,9 +30,8 @@ const uint8_t PR_FILL[] =
 //  Public Class Members
 // ---------------------------------------------------------------------------
 
-/// <summary>
-/// Initializes a new instance of the DMRDMOTX class.
-/// </summary>
+/* Initializes a new instance of the DMRDMOTX class. */
+
 DMRDMOTX::DMRDMOTX() :
     m_fifo(DMR_TX_BUFFER_LEN),
     m_poBuffer(),
@@ -47,9 +42,8 @@ DMRDMOTX::DMRDMOTX() :
     /* stub */
 }
 
-/// <summary>
-/// Process local buffer and transmit on the air interface.
-/// </summary>
+/* Process local buffer and transmit on the air interface. */
+
 void DMRDMOTX::process()
 {
     if (m_poLen == 0U && m_fifo.getData() > 0U) {
@@ -91,12 +85,8 @@ void DMRDMOTX::process()
     }
 }
 
-/// <summary>
-/// Write data to the local buffer.
-/// </summary>
-/// <param name="data"></param>
-/// <param name="length"></param>
-/// <returns></returns>
+/* Write data to the local buffer. */
+
 uint8_t DMRDMOTX::writeData(const uint8_t* data, uint8_t length)
 {
     if (length != (DMR_FRAME_LENGTH_BYTES + 1U))
@@ -113,10 +103,8 @@ uint8_t DMRDMOTX::writeData(const uint8_t* data, uint8_t length)
     return RSN_OK;
 }
 
-/// <summary>
-/// Sets the FDMA preamble count.
-/// </summary>
-/// <param name="preambleCnt">Count of preambles.</param>
+/* Sets the FDMA preamble count. */
+
 void DMRDMOTX::setPreambleCount(uint8_t preambleCnt)
 {
     uint32_t preambles = (uint32_t)((float)preambleCnt / 0.2083F);
@@ -127,20 +115,16 @@ void DMRDMOTX::setPreambleCount(uint8_t preambleCnt)
         m_preambleCnt = 80U;
 }
 
-/// <summary>
-/// Helper to resize the FIFO buffer.
-/// </summary>
-/// <param name="size"></param>
+/* Helper to resize the FIFO buffer. */
+
 void DMRDMOTX::resizeBuffer(uint16_t size)
 {
     m_fifo.reset();
     m_fifo.reinitialize(size);
 }
 
-/// <summary>
-/// Helper to get how much space the ring buffer has for samples.
-/// </summary>
-/// <returns></returns>
+/* Helper to get how much space the ring buffer has for samples. */
+
 uint16_t DMRDMOTX::getSpace() const
 {
     return m_fifo.getSpace() / (DMR_FRAME_LENGTH_BYTES + 2U);
@@ -150,10 +134,8 @@ uint16_t DMRDMOTX::getSpace() const
 //  Private Class Members
 // ---------------------------------------------------------------------------
 
-/// <summary>
-///
-/// </summary>
-/// <param name="c"></param>
+/* Helper to write a raw byte to the DAC. */
+
 void DMRDMOTX::writeByte(uint8_t c)
 {
     uint8_t bit;

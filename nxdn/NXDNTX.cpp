@@ -1,18 +1,14 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/**
-* Digital Voice Modem - Hotspot Firmware
-* GPLv2 Open Source. Use is subject to license terms.
-* DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
-*
-* @package DVM / Hotspot Firmware
-* @derivedfrom MMDVM_HS (https://github.com/g4klx/MMDVM_HS)
-* @license GPLv2 License (https://opensource.org/licenses/GPL-2.0)
-*
-*   Copyright (C) 2009-2018,2020 Jonathan Naylor, G4KLX
-*   Copyright (C) 2017 Andy Uribe, CA6JAU
-*   Copyright (C) 2022 Bryan Biedenkapp, N2PLL
-*
-*/
+/*
+ * Digital Voice Modem - Hotspot Firmware
+ * GPLv2 Open Source. Use is subject to license terms.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ *  Copyright (C) 2009-2018,2020 Jonathan Naylor, G4KLX
+ *  Copyright (C) 2017 Andy Uribe, CA6JAU
+ *  Copyright (C) 2022 Bryan Biedenkapp, N2PLL
+ *
+ */
 #include "Globals.h"
 #include "nxdn/NXDNTX.h"
 #include "nxdn/NXDNDefines.h"
@@ -23,9 +19,8 @@ using namespace nxdn;
 //  Public Class Members
 // ---------------------------------------------------------------------------
 
-/// <summary>
-/// Initializes a new instance of the NXDNTX class.
-/// </summary>
+/* Initializes a new instance of the NXDNTX class. */
+
 NXDNTX::NXDNTX() :
     m_fifo(NXDN_TX_BUFFER_LEN),
     m_state(NXDNTXSTATE_NORMAL),
@@ -39,9 +34,8 @@ NXDNTX::NXDNTX() :
     /* stub */
 }
 
-/// <summary>
-/// Process local buffer and transmit on the air interface.
-/// </summary>
+/* Process local buffer and transmit on the air interface. */
+
 void NXDNTX::process()
 {
     if (m_fifo.getData() == 0U && m_poLen == 0U && m_tailCnt > 0U &&
@@ -97,12 +91,8 @@ void NXDNTX::process()
     }
 }
 
-/// <summary>
-/// Write data to the local buffer.
-/// </summary>
-/// <param name="data"></param>
-/// <param name="length"></param>
-/// <returns></returns>
+/* Write data to the local buffer. */
+
 uint8_t NXDNTX::writeData(const uint8_t* data, uint16_t length)
 {
     if (length != (NXDN_FRAME_LENGTH_BYTES + 1U))
@@ -119,18 +109,15 @@ uint8_t NXDNTX::writeData(const uint8_t* data, uint16_t length)
     return RSN_OK;
 }
 
-/// <summary>
-/// Clears the local buffer.
-/// </summary>
+/* Clears the local buffer. */
+
 void NXDNTX::clear()
 {
     m_fifo.reset();
 }
 
-/// <summary>
-/// Sets the FDMA preamble count.
-/// </summary>
-/// <param name="preambleCnt">Count of preambles.</param>
+/* Sets the FDMA preamble count. */
+
 void NXDNTX::setPreambleCount(uint8_t preambleCnt)
 {
     m_preambleCnt = 300U + uint16_t(preambleCnt) * 6U; // 500ms + tx delay
@@ -140,38 +127,30 @@ void NXDNTX::setPreambleCount(uint8_t preambleCnt)
         m_preambleCnt = 60U;
 }
 
-/// <summary>
-/// Sets the Tx hang time.
-/// </summary>
-/// <param name="txHang">Transmit hang time in seconds.</param>
+/* Sets the Tx hang time. */
+
 void NXDNTX::setTxHang(uint8_t txHang)
 {
     m_txHang = txHang * NXDN_FIXED_TX_HANG;
 }
 
-/// <summary>
-/// Helper to set the calibration state for Tx.
-/// </summary>
-/// <param name="start"></param>
+/* Helper to set the calibration state for Tx. */
+
 void NXDNTX::setCal(bool start)
 {
     m_state = start ? NXDNTXSTATE_CAL : NXDNTXSTATE_NORMAL;
 }
 
-/// <summary>
-/// Helper to resize the FIFO buffer.
-/// </summary>
-/// <param name="size"></param>
+/* Helper to resize the FIFO buffer. */
+
 void NXDNTX::resizeBuffer(uint16_t size)
 {
     m_fifo.reset();
     m_fifo.reinitialize(size);
 }
 
-/// <summary>
-/// Helper to get how much space the ring buffer has for samples.
-/// </summary>
-/// <returns></returns>
+/* Helper to get how much space the ring buffer has for samples. */
+
 uint8_t NXDNTX::getSpace() const
 {
     return m_fifo.getSpace() / NXDN_FRAME_LENGTH_BYTES;
@@ -181,9 +160,8 @@ uint8_t NXDNTX::getSpace() const
 //  Private Class Members
 // ---------------------------------------------------------------------------
 
-/// <summary>
-///
-/// </summary>
+/* Helper to generate data. */
+
 void NXDNTX::createData()
 {
     if (!m_tx) {
@@ -204,10 +182,8 @@ void NXDNTX::createData()
     m_poPtr = 0U;
 }
 
-/// <summary>
-///
-/// </summary>
-/// <param name="c"></param>
+/* Helper to write a raw byte to the DAC. */
+
 void NXDNTX::writeByte(uint8_t c)
 {
     uint8_t bit;
@@ -223,9 +199,8 @@ void NXDNTX::writeByte(uint8_t c)
     }
 }
 
-/// <summary>
-///
-/// </summary>
+/* */
+
 void NXDNTX::writeSilence()
 {
     uint8_t bit;

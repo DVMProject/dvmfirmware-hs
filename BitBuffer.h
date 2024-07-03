@@ -1,17 +1,19 @@
 // SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Digital Voice Modem - Hotspot Firmware
+ * GPLv2 Open Source. Use is subject to license terms.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ *  Copyright (C) 2015,2016 Jonathan Naylor, G4KLX
+ *  Serial FIFO Control Copyright (C) 2015 by James McLaughlin, KI6ZUM
+ *
+ */
 /**
-* Digital Voice Modem - Hotspot Firmware
-* GPLv2 Open Source. Use is subject to license terms.
-* DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
-*
-* @package DVM / Hotspot Firmware
-* @derivedfrom MMDVM_HS (https://github.com/g4klx/MMDVM_HS)
-* @license GPLv2 License (https://opensource.org/licenses/GPL-2.0)
-*
-*   Copyright (C) 2015,2016 Jonathan Naylor, G4KLX
-*   Serial FIFO Control Copyright (C) 2015 by James McLaughlin, KI6ZUM
-*
-*/
+ * @file BitBuffer.h
+ * @ingroup hotspot_fw
+ * @file BitBuffer.cpp
+ * @ingroup hotspot_fw
+ */
 #if !defined(__BIT_RB_H__)
 #define __BIT_RB_H__
 
@@ -26,27 +28,52 @@
 
 // ---------------------------------------------------------------------------
 //  Class Declaration
-//      Implements a circular buffer for bit data.
 // ---------------------------------------------------------------------------
 
+/**
+ * @brief Implements a circular ring buffer for bit data.
+ * @ingroup hotspot_fw
+ */
 class DSP_FW_API BitBuffer {
 public:
-    /// <summary>Initializes a new instance of the BitBuffer class.</summary>
+    /**
+     * @brief Initializes a new instance of the BitBuffer class.
+     * @param length Length of buffer.
+     */
     BitBuffer(uint16_t length);
 
-    /// <summary>Helper to get how much space the ring buffer has for samples.</summary>
+    /**
+     * @brief Helper to get how much space the ring buffer has for samples.
+     * @returns uint16_t Amount of space remaining for data.
+     */
     uint16_t getSpace() const;
 
-    /// <summary></summary>
+    /**
+     * @brief 
+     * @returns uint16_t 
+     */
     uint16_t getData() const;
 
-    /// <summary></summary>
+    /**
+     * @brief 
+     * @param bit 
+     * @param control
+     * @returns bool 
+     */
     bool put(uint8_t bit, uint8_t control);
 
-    /// <summary></summary>
+    /**
+     * @brief 
+     * @param[out] bit 
+     * @param[out] control 
+     * @returns bool 
+     */
     bool get(uint8_t& bit, uint8_t& control);
 
-    /// <summary></summary>
+    /**
+     * @brief 
+     * @returns bool 
+     */
     bool hasOverflowed();
 
 private:

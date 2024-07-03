@@ -1,26 +1,21 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/**
-* Digital Voice Modem - Hotspot Firmware
-* GPLv2 Open Source. Use is subject to license terms.
-* DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
-*
-* @package DVM / Hotspot Firmware
-* @derivedfrom MMDVM_HS (https://github.com/g4klx/MMDVM_HS)
-* @license GPLv2 License (https://opensource.org/licenses/GPL-2.0)
-*
-*   Copyright (C) 2015,2016 Jonathan Naylor, G4KLX
-*   Serial FIFO Control Copyright (C) 2015 by James McLaughlin, KI6ZUM
-*
-*/
+/*
+ * Digital Voice Modem - Hotspot Firmware
+ * GPLv2 Open Source. Use is subject to license terms.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ *  Copyright (C) 2015,2016 Jonathan Naylor, G4KLX
+ *  Serial FIFO Control Copyright (C) 2015 by James McLaughlin, KI6ZUM
+ *
+ */
 #include "BitBuffer.h"
 
 // ---------------------------------------------------------------------------
 //  Public Class Members
 // ---------------------------------------------------------------------------
 
-/// <summary>
-/// Initializes a new instance of the BitBuffer class.
-/// </summary>
+/* Initializes a new instance of the BitBuffer class. */
+
 BitBuffer::BitBuffer(uint16_t length) :
     m_length(length),
     m_bits(NULL),
@@ -34,10 +29,8 @@ BitBuffer::BitBuffer(uint16_t length) :
     m_control = new uint8_t[length / 8U];
 }
 
-/// <summary>
-/// Helper to get how much space the ring buffer has for samples.
-/// </summary>
-/// <returns></returns>
+/* Helper to get how much space the ring buffer has for samples. */
+
 uint16_t BitBuffer::getSpace() const
 {
     uint16_t n = 0U;
@@ -55,10 +48,8 @@ uint16_t BitBuffer::getSpace() const
     return n;
 }
 
-/// <summary>
-///
-/// </summary>
-/// <returns></returns>
+/* */
+
 uint16_t BitBuffer::getData() const
 {
     if (m_tail == m_head)
@@ -69,11 +60,8 @@ uint16_t BitBuffer::getData() const
         return m_length - m_tail + m_head;
 }
 
-/// <summary>
-///
-/// </summary>
-/// <param name="c"></param>
-/// <returns></returns>
+/* */
+
 bool BitBuffer::put(uint8_t bit, uint8_t control)
 {
     if (m_full) {
@@ -94,10 +82,8 @@ bool BitBuffer::put(uint8_t bit, uint8_t control)
     return true;
 }
 
-/// <summary>
-///
-/// </summary>
-/// <returns></returns>
+/* */
+
 bool BitBuffer::get(uint8_t& bit, uint8_t& control)
 {
     if (m_head == m_tail && !m_full)
@@ -115,10 +101,8 @@ bool BitBuffer::get(uint8_t& bit, uint8_t& control)
     return true;
 }
 
-/// <summary>
-/// 
-/// </summary>
-/// <returns></returns>
+/* */
+
 bool BitBuffer::hasOverflowed()
 {
     bool overflow = m_overflow;

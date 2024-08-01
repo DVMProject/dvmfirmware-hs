@@ -9,7 +9,7 @@
  *  Copyright (C) 2016 Colin Durbridge, G4EML
  *  Copyright (C) 2016,2017,2018,2019 Andy Uribe, CA6JAU
  *  Copyright (C) 2019 Florian Wolters, DF2ET
- *  Copyright (C) 2021 Bryan Biedenkapp, N2PLL
+ *  Copyright (C) 2021,2024 Bryan Biedenkapp, N2PLL
  *
  */
 #include "Globals.h"

@@ -8,7 +8,7 @@
  *  Copyright (C) 2016 Jim McLaughlin, KI6ZUM
  *  Copyright (C) 2016,2017,2018,2019,2020 Andy Uribe, CA6JAU
  *  Copyright (C) 2017 Danilo, DB4PLE
- *  Copyright (C) 2021 Bryan Biedenkapp, N2PLL
+ *  Copyright (C) 2021,2024 Bryan Biedenkapp, N2PLL
  *
  */
 #include "Globals.h"

@@ -63,6 +63,10 @@ public:
     IO();
 
     /**
+     * @brief Initializes the air interface sampler.
+     */
+    void init();
+    /**
      * @brief Starts air interface sampler.
      */
     void start();
@@ -212,6 +216,11 @@ public:
      * @brief 
      */
     void selfTest();
+
+    /**
+     * @brief 
+     */
+    void resetMCU();
 
     /**
      * @brief 

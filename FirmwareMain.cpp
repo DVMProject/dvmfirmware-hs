@@ -73,6 +73,8 @@ IO io;
 
 void setup()
 {
+    io.init();
+
     serial.start();
 }
 
@@ -121,9 +123,68 @@ void loop()
 // ---------------------------------------------------------------------------
 //  Firmware Entry Point
 // ---------------------------------------------------------------------------
+#include <stm32f10x_flash.h>
+
+#define STM32_CNF_PAGE_ADDR (uint32_t)0x0800FC00
+#define STM32_CNF_PAGE      ((uint32_t *)0x0800FC00)
+#define STM32_CNF_PAGE_24   24U
+
+void jumpToBootLoader()
+{
+    // Disable RCC, set it to default (after reset) settings Internal clock, no PLL, etc.
+    RCC_DeInit();
+    USART_DeInit(USART1);
+    USART_DeInit(UART5);
+
+    // Disable Systick timer
+    SysTick->CTRL = 0;
+    SysTick->LOAD = 0;
+    SysTick->VAL = 0;
+
+    // Clear Interrupt Enable Register & Interrupt Pending Register
+    for (uint8_t i = 0; i < sizeof(NVIC->ICER) / sizeof(NVIC->ICER[0]); i++) {
+        NVIC->ICER[i] = 0xFFFFFFFF;
+        NVIC->ICPR[i] = 0xFFFFFFFF;
+    }
+
+#if defined(STM32F10X_MD)
+    volatile uint32_t addr = 0x1FFFF000;
+#endif
+
+    // Update the NVIC's vector
+    SCB->VTOR = addr;
+
+    void (*SysMemBootJump)(void);
+    SysMemBootJump = (void (*)(void))(*((uint32_t *)(addr + 4)));
+    __ASM volatile ("MSR msp, %0" : : "r" (*(uint32_t *)addr) : "sp"); // __set_MSP
+    SysMemBootJump();
+}
 
 int main()
 {
+    // does the configuration page contain the request bootloader flag?
+    if ((STM32_CNF_PAGE[STM32_CNF_PAGE_24] != 0xFFFFFFFFU) && (STM32_CNF_PAGE[STM32_CNF_PAGE_24] != 0x00U)) {
+        uint8_t bootloadMode = (STM32_CNF_PAGE[STM32_CNF_PAGE_24] >> 8) & 0xFFU;
+        if ((bootloadMode & 0x20U) == 0x20U) {
+            // we unfortunately need to discard the configuration area entirely for bootloader mode...
+            FLASH_Unlock();
+            FLASH_ClearFlag(FLASH_FLAG_BSY | FLASH_FLAG_EOP | FLASH_FLAG_PGERR | FLASH_FLAG_WRPRTERR);
+
+#if defined(STM32F4XX) || defined(STM32F7XX)
+            if (FLASH_EraseSector(STM32_CNF_SECTOR, VoltageRange_3) != FLASH_COMPLETE) {
+                FLASH_Lock();
+                return RSN_FAILED_ERASE_FLASH;
+            }
+#elif defined(STM32F10X_MD)
+            if (FLASH_ErasePage(STM32_CNF_PAGE_ADDR) != FLASH_COMPLETE) {
+                FLASH_Lock();
+                return RSN_FAILED_ERASE_FLASH;
+            }
+#endif
+            jumpToBootLoader();
+        }
+    }
+
     setup();
 
     for (;;)

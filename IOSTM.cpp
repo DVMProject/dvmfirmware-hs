@@ -338,6 +338,25 @@ void IO::getUDID(uint8_t* buffer)
 
 /* */
 
+void IO::resetMCU()
+{
+    DEBUG1("reset - bye-bye");
+
+    delayUS(250 * 1000);
+
+    setLEDInt(false);
+    setCOSInt(false);
+    setDMRInt(false);
+    setP25Int(false);
+    setNXDNInt(false);
+
+    delayUS(250 * 1000);
+
+    NVIC_SystemReset();
+}
+
+/* */
+
 void IO::delayBit()
 {
     delay_ns();

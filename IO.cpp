@@ -34,6 +34,13 @@ IO::IO():
     m_rfPower(0U),
     m_gainMode(ADF_GAIN_AUTO)    
 {
+    /* stub */
+}
+
+/* Initializes the air interface sampler. */
+
+void IO::init()
+{
     initInt();
 
     CE(HIGH);

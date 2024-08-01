@@ -178,6 +178,10 @@ void SerialPort::process()
                     }
                     break;
 
+                case CMD_RESET_MCU:
+                    io.resetMCU();
+                    break;
+
                 case CMD_SET_BUFFERS:
                     err = setBuffers(m_buffer + 3U, m_len - 3U);
                     if (err == RSN_OK) {

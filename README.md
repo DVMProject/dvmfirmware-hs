@@ -32,9 +32,13 @@ Next, you will need to disable bluetooth on the board. Edit ```/boot/config.txt`
 
 > Most sets of instructions reccomend to download stm32flash from online, however we have found the prepackaged version to work fine.
 
-Once the hotspot is back on, navigate to the build folder where you compiled the firmware. Put a jumper across the J1 points on the board, and the RED heartbeat LED should stop flashing. Run the below command to flash.
+Once the hotspot is back on, navigate to the build folder where you compiled the firmware. Put a jumper across the J1 points on the board, and the RED heartbeat LED should stop flashing. Run the below command to flash. Sudo is required on most systems to access GPIO pins.
 
-```stm32flash -v -w dvm-firmware-hs_f1.bin -i 20,-21,21,-20 -R /dev/ttyAMA0```
+```sudo stm32flash -v -w dvm-firmware-hs_f1.bin -i 20,-21,21,-20 -R /dev/ttyAMA0```
+
+Note that on newer raspbian versions, the way GPIO chips are numbered has changed. If you're using raspbian bookworm (debian 12) or greater, use this command instead:
+
+```sudo stm32flash -v -w dvm-firmware-hs_f1.bin -i 532,-533,533,-520 -R /dev/ttyAMA0```
 
 You should see the below output if the board flashed successfully.
 ```

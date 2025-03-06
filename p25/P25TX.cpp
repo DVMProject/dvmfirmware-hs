@@ -96,7 +96,7 @@ void P25TX::process()
 
 /* Write data to the local buffer. */
 
-uint8_t P25TX::writeData(const uint8_t* data, uint8_t length)
+uint8_t P25TX::writeData(const uint8_t* data, uint16_t length)
 {
     if (length < (P25_TDU_FRAME_LENGTH_BYTES + 1U))
         return RSN_ILLEGAL_LENGTH;
@@ -108,8 +108,16 @@ uint8_t P25TX::writeData(const uint8_t* data, uint8_t length)
         return RSN_RINGBUFF_FULL;
     }
 
-    m_fifo.put(length - 1U);
-    for (uint8_t i = 0U; i < (length - 1U); i++)
+    if (length <= 255U) {
+        m_fifo.put(DVM_SHORT_FRAME_START);
+        m_fifo.put(length - 1U);
+    } else {
+        m_fifo.put(DVM_LONG_FRAME_START);
+        m_fifo.put(((length - 1U) >> 8U) & 0xFFU);
+        m_fifo.put((length - 1U) & 0xFFU);
+    }
+
+    for (uint16_t i = 0U; i < (length - 1U); i++)
         m_fifo.put(data[i + 1U]);
 
     return RSN_OK;
@@ -182,9 +190,19 @@ void P25TX::createData()
             m_poBuffer[m_poLen++] = P25_START_SYNC;
     }
     else {
-        uint8_t length = m_fifo.get();
+        uint8_t frameType = m_fifo.get();
+        uint16_t length = 0U;
+        switch (frameType) {
+        case DVM_SHORT_FRAME_START:
+            length = m_fifo.get();
+            break;
+        case DVM_LONG_FRAME_START:
+            length = ((m_fifo.get() & 0xFFU) << 8) + (m_fifo.get());
+            break;
+        }
+
         DEBUG3("P25TX::createData() dataLength/fifoSpace", length, m_fifo.getSpace());
-        for (uint8_t i = 0U; i < length; i++) {
+        for (uint16_t i = 0U; i < length; i++) {
             m_poBuffer[m_poLen++] = m_fifo.get();
         }
     }
@@ -198,7 +216,7 @@ void P25TX::createCal()
 {
     // 1.2 kHz sine wave generation
     if (m_modemState == STATE_P25_CAL) {
-        for (unsigned int i = 0U; i < P25_LDU_FRAME_LENGTH_BYTES; i++) {
+        for (uint8_t i = 0U; i < P25_LDU_FRAME_LENGTH_BYTES; i++) {
             m_poBuffer[i] = P25_START_SYNC;
         }
 

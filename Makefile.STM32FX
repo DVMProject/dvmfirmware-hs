@@ -15,7 +15,7 @@ OBJDIR_F4=obj_f4
 BINELF_F1=dvm-firmware-hs_f1.elf
 BINHEX_F1=dvm-firmware-hs_f1.hex
 BINBIN_F1=dvm-firmware-hs_f1.bin
-BINELF_F4=dvm-firwmare-hs_f4.elf
+BINELF_F4=dvm-firmware-hs_f4.elf
 BINHEX_F4=dvm-firmware-hs_f4.hex
 BINBIN_F4=dvm-firmware-hs_f4.bin
 

@@ -27,7 +27,7 @@ NXDNTX::NXDNTX() :
     m_poBuffer(),
     m_poLen(0U),
     m_poPtr(0U),
-    m_preambleCnt(240U), // 200ms
+    m_preambleCnt(57U),  // Leave room for the three-byte NXDN framing pattern.
     m_txHang(3000U),     // 5s
     m_tailCnt(0U)
 {
@@ -123,8 +123,8 @@ void NXDNTX::setPreambleCount(uint8_t preambleCnt)
     m_preambleCnt = 300U + uint16_t(preambleCnt) * 6U; // 500ms + tx delay
 
     // clamp preamble count
-    if (m_preambleCnt > 60U)
-        m_preambleCnt = 60U;
+    if (m_preambleCnt > 57U)
+        m_preambleCnt = 57U;
 }
 
 /* Sets the Tx hang time. */
